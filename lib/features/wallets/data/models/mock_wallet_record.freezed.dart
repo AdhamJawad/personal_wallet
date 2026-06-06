@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MockWalletRecord {
 
- Wallet get wallet; String get usdBalance; String get sypBalance;
+ Wallet get wallet;
 /// Create a copy of MockWalletRecord
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $MockWalletRecordCopyWith<MockWalletRecord> get copyWith => _$MockWalletRecordCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MockWalletRecord&&(identical(other.wallet, wallet) || other.wallet == wallet)&&(identical(other.usdBalance, usdBalance) || other.usdBalance == usdBalance)&&(identical(other.sypBalance, sypBalance) || other.sypBalance == sypBalance));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MockWalletRecord&&(identical(other.wallet, wallet) || other.wallet == wallet));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,wallet,usdBalance,sypBalance);
+int get hashCode => Object.hash(runtimeType,wallet);
 
 @override
 String toString() {
-  return 'MockWalletRecord(wallet: $wallet, usdBalance: $usdBalance, sypBalance: $sypBalance)';
+  return 'MockWalletRecord(wallet: $wallet)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $MockWalletRecordCopyWith<$Res>  {
   factory $MockWalletRecordCopyWith(MockWalletRecord value, $Res Function(MockWalletRecord) _then) = _$MockWalletRecordCopyWithImpl;
 @useResult
 $Res call({
- Wallet wallet, String usdBalance, String sypBalance
+ Wallet wallet
 });
 
 
@@ -65,12 +65,10 @@ class _$MockWalletRecordCopyWithImpl<$Res>
 
 /// Create a copy of MockWalletRecord
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? wallet = null,Object? usdBalance = null,Object? sypBalance = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? wallet = null,}) {
   return _then(_self.copyWith(
 wallet: null == wallet ? _self.wallet : wallet // ignore: cast_nullable_to_non_nullable
-as Wallet,usdBalance: null == usdBalance ? _self.usdBalance : usdBalance // ignore: cast_nullable_to_non_nullable
-as String,sypBalance: null == sypBalance ? _self.sypBalance : sypBalance // ignore: cast_nullable_to_non_nullable
-as String,
+as Wallet,
   ));
 }
 /// Create a copy of MockWalletRecord
@@ -164,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Wallet wallet,  String usdBalance,  String sypBalance)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Wallet wallet)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MockWalletRecord() when $default != null:
-return $default(_that.wallet,_that.usdBalance,_that.sypBalance);case _:
+return $default(_that.wallet);case _:
   return orElse();
 
 }
@@ -185,10 +183,10 @@ return $default(_that.wallet,_that.usdBalance,_that.sypBalance);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Wallet wallet,  String usdBalance,  String sypBalance)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Wallet wallet)  $default,) {final _that = this;
 switch (_that) {
 case _MockWalletRecord():
-return $default(_that.wallet,_that.usdBalance,_that.sypBalance);case _:
+return $default(_that.wallet);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +203,10 @@ return $default(_that.wallet,_that.usdBalance,_that.sypBalance);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Wallet wallet,  String usdBalance,  String sypBalance)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Wallet wallet)?  $default,) {final _that = this;
 switch (_that) {
 case _MockWalletRecord() when $default != null:
-return $default(_that.wallet,_that.usdBalance,_that.sypBalance);case _:
+return $default(_that.wallet);case _:
   return null;
 
 }
@@ -220,12 +218,10 @@ return $default(_that.wallet,_that.usdBalance,_that.sypBalance);case _:
 @JsonSerializable()
 
 class _MockWalletRecord implements MockWalletRecord {
-  const _MockWalletRecord({required this.wallet, required this.usdBalance, required this.sypBalance});
+  const _MockWalletRecord({required this.wallet});
   factory _MockWalletRecord.fromJson(Map<String, dynamic> json) => _$MockWalletRecordFromJson(json);
 
 @override final  Wallet wallet;
-@override final  String usdBalance;
-@override final  String sypBalance;
 
 /// Create a copy of MockWalletRecord
 /// with the given fields replaced by the non-null parameter values.
@@ -240,16 +236,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MockWalletRecord&&(identical(other.wallet, wallet) || other.wallet == wallet)&&(identical(other.usdBalance, usdBalance) || other.usdBalance == usdBalance)&&(identical(other.sypBalance, sypBalance) || other.sypBalance == sypBalance));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MockWalletRecord&&(identical(other.wallet, wallet) || other.wallet == wallet));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,wallet,usdBalance,sypBalance);
+int get hashCode => Object.hash(runtimeType,wallet);
 
 @override
 String toString() {
-  return 'MockWalletRecord(wallet: $wallet, usdBalance: $usdBalance, sypBalance: $sypBalance)';
+  return 'MockWalletRecord(wallet: $wallet)';
 }
 
 
@@ -260,7 +256,7 @@ abstract mixin class _$MockWalletRecordCopyWith<$Res> implements $MockWalletReco
   factory _$MockWalletRecordCopyWith(_MockWalletRecord value, $Res Function(_MockWalletRecord) _then) = __$MockWalletRecordCopyWithImpl;
 @override @useResult
 $Res call({
- Wallet wallet, String usdBalance, String sypBalance
+ Wallet wallet
 });
 
 
@@ -277,12 +273,10 @@ class __$MockWalletRecordCopyWithImpl<$Res>
 
 /// Create a copy of MockWalletRecord
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? wallet = null,Object? usdBalance = null,Object? sypBalance = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? wallet = null,}) {
   return _then(_MockWalletRecord(
 wallet: null == wallet ? _self.wallet : wallet // ignore: cast_nullable_to_non_nullable
-as Wallet,usdBalance: null == usdBalance ? _self.usdBalance : usdBalance // ignore: cast_nullable_to_non_nullable
-as String,sypBalance: null == sypBalance ? _self.sypBalance : sypBalance // ignore: cast_nullable_to_non_nullable
-as String,
+as Wallet,
   ));
 }
 

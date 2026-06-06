@@ -7,5 +7,8 @@ sealed class AppConstants {
   static const debtsBox = 'debts_box';
   static const contactsBox = 'contacts_box';
   static const qrProfilesBox = 'qr_profiles_box';
+  static const attachmentsBox = 'attachments_box';
+  static const notificationsBox = 'notifications_box';
+  static const auditBox = 'audit_box';
   static const syncQueueBox = 'sync_queue_box';
 }

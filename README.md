@@ -26,6 +26,8 @@ Production-grade Flutter architecture scaffold for an offline-first personal wal
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Auth Module](docs/AUTH_MODULE.md)
+- [Debts Module](docs/DEBTS_MODULE.md)
+- [Transactions Module](docs/TRANSACTIONS_MODULE.md)
 - [Wallet Module](docs/WALLET_MODULE.md)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
 

@@ -1,0 +1,16 @@
+enum SyncOperationType {
+  walletCreate,
+  walletRename,
+  walletArchive,
+  depositCreate,
+  withdrawCreate,
+  internalTransferCreate,
+  exchangeCreate,
+  debtCreate,
+  debtRepaymentCreate,
+  debtSettlementCreate,
+  externalContactCreate,
+  registeredContactCreate,
+  userTransferCreate,
+  attachmentCreate,
+}

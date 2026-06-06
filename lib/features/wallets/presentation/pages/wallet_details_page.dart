@@ -88,10 +88,14 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                const _PlaceholderSection(
+                _PlaceholderSection(
                   title: 'Transactions',
                   description:
-                      'Transaction history will appear here once the transaction module is implemented.',
+                      'This wallet now contributes to the immutable ledger. Open the transaction module to view and create entries.',
+                  trailing: PwButton.secondary(
+                    label: 'Open Ledger',
+                    onPressed: () => context.go(AppRoutes.transactionsPath),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 const _PlaceholderSection(
@@ -106,10 +110,15 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
 }
 
 class _PlaceholderSection extends StatelessWidget {
-  const _PlaceholderSection({required this.title, required this.description});
+  const _PlaceholderSection({
+    required this.title,
+    required this.description,
+    this.trailing,
+  });
 
   final String title;
   final String description;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +128,12 @@ class _PlaceholderSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(title, style: context.titleMedium),
+            Row(
+              children: <Widget>[
+                Expanded(child: Text(title, style: context.titleMedium)),
+                trailing ?? const SizedBox.shrink(),
+              ],
+            ),
             const SizedBox(height: AppSpacing.sm),
             Text(description),
           ],

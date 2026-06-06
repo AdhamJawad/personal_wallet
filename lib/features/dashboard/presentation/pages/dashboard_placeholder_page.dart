@@ -11,10 +11,10 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/amount_formatter.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../../wallets/presentation/providers/wallet_providers.dart';
 import '../../../wallets/presentation/widgets/dashboard_metric_card.dart';
 import '../../../wallets/presentation/widgets/dashboard_section_header.dart';
-import '../../../wallets/presentation/widgets/disabled_quick_action_card.dart';
 import '../../../wallets/presentation/widgets/wallet_overview_card.dart';
 
 class DashboardPlaceholderPage extends ConsumerWidget {
@@ -24,6 +24,7 @@ class DashboardPlaceholderPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authControllerProvider);
     final walletState = ref.watch(walletControllerProvider);
+    final transactionState = ref.watch(transactionControllerProvider);
     final session = authState.session;
     final dashboardSnapshot = walletState.dashboardSnapshot;
     final recentWallets =
@@ -135,7 +136,7 @@ class DashboardPlaceholderPage extends ConsumerWidget {
                 const DashboardSectionHeader(
                   title: 'Recent Activity',
                   subtitle:
-                      'Mock wallet activity until the transaction module is ready.',
+                      'Latest immutable ledger entries across your wallets.',
                 ),
                 const SizedBox(height: AppSpacing.md),
                 PwSectionCard(
@@ -175,35 +176,49 @@ class DashboardPlaceholderPage extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xl),
                 const DashboardSectionHeader(
                   title: 'Quick Actions',
-                  subtitle:
-                      'Visible now, activated in the next finance phases.',
+                  subtitle: 'Create new immutable ledger transactions.',
                 ),
                 const SizedBox(height: AppSpacing.md),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: MediaQuery.sizeOf(context).width < 760
-                      ? 2
-                      : 4,
-                  childAspectRatio: 1.12,
-                  mainAxisSpacing: AppSpacing.md,
-                  crossAxisSpacing: AppSpacing.md,
-                  children: const <Widget>[
-                    DisabledQuickActionCard(
+                Wrap(
+                  spacing: AppSpacing.md,
+                  runSpacing: AppSpacing.md,
+                  children: <Widget>[
+                    PwButton.primary(
                       label: 'Deposit',
-                      icon: Icons.south_west_rounded,
+                      onPressed: () =>
+                          context.push(AppRoutes.depositCreatePath),
                     ),
-                    DisabledQuickActionCard(
+                    PwButton.secondary(
                       label: 'Withdraw',
-                      icon: Icons.north_east_rounded,
+                      onPressed: () =>
+                          context.push(AppRoutes.withdrawCreatePath),
                     ),
-                    DisabledQuickActionCard(
-                      label: 'Transfer',
-                      icon: Icons.sync_alt_rounded,
+                    PwButton.secondary(
+                      label: 'Send Money',
+                      onPressed: () =>
+                          context.push(AppRoutes.userTransferCreatePath),
                     ),
-                    DisabledQuickActionCard(
+                    PwButton.secondary(
                       label: 'Exchange',
-                      icon: Icons.currency_exchange_rounded,
+                      onPressed: () =>
+                          context.push(AppRoutes.exchangeCreatePath),
+                    ),
+                    PwButton.secondary(
+                      label: 'My QR',
+                      onPressed: () => context.push(AppRoutes.qrPath),
+                    ),
+                    PwButton.secondary(
+                      label: 'Notifications',
+                      onPressed: () =>
+                          context.push(AppRoutes.notificationCenterPath),
+                    ),
+                    PwButton.secondary(
+                      label: 'View Ledger',
+                      onPressed: () => context.go(AppRoutes.transactionsPath),
+                    ),
+                    PwButton.secondary(
+                      label: 'Sync Queue',
+                      onPressed: () => context.push(AppRoutes.syncDashboardPath),
                     ),
                   ],
                 ),
@@ -227,10 +242,20 @@ class DashboardPlaceholderPage extends ConsumerWidget {
                                     ? 'Biometric login enabled'
                                     : 'Biometric login disabled',
                               ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                '${transactionState.transactions.length} ledger entries recorded',
+                              ),
                             ],
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
+                        PwButton.secondary(
+                          label: 'Audit',
+                          onPressed: () =>
+                              context.push(AppRoutes.auditHistoryPath),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
                         PwButton.secondary(
                           label: 'Logout',
                           onPressed: () async {

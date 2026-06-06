@@ -14,6 +14,9 @@ sealed class HiveInitializer {
       Hive.openBox<String>(AppConstants.debtsBox),
       Hive.openBox<String>(AppConstants.contactsBox),
       Hive.openBox<String>(AppConstants.qrProfilesBox),
+      Hive.openBox<String>(AppConstants.attachmentsBox),
+      Hive.openBox<String>(AppConstants.notificationsBox),
+      Hive.openBox<String>(AppConstants.auditBox),
       Hive.openBox<String>(AppConstants.syncQueueBox),
     ]);
   }

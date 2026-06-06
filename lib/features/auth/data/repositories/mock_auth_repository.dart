@@ -10,9 +10,9 @@ import '../../domain/models/register_request.dart';
 import '../../domain/services/otp_service.dart';
 import '../models/mock_auth_account.dart';
 import '../../domain/models/app_user.dart';
-import '../../domain/repositories/auth_repository.dart';
+import 'local_auth_repository.dart';
 
-class MockAuthRepository implements AuthRepository {
+class MockAuthRepository implements LocalAuthRepository {
   MockAuthRepository({
     required LocalStore localStore,
     required OtpService otpService,
@@ -37,25 +37,55 @@ class MockAuthRepository implements AuthRepository {
     }
 
     final DateTime now = DateTime.now().toUtc();
-    final MockAuthAccount account = MockAuthAccount(
-      user: AppUser(
-        id: 'user_demo_1',
-        phoneNumber: _demoPhoneNumber,
-        displayName: _demoDisplayName,
-        isVerified: true,
-        biometricEnabled: false,
-        personalQrToken: IdGenerator.next(),
-        createdAt: now,
-        updatedAt: now,
+    final List<MockAuthAccount> accounts = <MockAuthAccount>[
+      MockAuthAccount(
+        user: AppUser(
+          id: 'user_demo_1',
+          phoneNumber: _demoPhoneNumber,
+          displayName: _demoDisplayName,
+          isVerified: true,
+          biometricEnabled: false,
+          personalQrToken: 'PW-DEMO-001',
+          createdAt: now,
+          updatedAt: now,
+        ),
+        password: _demoPassword,
       ),
-      password: _demoPassword,
-    );
+      MockAuthAccount(
+        user: AppUser(
+          id: 'user_demo_2',
+          phoneNumber: '+963900000002',
+          displayName: 'Ahmad Kareem',
+          isVerified: true,
+          biometricEnabled: false,
+          personalQrToken: 'PW-AHMAD-002',
+          createdAt: now,
+          updatedAt: now,
+        ),
+        password: _demoPassword,
+      ),
+      MockAuthAccount(
+        user: AppUser(
+          id: 'user_demo_3',
+          phoneNumber: '+963900000003',
+          displayName: 'Sara Nasser',
+          isVerified: true,
+          biometricEnabled: false,
+          personalQrToken: 'PW-SARA-003',
+          createdAt: now,
+          updatedAt: now,
+        ),
+        password: _demoPassword,
+      ),
+    ];
 
-    await _localStore.write(
-      boxName: AppConstants.usersBox,
-      key: _demoPhoneNumber,
-      value: jsonEncode(account.toJson()),
-    );
+    for (final MockAuthAccount account in accounts) {
+      await _localStore.write(
+        boxName: AppConstants.usersBox,
+        key: account.user.phoneNumber,
+        value: jsonEncode(account.toJson()),
+      );
+    }
   }
 
   Future<MockAuthAccount?> _findAccount(String phoneNumber) async {

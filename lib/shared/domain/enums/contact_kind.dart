@@ -1,0 +1,1 @@
+enum ContactKind { registered, external }

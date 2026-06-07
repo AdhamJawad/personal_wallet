@@ -3,281 +3,295 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
-import '../../../../core/design_system/widgets/pw_button.dart';
-import '../../../../core/design_system/widgets/pw_scaffold.dart';
-import '../../../../core/design_system/widgets/pw_section_card.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/utils/amount_formatter.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../transactions/domain/models/ledger_transaction.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
+import '../../../wallets/domain/models/wallet_overview.dart';
 import '../../../wallets/presentation/providers/wallet_providers.dart';
-import '../../../wallets/presentation/widgets/dashboard_metric_card.dart';
-import '../../../wallets/presentation/widgets/dashboard_section_header.dart';
-import '../../../wallets/presentation/widgets/wallet_overview_card.dart';
+import '../widgets/dashboard_activity_list.dart';
+import '../widgets/dashboard_breakpoints.dart';
+import '../widgets/dashboard_copy.dart';
+import '../widgets/dashboard_empty_state.dart';
+import '../widgets/dashboard_header.dart';
+import '../widgets/dashboard_section_title.dart';
+import '../widgets/dashboard_skeleton_block.dart';
+import '../widgets/dashboard_total_assets_card.dart';
+import '../widgets/dashboard_wallet_preview_card.dart';
 
-class DashboardPlaceholderPage extends ConsumerWidget {
+class DashboardPlaceholderPage extends ConsumerStatefulWidget {
   const DashboardPlaceholderPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardPlaceholderPage> createState() =>
+      _DashboardPlaceholderPageState();
+}
+
+class _DashboardPlaceholderPageState
+    extends ConsumerState<DashboardPlaceholderPage> {
+  bool _showBalances = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final DashboardCopy copy = DashboardCopy.of(context);
     final authState = ref.watch(authControllerProvider);
     final walletState = ref.watch(walletControllerProvider);
     final transactionState = ref.watch(transactionControllerProvider);
     final session = authState.session;
     final dashboardSnapshot = walletState.dashboardSnapshot;
-    final recentWallets =
+    final List<WalletOverview> recentWallets =
         dashboardSnapshot?.walletSummaries.take(3).toList(growable: false) ??
-        const [];
+        const <WalletOverview>[];
+    final Map<String, String> walletNames = <String, String>{
+      for (final WalletOverview wallet in walletState.wallets)
+        wallet.wallet.id: wallet.wallet.name,
+    };
+    final List<DashboardActivityData> recentActivities = transactionState
+        .transactions
+        .take(10)
+        .map(
+          (LedgerTransaction transaction) => DashboardActivityData.fromTransaction(
+            transaction,
+            walletNames[transaction.sourceWalletId ??
+                    transaction.destinationWalletId ??
+                    ''] ??
+                copy.walletFallback,
+            copy,
+          ),
+        )
+        .toList(growable: false);
+    final bool isInitialDashboardLoading =
+        walletState.isLoading && dashboardSnapshot == null;
+    final bool isWalletsLoading = walletState.isLoading && recentWallets.isEmpty;
+    final bool isActivitiesLoading =
+        transactionState.isLoading && recentActivities.isEmpty;
+    final String userName = session?.user.displayName ?? 'User';
 
-    return PwScaffold(
-      title: 'Dashboard',
-      body: walletState.isLoading && dashboardSnapshot == null
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: <Color>[AppColors.brand, AppColors.brandDark],
+    return Directionality(
+      textDirection: copy.textDirection,
+      child: Scaffold(
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final DashboardBreakpoint breakpoint =
+                  resolveDashboardBreakpoint(constraints.maxWidth);
+              final double horizontalPadding = switch (breakpoint) {
+                DashboardBreakpoint.smallPhone => AppSpacing.lg,
+                DashboardBreakpoint.phone => AppSpacing.xl,
+                DashboardBreakpoint.tablet => AppSpacing.xxl,
+                DashboardBreakpoint.largeTablet => 40,
+              };
+              final int walletColumns = switch (breakpoint) {
+                DashboardBreakpoint.largeTablet => 3,
+                DashboardBreakpoint.tablet => 2,
+                DashboardBreakpoint.phone => 1,
+                DashboardBreakpoint.smallPhone => 1,
+              };
+
+              return Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: ListView(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      AppSpacing.xl,
+                      horizontalPadding,
+                      AppSpacing.xxl,
                     ),
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text(
-                        'Welcome back, ${session?.user.displayName ?? 'User'}',
-                        style: context.titleLarge.copyWith(color: Colors.white),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'Here is your current wallet overview.',
-                        style: context.bodyLarge.copyWith(
-                          color: Colors.white70,
+                      if (isInitialDashboardLoading)
+                        const _DashboardHeaderSkeleton()
+                      else
+                        DashboardHeader(
+                          greeting: _resolveGreeting(copy),
+                          userName: userName,
                         ),
+                      const SizedBox(height: AppSpacing.xl),
+                      DashboardTotalAssetsCard(
+                        totalUsd: dashboardSnapshot?.totalUsd ?? '0',
+                        totalSyp: dashboardSnapshot?.totalSyp ?? '0',
+                        showBalances: _showBalances,
+                        updatedLabel: copy.updatedNow,
+                        isLoading: isInitialDashboardLoading,
+                        onToggleVisibility: () {
+                          setState(() => _showBalances = !_showBalances);
+                        },
                       ),
                       const SizedBox(height: AppSpacing.xl),
-                      LayoutBuilder(
-                        builder:
-                            (BuildContext context, BoxConstraints constraints) {
-                              final bool singleColumn =
-                                  constraints.maxWidth < 620;
-
-                              return Flex(
-                                direction: singleColumn
-                                    ? Axis.vertical
-                                    : Axis.horizontal,
-                                children: <Widget>[
-                                  Expanded(
-                                    child: DashboardMetricCard(
-                                      label: 'Total USD',
-                                      value: AmountFormatter.format(
-                                        dashboardSnapshot?.totalUsd ?? '0',
-                                      ),
-                                      caption: 'Across all wallets',
-                                      icon: Icons.attach_money_rounded,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: singleColumn ? 0 : AppSpacing.md,
-                                    height: singleColumn ? AppSpacing.md : 0,
-                                  ),
-                                  Expanded(
-                                    child: DashboardMetricCard(
-                                      label: 'Total SYP',
-                                      value: AmountFormatter.format(
-                                        dashboardSnapshot?.totalSyp ?? '0',
-                                      ),
-                                      caption: 'Across all wallets',
-                                      icon:
-                                          Icons.account_balance_wallet_rounded,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
+                      DashboardSectionTitle(
+                        title: copy.myWallets,
+                        actionLabel: copy.seeAll,
+                        onActionPressed: () => context.go(AppRoutes.walletsPath),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _WalletsPreviewSection(
+                        wallets: recentWallets,
+                        columns: walletColumns,
+                        showBalances: _showBalances,
+                        isLoading: isWalletsLoading,
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      DashboardSectionTitle(
+                        title: copy.recentActivity,
+                        actionLabel: copy.seeAll,
+                        onActionPressed: () =>
+                            context.go(AppRoutes.transactionsPath),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      DashboardActivityList(
+                        items: recentActivities,
+                        isLoading: isActivitiesLoading,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xl),
-                DashboardSectionHeader(
-                  title: 'Wallet Summary',
-                  subtitle: 'Your active and archived wallets at a glance.',
-                  trailing: TextButton(
-                    onPressed: () => context.go(AppRoutes.walletsPath),
-                    child: const Text('View all'),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                if (recentWallets.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                    child: Text('No wallets available yet.'),
-                  )
-                else
-                  ...recentWallets.map(
-                    (walletOverview) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                      child: WalletOverviewCard(
-                        walletOverview: walletOverview,
-                        onTap: () => context.push(
-                          AppRoutes.walletDetailsLocation(
-                            walletOverview.wallet.id,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: AppSpacing.xl),
-                const DashboardSectionHeader(
-                  title: 'Recent Activity',
-                  subtitle:
-                      'Latest immutable ledger entries across your wallets.',
-                ),
-                const SizedBox(height: AppSpacing.md),
-                PwSectionCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      children:
-                          dashboardSnapshot?.recentActivities
-                              .map((item) {
-                                return ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: const CircleAvatar(
-                                    backgroundColor: AppColors.canvasTop,
-                                    child: Icon(
-                                      Icons.history_rounded,
-                                      color: AppColors.brand,
-                                    ),
-                                  ),
-                                  title: Text(item.title),
-                                  subtitle: Text(item.subtitle),
-                                  trailing: Text(
-                                    item.walletName,
-                                    textAlign: TextAlign.right,
-                                  ),
-                                );
-                              })
-                              .toList(growable: false) ??
-                          const <Widget>[
-                            ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: Text('No activity yet.'),
-                            ),
-                          ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                const DashboardSectionHeader(
-                  title: 'Quick Actions',
-                  subtitle: 'Create new immutable ledger transactions.',
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Wrap(
-                  spacing: AppSpacing.md,
-                  runSpacing: AppSpacing.md,
-                  children: <Widget>[
-                    PwButton.primary(
-                      label: 'Deposit',
-                      onPressed: () =>
-                          context.push(AppRoutes.depositCreatePath),
-                    ),
-                    PwButton.secondary(
-                      label: 'Withdraw',
-                      onPressed: () =>
-                          context.push(AppRoutes.withdrawCreatePath),
-                    ),
-                    PwButton.secondary(
-                      label: 'Send Money',
-                      onPressed: () =>
-                          context.push(AppRoutes.userTransferCreatePath),
-                    ),
-                    PwButton.secondary(
-                      label: 'Exchange',
-                      onPressed: () =>
-                          context.push(AppRoutes.exchangeCreatePath),
-                    ),
-                    PwButton.secondary(
-                      label: 'My QR',
-                      onPressed: () => context.push(AppRoutes.qrPath),
-                    ),
-                    PwButton.secondary(
-                      label: 'Notifications',
-                      onPressed: () =>
-                          context.push(AppRoutes.notificationCenterPath),
-                    ),
-                    PwButton.secondary(
-                      label: 'View Ledger',
-                      onPressed: () => context.go(AppRoutes.transactionsPath),
-                    ),
-                    PwButton.secondary(
-                      label: 'Sync Queue',
-                      onPressed: () => context.push(AppRoutes.syncDashboardPath),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                PwSectionCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                'Session & access',
-                                style: context.titleMedium,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Text(
-                                authState.isBiometricLoginEnabled
-                                    ? 'Biometric login enabled'
-                                    : 'Biometric login disabled',
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                '${transactionState.transactions.length} ledger entries recorded',
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        PwButton.secondary(
-                          label: 'Audit',
-                          onPressed: () =>
-                              context.push(AppRoutes.auditHistoryPath),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        PwButton.secondary(
-                          label: 'Logout',
-                          onPressed: () async {
-                            final result = await ref
-                                .read(authControllerProvider.notifier)
-                                .logout();
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
 
-                            if (!context.mounted) {
-                              return;
-                            }
+  String _resolveGreeting(DashboardCopy copy) {
+    final int hour = DateTime.now().hour;
+    if (hour < 12) {
+      return copy.goodMorning;
+    }
+    if (hour < 18) {
+      return copy.goodAfternoon;
+    }
+    return copy.goodEvening;
+  }
+}
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(result.message)),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+class _WalletsPreviewSection extends StatelessWidget {
+  const _WalletsPreviewSection({
+    required this.wallets,
+    required this.columns,
+    required this.showBalances,
+    required this.isLoading,
+  });
+
+  final List<WalletOverview> wallets;
+  final int columns;
+  final bool showBalances;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    final DashboardCopy copy = DashboardCopy.of(context);
+    if (isLoading) {
+      return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          if (columns == 1) {
+            return const Column(
+              children: <Widget>[
+                DashboardWalletPreviewCard(showBalances: false, isLoading: true),
+                SizedBox(height: AppSpacing.md),
+                DashboardWalletPreviewCard(showBalances: false, isLoading: true),
+                SizedBox(height: AppSpacing.md),
+                DashboardWalletPreviewCard(showBalances: false, isLoading: true),
               ],
+            );
+          }
+
+          final double itemWidth =
+              (constraints.maxWidth - AppSpacing.md * (columns - 1)) / columns;
+          return Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.md,
+            children: List<Widget>.generate(
+              3,
+              (_) => SizedBox(
+                width: itemWidth,
+                child: const DashboardWalletPreviewCard(
+                  showBalances: false,
+                  isLoading: true,
+                ),
+              ),
             ),
+          );
+        },
+      );
+    }
+
+    if (wallets.isEmpty) {
+      return DashboardEmptyState(
+        icon: Icons.account_balance_wallet_outlined,
+        title: copy.noWalletsTitle,
+        message: copy.noWalletsMessage,
+        actionLabel: copy.createWallet,
+        onActionPressed: () => context.push(AppRoutes.walletCreatePath),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        if (columns == 1) {
+          return Column(
+            children: wallets.map((WalletOverview wallet) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: DashboardWalletPreviewCard(
+                  walletOverview: wallet,
+                  showBalances: showBalances,
+                  onTap: () =>
+                      context.push(AppRoutes.walletDetailsLocation(wallet.wallet.id)),
+                ),
+              );
+            }).toList(growable: false),
+          );
+        }
+
+        final double itemWidth =
+            (constraints.maxWidth - AppSpacing.md * (columns - 1)) / columns;
+        return Wrap(
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.md,
+          children: wallets
+              .map(
+                (WalletOverview wallet) => SizedBox(
+                  width: itemWidth,
+                  child: DashboardWalletPreviewCard(
+                    walletOverview: wallet,
+                    showBalances: showBalances,
+                    onTap: () => context.push(
+                      AppRoutes.walletDetailsLocation(wallet.wallet.id),
+                    ),
+                  ),
+                ),
+              )
+              .toList(growable: false),
+        );
+      },
+    );
+  }
+}
+
+class _DashboardHeaderSkeleton extends StatelessWidget {
+  const _DashboardHeaderSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: <Widget>[
+        DashboardSkeletonBlock(height: 58, width: 58, radius: 22),
+        SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: <Widget>[
+              DashboardSkeletonBlock(height: 24, width: 88, radius: 999),
+              SizedBox(height: AppSpacing.md),
+              DashboardSkeletonBlock(height: 14, width: 110),
+              SizedBox(height: AppSpacing.sm),
+              DashboardSkeletonBlock(height: 30, width: 170),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

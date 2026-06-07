@@ -20,6 +20,7 @@ import '../../features/debts/presentation/pages/create_debt_repayment_page.dart'
 import '../../features/debts/presentation/pages/debt_details_page.dart';
 import '../../features/debts/presentation/pages/debts_page.dart';
 import '../../features/notifications/presentation/pages/notification_center_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/qr/presentation/pages/my_qr_page.dart';
 import '../../features/qr/presentation/pages/qr_scanner_page.dart';
 import '../../features/qr/presentation/pages/user_preview_page.dart';
@@ -40,12 +41,24 @@ import '../../features/wallets/presentation/pages/create_wallet_page.dart';
 import '../../features/wallets/presentation/pages/edit_wallet_page.dart';
 import '../../features/wallets/presentation/pages/wallet_details_page.dart';
 import '../../features/wallets/presentation/pages/wallets_page.dart';
+import '../presentation/widgets/app_shell_page.dart';
 import 'app_routes.dart';
+
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> _homeBranchNavigatorKey =
+    GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> _walletsBranchNavigatorKey =
+    GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> _debtsBranchNavigatorKey =
+    GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> _profileBranchNavigatorKey =
+    GlobalKey<NavigatorState>();
 
 final appRouterProvider = Provider<GoRouter>((Ref ref) {
   final authState = ref.watch(authControllerProvider);
 
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splashPath,
     redirect: (BuildContext context, GoRouterState state) {
       final String location = state.matchedLocation;
@@ -90,13 +103,6 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
     },
     routes: <RouteBase>[
       GoRoute(
-        path: AppRoutes.dashboardPath,
-        name: AppRoutes.dashboard,
-        builder: (BuildContext context, GoRouterState state) {
-          return const DashboardPlaceholderPage();
-        },
-      ),
-      GoRoute(
         path: AppRoutes.authPath,
         name: AppRoutes.auth,
         redirect: (_, _) => AppRoutes.loginPath,
@@ -136,36 +142,143 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
           return const ForgotPasswordPage();
         },
       ),
-      GoRoute(
-        path: AppRoutes.walletsPath,
-        name: AppRoutes.wallets,
-        builder: (BuildContext context, GoRouterState state) {
-          return const WalletsPage();
+      StatefulShellRoute.indexedStack(
+        builder: (
+          BuildContext context,
+          GoRouterState state,
+          StatefulNavigationShell navigationShell,
+        ) {
+          return AppShellPage(navigationShell: navigationShell);
         },
-        routes: <RouteBase>[
-          GoRoute(
-            path: 'create',
-            name: AppRoutes.walletCreate,
-            builder: (BuildContext context, GoRouterState state) {
-              return const CreateWalletPage();
-            },
-          ),
-          GoRoute(
-            path: ':walletId',
-            name: AppRoutes.walletDetails,
-            builder: (BuildContext context, GoRouterState state) {
-              return WalletDetailsPage(
-                walletId: state.pathParameters['walletId']!,
-              );
-            },
+        branches: <StatefulShellBranch>[
+          StatefulShellBranch(
+            navigatorKey: _homeBranchNavigatorKey,
             routes: <RouteBase>[
               GoRoute(
-                path: 'edit',
-                name: AppRoutes.walletEdit,
+                path: AppRoutes.dashboardPath,
+                name: AppRoutes.dashboard,
                 builder: (BuildContext context, GoRouterState state) {
-                  return EditWalletPage(
-                    walletId: state.pathParameters['walletId']!,
-                  );
+                  return const DashboardPlaceholderPage();
+                },
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _walletsBranchNavigatorKey,
+            routes: <RouteBase>[
+              GoRoute(
+                path: AppRoutes.walletsPath,
+                name: AppRoutes.wallets,
+                builder: (BuildContext context, GoRouterState state) {
+                  return const WalletsPage();
+                },
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'create',
+                    name: AppRoutes.walletCreate,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (BuildContext context, GoRouterState state) {
+                      return const CreateWalletPage();
+                    },
+                  ),
+                  GoRoute(
+                    path: ':walletId',
+                    name: AppRoutes.walletDetails,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (BuildContext context, GoRouterState state) {
+                      return WalletDetailsPage(
+                        walletId: state.pathParameters['walletId']!,
+                      );
+                    },
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: 'edit',
+                        name: AppRoutes.walletEdit,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (BuildContext context, GoRouterState state) {
+                          return EditWalletPage(
+                            walletId: state.pathParameters['walletId']!,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _debtsBranchNavigatorKey,
+            routes: <RouteBase>[
+              GoRoute(
+                path: AppRoutes.debtsPath,
+                name: AppRoutes.debts,
+                builder: (BuildContext context, GoRouterState state) {
+                  return const DebtsPage();
+                },
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'create',
+                    name: AppRoutes.debtCreate,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (BuildContext context, GoRouterState state) {
+                      return const CreateDebtPage();
+                    },
+                  ),
+                  GoRoute(
+                    path: ':debtId',
+                    name: AppRoutes.debtDetails,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (BuildContext context, GoRouterState state) {
+                      return DebtDetailsPage(
+                        debtId: state.pathParameters['debtId']!,
+                      );
+                    },
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: 'repayment',
+                        name: AppRoutes.debtRepayment,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (BuildContext context, GoRouterState state) {
+                          return CreateDebtRepaymentPage(
+                            debtId: state.pathParameters['debtId']!,
+                          );
+                        },
+                      ),
+                      GoRoute(
+                        path: 'settlement',
+                        name: AppRoutes.debtSettlement,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (BuildContext context, GoRouterState state) {
+                          return DebtSettlementPage(
+                            debtId: state.pathParameters['debtId']!,
+                          );
+                        },
+                      ),
+                      GoRoute(
+                        path: 'settlement-success',
+                        name: AppRoutes.debtSettlementSuccess,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (BuildContext context, GoRouterState state) {
+                          return DebtSettlementSuccessPage(
+                            debtId: state.pathParameters['debtId']!,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _profileBranchNavigatorKey,
+            routes: <RouteBase>[
+              GoRoute(
+                path: AppRoutes.profilePath,
+                name: AppRoutes.profile,
+                builder: (BuildContext context, GoRouterState state) {
+                  return const ProfilePage();
                 },
               ),
             ],
@@ -215,58 +328,6 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
                 transactionId: state.pathParameters['transactionId']!,
               );
             },
-          ),
-        ],
-      ),
-      GoRoute(
-        path: AppRoutes.debtsPath,
-        name: AppRoutes.debts,
-        builder: (BuildContext context, GoRouterState state) {
-          return const DebtsPage();
-        },
-        routes: <RouteBase>[
-          GoRoute(
-            path: 'create',
-            name: AppRoutes.debtCreate,
-            builder: (BuildContext context, GoRouterState state) {
-              return const CreateDebtPage();
-            },
-          ),
-          GoRoute(
-            path: ':debtId',
-            name: AppRoutes.debtDetails,
-            builder: (BuildContext context, GoRouterState state) {
-              return DebtDetailsPage(debtId: state.pathParameters['debtId']!);
-            },
-            routes: <RouteBase>[
-              GoRoute(
-                path: 'repayment',
-                name: AppRoutes.debtRepayment,
-                builder: (BuildContext context, GoRouterState state) {
-                  return CreateDebtRepaymentPage(
-                    debtId: state.pathParameters['debtId']!,
-                  );
-                },
-              ),
-              GoRoute(
-                path: 'settlement',
-                name: AppRoutes.debtSettlement,
-                builder: (BuildContext context, GoRouterState state) {
-                  return DebtSettlementPage(
-                    debtId: state.pathParameters['debtId']!,
-                  );
-                },
-              ),
-              GoRoute(
-                path: 'settlement-success',
-                name: AppRoutes.debtSettlementSuccess,
-                builder: (BuildContext context, GoRouterState state) {
-                  return DebtSettlementSuccessPage(
-                    debtId: state.pathParameters['debtId']!,
-                  );
-                },
-              ),
-            ],
           ),
         ],
       ),

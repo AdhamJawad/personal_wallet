@@ -45,6 +45,8 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Personal Wallet uses Face ID to unlock your saved login securely.</string>
 </dict>

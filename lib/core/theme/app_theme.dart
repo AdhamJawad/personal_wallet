@@ -7,7 +7,14 @@ import 'app_spacing.dart';
 
 sealed class AppTheme {
   static ThemeData light() {
-    final TextTheme textTheme = GoogleFonts.ibmPlexSansTextTheme();
+    final TextTheme textTheme = GoogleFonts.cairoTextTheme().copyWith(
+      headlineSmall: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+      titleLarge: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+      titleMedium: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+      bodyLarge: GoogleFonts.cairo(fontWeight: FontWeight.w500),
+      bodyMedium: GoogleFonts.cairo(fontWeight: FontWeight.w400),
+      labelLarge: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -18,6 +25,7 @@ sealed class AppTheme {
         surface: AppColors.surface,
       ),
       scaffoldBackgroundColor: AppColors.canvasTop,
+      fontFamily: GoogleFonts.cairo().fontFamily,
       textTheme: textTheme.apply(
         bodyColor: AppColors.textPrimary,
         displayColor: AppColors.textPrimary,
@@ -35,6 +43,7 @@ sealed class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
@@ -43,7 +52,8 @@ sealed class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.brand,
           foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size(0, 52),
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
@@ -52,8 +62,9 @@ sealed class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.brand,
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size(0, 52),
           side: const BorderSide(color: AppColors.outlineSoft),
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
@@ -83,8 +94,15 @@ sealed class AppTheme {
   }
 
   static ThemeData dark() {
-    final TextTheme textTheme = GoogleFonts.ibmPlexSansTextTheme(
+    final TextTheme textTheme = GoogleFonts.cairoTextTheme(
       ThemeData.dark(useMaterial3: true).textTheme,
+    ).copyWith(
+      headlineSmall: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+      titleLarge: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+      titleMedium: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+      bodyLarge: GoogleFonts.cairo(fontWeight: FontWeight.w500),
+      bodyMedium: GoogleFonts.cairo(fontWeight: FontWeight.w400),
+      labelLarge: GoogleFonts.cairo(fontWeight: FontWeight.w600),
     );
 
     return ThemeData(
@@ -97,6 +115,7 @@ sealed class AppTheme {
         surface: AppColors.surfaceDark,
       ),
       scaffoldBackgroundColor: AppColors.brandDark,
+      fontFamily: GoogleFonts.cairo().fontFamily,
       textTheme: textTheme.apply(
         bodyColor: AppColors.textOnDark,
         displayColor: AppColors.textOnDark,
@@ -114,6 +133,7 @@ sealed class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.surfaceDark,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
@@ -122,7 +142,8 @@ sealed class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.accent,
           foregroundColor: AppColors.brandDark,
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size(0, 52),
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
@@ -131,8 +152,9 @@ sealed class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textOnDark,
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size(0, 52),
           side: const BorderSide(color: AppColors.outlineSoft),
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),

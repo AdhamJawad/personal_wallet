@@ -61,7 +61,7 @@ class WalletOverviewCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(26),
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -92,9 +92,17 @@ class WalletOverviewCard extends StatelessWidget {
                       label: wallet.isArchived ? copy.archived : copy.active,
                       emphasized: !wallet.isArchived,
                     ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.72,
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.md),
                 _BalanceRow(
                   label: copy.usdShort,
                   amount: AmountFormatter.format(
@@ -102,7 +110,7 @@ class WalletOverviewCard extends StatelessWidget {
                   ),
                   currency: copy.usdShort,
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 _BalanceRow(
                   label: copy.sypShort,
                   amount: AmountFormatter.format(
@@ -110,7 +118,7 @@ class WalletOverviewCard extends StatelessWidget {
                   ),
                   currency: copy.sypShort,
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.md),
                 Text(
                   _relativeUpdatedLabel(copy, wallet.updatedAt),
                   maxLines: 1,
@@ -144,26 +152,27 @@ class _BalanceRow extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          label,
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+    return RichText(
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      text: TextSpan(
+        children: <InlineSpan>[
+          TextSpan(
+            text: '$label ',
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          '$amount $currency',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            height: 1.1,
+          TextSpan(
+            text: '$amount $currency',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
+              height: 1.05,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -216,7 +225,7 @@ class _WalletOverviewSkeleton extends StatelessWidget {
         ),
       ),
       child: const Padding(
-        padding: EdgeInsets.all(AppSpacing.xl),
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -227,13 +236,15 @@ class _WalletOverviewSkeleton extends StatelessWidget {
                 Expanded(child: DashboardSkeletonBlock(height: 20, width: 140)),
                 SizedBox(width: AppSpacing.sm),
                 DashboardSkeletonBlock(height: 28, width: 74, radius: 999),
+                SizedBox(width: AppSpacing.xs),
+                DashboardSkeletonBlock(height: 18, width: 18, radius: 999),
               ],
             ),
-            SizedBox(height: AppSpacing.lg),
-            _WalletBalanceRowSkeleton(),
             SizedBox(height: AppSpacing.md),
             _WalletBalanceRowSkeleton(),
-            SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.sm),
+            _WalletBalanceRowSkeleton(),
+            SizedBox(height: AppSpacing.md),
             DashboardSkeletonBlock(height: 14, width: 116),
           ],
         ),
@@ -247,12 +258,11 @@ class _WalletBalanceRowSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return const Row(
       children: <Widget>[
-        DashboardSkeletonBlock(height: 14, width: 34),
-        SizedBox(height: AppSpacing.xs),
-        DashboardSkeletonBlock(height: 28, width: 148),
+        DashboardSkeletonBlock(height: 14, width: 30),
+        SizedBox(width: AppSpacing.sm),
+        DashboardSkeletonBlock(height: 22, width: 148),
       ],
     );
   }

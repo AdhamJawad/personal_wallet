@@ -90,6 +90,38 @@ final class DashboardCopy {
   String get createWallet => isArabic
       ? '\u0625\u0646\u0634\u0627\u0621 \u0645\u062d\u0641\u0638\u0629'
       : 'Create Wallet';
+  String get createWalletHelper => isArabic
+      ? '\u0623\u0646\u0634\u0626 \u0645\u062d\u0641\u0638\u0629 \u062c\u062f\u064a\u062f\u0629 \u0644\u062a\u0646\u0638\u064a\u0645 \u0623\u0645\u0648\u0627\u0644\u0643.'
+      : 'Create a new wallet for organizing your funds.';
+  String get walletNameLabel => isArabic
+      ? '\u0627\u0633\u0645 \u0627\u0644\u0645\u062d\u0641\u0638\u0629'
+      : 'Wallet Name';
+  String get walletNameHint => isArabic
+      ? '\u0645\u062d\u0641\u0638\u0629 \u0627\u0644\u0633\u0641\u0631'
+      : 'Travel Wallet';
+  String get walletColor => isArabic
+      ? '\u0644\u0648\u0646 \u0627\u0644\u0645\u062d\u0641\u0638\u0629'
+      : 'Wallet Color';
+  String get walletPreview =>
+      isArabic ? '\u0645\u0639\u0627\u064a\u0646\u0629' : 'Preview';
+  String get walletDetails => isArabic
+      ? '\u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u062d\u0641\u0638\u0629'
+      : 'Wallet Details';
+  String get createWalletConfirm => isArabic
+      ? '\u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u062d\u0641\u0638\u0629'
+      : 'Create Wallet';
+  String get walletCreatedSuccess => isArabic
+      ? '\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u062d\u0641\u0638\u0629 \u0628\u0646\u062c\u0627\u062d'
+      : 'Wallet created successfully';
+  String get walletCreateFailure => isArabic
+      ? '\u062a\u0639\u0630\u0631 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u062d\u0641\u0638\u0629.'
+      : 'Failed to create wallet.';
+  String get walletNameRequired => isArabic
+      ? '\u0627\u0633\u0645 \u0627\u0644\u0645\u062d\u0641\u0638\u0629 \u0645\u0637\u0644\u0648\u0628.'
+      : 'Wallet name is required.';
+  String get walletNameTooShort => isArabic
+      ? '\u064a\u062c\u0628 \u0623\u0646 \u064a\u062d\u062a\u0648\u064a \u0627\u0633\u0645 \u0627\u0644\u0645\u062d\u0641\u0638\u0629 \u0639\u0644\u0649 3 \u0623\u062d\u0631\u0641 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644.'
+      : 'Wallet name must be at least 3 characters.';
   String get walletsPageSubtitle => isArabic
       ? '\u0646\u0638\u0631\u0629 \u0633\u0631\u064a\u0639\u0629 \u0639\u0644\u0649 \u0627\u0644\u0623\u0631\u0635\u062f\u0629 \u0648\u0627\u0644\u062d\u0631\u0643\u0629 \u0628\u0643\u0644 \u0645\u062d\u0641\u0638\u0629.'
       : 'A compact view of balances and activity across every wallet.';
@@ -170,6 +202,44 @@ final class DashboardCopy {
   String updatedDaysAgo(int days) => isArabic
       ? '\u062a\u0645 \u0627\u0644\u062a\u062d\u062f\u064a\u062b \u0645\u0646\u0630 $days \u0623\u064a\u0627\u0645'
       : 'Updated $days days ago';
+  String get all => isArabic ? '\u0627\u0644\u0643\u0644' : 'All';
+  String get deposits => isArabic
+      ? '\u0627\u0644\u0625\u064a\u062f\u0627\u0639\u0627\u062a'
+      : 'Deposits';
+  String get withdrawals => isArabic
+      ? '\u0627\u0644\u0633\u062d\u0648\u0628\u0627\u062a'
+      : 'Withdrawals';
+  String get transfers => isArabic
+      ? '\u0627\u0644\u062a\u062d\u0648\u064a\u0644\u0627\u062a'
+      : 'Transfers';
+  String get exchanges => isArabic
+      ? '\u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0635\u0631\u0641'
+      : 'Exchanges';
+  String get noWalletActivityTitle => isArabic
+      ? '\u0644\u0627 \u062a\u0648\u062c\u062f \u0639\u0645\u0644\u064a\u0627\u062a \u0628\u0639\u062f'
+      : 'No activity yet';
+  String get noWalletActivityMessage => isArabic
+      ? '\u0633\u062a\u0638\u0647\u0631 \u0623\u0648\u0644 \u0639\u0645\u0644\u064a\u0629 \u0645\u0627\u0644\u064a\u0629 \u0644\u0647\u0630\u0647 \u0627\u0644\u0645\u062d\u0641\u0638\u0629 \u0647\u0646\u0627.'
+      : 'The first financial activity for this wallet will appear here.';
+  String get walletNotFound => isArabic
+      ? '\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0639\u062b\u0648\u0631 \u0639\u0644\u0649 \u0627\u0644\u0645\u062d\u0641\u0638\u0629.'
+      : 'Wallet not found.';
+  String get lastUpdated => isArabic
+      ? '\u0622\u062e\u0631 \u062a\u062d\u062f\u064a\u062b'
+      : 'Last updated';
+  String get balanceUsd =>
+      isArabic ? '\u0631\u0635\u064a\u062f USD' : 'USD Balance';
+  String get balanceSyp =>
+      isArabic ? '\u0631\u0635\u064a\u062f SYP' : 'SYP Balance';
+  String get openTransaction => isArabic
+      ? '\u0641\u062a\u062d \u0627\u0644\u0639\u0645\u0644\u064a\u0629'
+      : 'Open transaction';
+  String get reference =>
+      isArabic ? '\u0627\u0644\u0645\u0631\u062c\u0639' : 'Reference';
+  String get amount =>
+      isArabic ? '\u0627\u0644\u0645\u0628\u0644\u063a' : 'Amount';
+  String get date =>
+      isArabic ? '\u0627\u0644\u062a\u0627\u0631\u064a\u062e' : 'Date';
   String get newest =>
       isArabic ? '\u0627\u0644\u0623\u062d\u062f\u062b' : 'Newest';
   String get oldest =>

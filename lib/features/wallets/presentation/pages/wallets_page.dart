@@ -15,6 +15,7 @@ import '../../../dashboard/presentation/widgets/dashboard_skeleton_block.dart';
 import '../../domain/enums/wallet_sort_option.dart';
 import '../../domain/models/wallet_overview.dart';
 import '../providers/wallet_providers.dart';
+import '../widgets/create_wallet_sheet.dart';
 import '../widgets/wallet_overview_card.dart';
 
 class WalletsPage extends ConsumerStatefulWidget {
@@ -98,13 +99,14 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
         onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
           appBar: AppBar(
+            titleSpacing: AppSpacing.lg,
             title: Text(copy.wallets),
             actions: <Widget>[
               Padding(
-                padding: const EdgeInsetsDirectional.only(end: AppSpacing.md),
+                padding: const EdgeInsetsDirectional.only(end: AppSpacing.lg),
                 child: _CreateWalletAction(
                   tooltip: copy.createWallet,
-                  onPressed: () => context.push(AppRoutes.walletCreatePath),
+                  onPressed: () => showCreateWalletSheet(context),
                 ),
               ),
             ],
@@ -172,7 +174,7 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
                             message: copy.noWalletsMessage,
                             actionLabel: copy.createWallet,
                             onActionPressed: () =>
-                                context.push(AppRoutes.walletCreatePath),
+                                showCreateWalletSheet(context),
                           )
                         else if (visibleWallets.isEmpty && hasSearchQuery)
                           DashboardEmptyState(
@@ -223,13 +225,22 @@ class _CreateWalletAction extends StatelessWidget {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
     return Material(
-      color: colorScheme.primary.withValues(alpha: 0.10),
-      borderRadius: BorderRadius.circular(AppRadius.pill),
-      child: IconButton(
-        onPressed: onPressed,
-        tooltip: tooltip,
-        visualDensity: VisualDensity.compact,
-        icon: Icon(Icons.add_rounded, color: colorScheme.primary),
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(
+              color: colorScheme.outline.withValues(alpha: 0.12),
+            ),
+          ),
+          child: Icon(Icons.add_rounded, size: 20, color: colorScheme.primary),
+        ),
       ),
     );
   }
@@ -362,7 +373,10 @@ class _WalletSummaryCard extends StatelessWidget {
     final DashboardCopy copy = DashboardCopy.of(context);
 
     return _WalletPageSurface(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final bool stacked = constraints.maxWidth < 600;
@@ -371,24 +385,17 @@ class _WalletSummaryCard extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  copy.walletSummary,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
                 _SummaryLine(
                   label: copy.totalWallets,
                   value: '${summary.walletCount}',
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 _SummaryLine(
                   label: copy.usdTotal,
                   value:
                       '${AmountFormatter.format(summary.totalUsd)} ${copy.usdShort}',
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 _SummaryLine(
                   label: copy.sypTotal,
                   value:
@@ -401,13 +408,6 @@ class _WalletSummaryCard extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                copy.walletSummary,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: AppSpacing.lg),
               Row(
                 children: <Widget>[
                   Expanded(
@@ -416,7 +416,7 @@ class _WalletSummaryCard extends StatelessWidget {
                       value: '${summary.walletCount}',
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.lg),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: _SummaryLine(
                       label: copy.usdTotal,
@@ -424,7 +424,7 @@ class _WalletSummaryCard extends StatelessWidget {
                           '${AmountFormatter.format(summary.totalUsd)} ${copy.usdShort}',
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.lg),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: _SummaryLine(
                       label: copy.sypTotal,
@@ -464,12 +464,12 @@ class _SummaryLine extends StatelessWidget {
             color: colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: 2),
         Text(
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleMedium?.copyWith(
+          style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -484,7 +484,10 @@ class _WalletSummarySkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _WalletPageSurface(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final bool stacked = constraints.maxWidth < 600;
@@ -493,12 +496,10 @@ class _WalletSummarySkeleton extends StatelessWidget {
             return const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                DashboardSkeletonBlock(height: 20, width: 122),
-                SizedBox(height: AppSpacing.lg),
                 _SummaryLineSkeleton(),
-                SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.sm),
                 _SummaryLineSkeleton(),
-                SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.sm),
                 _SummaryLineSkeleton(),
               ],
             );
@@ -507,14 +508,12 @@ class _WalletSummarySkeleton extends StatelessWidget {
           return const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              DashboardSkeletonBlock(height: 20, width: 122),
-              SizedBox(height: AppSpacing.lg),
               Row(
                 children: <Widget>[
                   Expanded(child: _SummaryLineSkeleton()),
-                  SizedBox(width: AppSpacing.lg),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(child: _SummaryLineSkeleton()),
-                  SizedBox(width: AppSpacing.lg),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(child: _SummaryLineSkeleton()),
                 ],
               ),
@@ -535,8 +534,8 @@ class _SummaryLineSkeleton extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         DashboardSkeletonBlock(height: 14, width: 84),
-        SizedBox(height: AppSpacing.xs),
-        DashboardSkeletonBlock(height: 22, width: 116),
+        SizedBox(height: 2),
+        DashboardSkeletonBlock(height: 18, width: 104),
       ],
     );
   }

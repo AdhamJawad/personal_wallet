@@ -9,6 +9,7 @@ import '../../../transactions/domain/models/ledger_transaction.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../../wallets/domain/models/wallet_overview.dart';
 import '../../../wallets/presentation/providers/wallet_providers.dart';
+import '../../../wallets/presentation/widgets/create_wallet_sheet.dart';
 import '../widgets/dashboard_activity_list.dart';
 import '../widgets/dashboard_breakpoints.dart';
 import '../widgets/dashboard_copy.dart';
@@ -50,19 +51,21 @@ class _DashboardPlaceholderPageState
         .transactions
         .take(10)
         .map(
-          (LedgerTransaction transaction) => DashboardActivityData.fromTransaction(
-            transaction,
-            walletNames[transaction.sourceWalletId ??
-                    transaction.destinationWalletId ??
-                    ''] ??
-                copy.walletFallback,
-            copy,
-          ),
+          (LedgerTransaction transaction) =>
+              DashboardActivityData.fromTransaction(
+                transaction,
+                walletNames[transaction.sourceWalletId ??
+                        transaction.destinationWalletId ??
+                        ''] ??
+                    copy.walletFallback,
+                copy,
+              ),
         )
         .toList(growable: false);
     final bool isInitialDashboardLoading =
         walletState.isLoading && dashboardSnapshot == null;
-    final bool isWalletsLoading = walletState.isLoading && recentWallets.isEmpty;
+    final bool isWalletsLoading =
+        walletState.isLoading && recentWallets.isEmpty;
     final bool isActivitiesLoading =
         transactionState.isLoading && recentActivities.isEmpty;
     final String userName = session?.user.displayName ?? 'User';
@@ -73,8 +76,9 @@ class _DashboardPlaceholderPageState
         body: SafeArea(
           child: LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
-              final DashboardBreakpoint breakpoint =
-                  resolveDashboardBreakpoint(constraints.maxWidth);
+              final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
+                constraints.maxWidth,
+              );
               final double horizontalPadding = switch (breakpoint) {
                 DashboardBreakpoint.smallPhone => AppSpacing.lg,
                 DashboardBreakpoint.phone => AppSpacing.xl,
@@ -122,7 +126,8 @@ class _DashboardPlaceholderPageState
                       DashboardSectionTitle(
                         title: copy.myWallets,
                         actionLabel: copy.seeAll,
-                        onActionPressed: () => context.go(AppRoutes.walletsPath),
+                        onActionPressed: () =>
+                            context.go(AppRoutes.walletsPath),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _WalletsPreviewSection(
@@ -188,11 +193,20 @@ class _WalletsPreviewSection extends StatelessWidget {
           if (columns == 1) {
             return const Column(
               children: <Widget>[
-                DashboardWalletPreviewCard(showBalances: false, isLoading: true),
+                DashboardWalletPreviewCard(
+                  showBalances: false,
+                  isLoading: true,
+                ),
                 SizedBox(height: AppSpacing.md),
-                DashboardWalletPreviewCard(showBalances: false, isLoading: true),
+                DashboardWalletPreviewCard(
+                  showBalances: false,
+                  isLoading: true,
+                ),
                 SizedBox(height: AppSpacing.md),
-                DashboardWalletPreviewCard(showBalances: false, isLoading: true),
+                DashboardWalletPreviewCard(
+                  showBalances: false,
+                  isLoading: true,
+                ),
               ],
             );
           }
@@ -223,7 +237,7 @@ class _WalletsPreviewSection extends StatelessWidget {
         title: copy.noWalletsTitle,
         message: copy.noWalletsMessage,
         actionLabel: copy.createWallet,
-        onActionPressed: () => context.push(AppRoutes.walletCreatePath),
+        onActionPressed: () => showCreateWalletSheet(context),
       );
     }
 
@@ -231,17 +245,20 @@ class _WalletsPreviewSection extends StatelessWidget {
       builder: (BuildContext context, BoxConstraints constraints) {
         if (columns == 1) {
           return Column(
-            children: wallets.map((WalletOverview wallet) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: DashboardWalletPreviewCard(
-                  walletOverview: wallet,
-                  showBalances: showBalances,
-                  onTap: () =>
-                      context.push(AppRoutes.walletDetailsLocation(wallet.wallet.id)),
-                ),
-              );
-            }).toList(growable: false),
+            children: wallets
+                .map((WalletOverview wallet) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: DashboardWalletPreviewCard(
+                      walletOverview: wallet,
+                      showBalances: showBalances,
+                      onTap: () => context.push(
+                        AppRoutes.walletDetailsLocation(wallet.wallet.id),
+                      ),
+                    ),
+                  );
+                })
+                .toList(growable: false),
           );
         }
 

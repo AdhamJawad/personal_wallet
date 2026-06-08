@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'app_modal_bottom_sheet.dart';
 import '../../../features/dashboard/presentation/widgets/dashboard_copy.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -64,15 +65,9 @@ class AppShellPage extends StatelessWidget {
     BuildContext context,
     DashboardCopy copy,
   ) async {
-    await showModalBottomSheet<void>(
+    await showAppModalBottomSheet<void>(
       context: context,
-      showDragHandle: true,
       backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppRadius.xl),
-        ),
-      ),
       builder: (BuildContext modalContext) {
         return SafeArea(
           top: false,
@@ -90,9 +85,9 @@ class AppShellPage extends StatelessWidget {
                 Text(
                   copy.actionsSheetTitle,
                   textAlign: TextAlign.right,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
@@ -110,22 +105,26 @@ class AppShellPage extends StatelessWidget {
                     _ActionSheetItem(
                       label: copy.deposit,
                       icon: Icons.south_west_rounded,
-                      onTap: () => _pushAction(context, '/transactions/deposit'),
+                      onTap: () =>
+                          _pushAction(context, '/transactions/deposit'),
                     ),
                     _ActionSheetItem(
                       label: copy.withdraw,
                       icon: Icons.north_east_rounded,
-                      onTap: () => _pushAction(context, '/transactions/withdraw'),
+                      onTap: () =>
+                          _pushAction(context, '/transactions/withdraw'),
                     ),
                     _ActionSheetItem(
                       label: copy.transfer,
                       icon: Icons.swap_horiz_rounded,
-                      onTap: () => _pushAction(context, '/transactions/transfer'),
+                      onTap: () =>
+                          _pushAction(context, '/transactions/transfer'),
                     ),
                     _ActionSheetItem(
                       label: copy.exchange,
                       icon: Icons.currency_exchange_rounded,
-                      onTap: () => _pushAction(context, '/transactions/exchange'),
+                      onTap: () =>
+                          _pushAction(context, '/transactions/exchange'),
                     ),
                     _ActionSheetItem(
                       label: copy.createDebt,
@@ -149,10 +148,7 @@ class AppShellPage extends StatelessWidget {
 }
 
 class _ShellNavigationBar extends StatelessWidget {
-  const _ShellNavigationBar({
-    required this.currentIndex,
-    required this.items,
-  });
+  const _ShellNavigationBar({required this.currentIndex, required this.items});
 
   final int currentIndex;
   final List<_ShellNavItem> items;
@@ -198,7 +194,8 @@ class _ShellNavigationBar extends StatelessWidget {
                   child: _ShellNavigationButton(
                     item: item,
                     isSelected:
-                        !item.isPrimaryAction && currentIndex == _branchIndexFor(index),
+                        !item.isPrimaryAction &&
+                        currentIndex == _branchIndexFor(index),
                     isCenter: index == 2,
                   ),
                 );
@@ -284,11 +281,7 @@ class _ShellNavigationButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Icon(
-                  item.icon,
-                  size: iconSize,
-                  color: foregroundColor,
-                ),
+                Icon(item.icon, size: iconSize, color: foregroundColor),
                 const SizedBox(height: 3),
                 SizedBox(
                   height: 13,
@@ -374,11 +367,7 @@ class _ActionSheetItem extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(
-                    icon,
-                    size: 18,
-                    color: colorScheme.primary,
-                  ),
+                  child: Icon(icon, size: 18, color: colorScheme.primary),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/domain/enums/contact_kind.dart';
@@ -188,9 +189,9 @@ class _TransferPageState extends ConsumerState<TransferPage> {
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(
               controller: _amountController,
-              label: 'Amount',
+              label: context.tr.amount,
               keyboardType: TextInputType.number,
-              validator: amountValidator,
+              validator: (String? value) => amountValidator(context, value),
             ),
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(

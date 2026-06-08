@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'app_modal_bottom_sheet.dart';
-import '../../../features/dashboard/presentation/widgets/dashboard_copy.dart';
+import '../../../core/localization/localization_extensions.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 
@@ -13,7 +13,6 @@ class AppShellPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DashboardCopy copy = DashboardCopy.of(context);
     void goBranch(int index) {
       navigationShell.goBranch(
         index,
@@ -21,50 +20,44 @@ class AppShellPage extends StatelessWidget {
       );
     }
 
-    return Directionality(
-      textDirection: copy.textDirection,
-      child: Scaffold(
-        extendBody: true,
-        body: navigationShell,
-        bottomNavigationBar: _ShellNavigationBar(
-          currentIndex: navigationShell.currentIndex,
-          items: <_ShellNavItem>[
-            _ShellNavItem(
-              label: copy.home,
-              icon: Icons.home_rounded,
-              onTap: () => goBranch(0),
-            ),
-            _ShellNavItem(
-              label: copy.wallets,
-              icon: Icons.account_balance_wallet_rounded,
-              onTap: () => goBranch(1),
-            ),
-            _ShellNavItem(
-              label: copy.action,
-              icon: Icons.add_rounded,
-              onTap: () => _showQuickActions(context, copy),
-              isPrimaryAction: true,
-            ),
-            _ShellNavItem(
-              label: copy.debts,
-              icon: Icons.request_quote_rounded,
-              onTap: () => goBranch(2),
-            ),
-            _ShellNavItem(
-              label: copy.profile,
-              icon: Icons.person_rounded,
-              onTap: () => goBranch(3),
-            ),
-          ],
-        ),
+    return Scaffold(
+      extendBody: true,
+      body: navigationShell,
+      bottomNavigationBar: _ShellNavigationBar(
+        currentIndex: navigationShell.currentIndex,
+        items: <_ShellNavItem>[
+          _ShellNavItem(
+            label: context.tr.home,
+            icon: Icons.home_rounded,
+            onTap: () => goBranch(0),
+          ),
+          _ShellNavItem(
+            label: context.tr.wallets,
+            icon: Icons.account_balance_wallet_rounded,
+            onTap: () => goBranch(1),
+          ),
+          _ShellNavItem(
+            label: context.tr.action,
+            icon: Icons.add_rounded,
+            onTap: () => _showQuickActions(context),
+            isPrimaryAction: true,
+          ),
+          _ShellNavItem(
+            label: context.tr.debts,
+            icon: Icons.request_quote_rounded,
+            onTap: () => goBranch(2),
+          ),
+          _ShellNavItem(
+            label: context.tr.profile,
+            icon: Icons.person_rounded,
+            onTap: () => goBranch(3),
+          ),
+        ],
       ),
     );
   }
 
-  Future<void> _showQuickActions(
-    BuildContext context,
-    DashboardCopy copy,
-  ) async {
+  Future<void> _showQuickActions(BuildContext context) async {
     await showAppModalBottomSheet<void>(
       context: context,
       backgroundColor: Theme.of(context).cardColor,
@@ -83,7 +76,7 @@ class AppShellPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: <Widget>[
                 Text(
-                  copy.actionsSheetTitle,
+                  context.tr.actionsSheetTitle,
                   textAlign: TextAlign.right,
                   style: Theme.of(
                     context,
@@ -91,7 +84,7 @@ class AppShellPage extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  copy.actionsSheetSubtitle,
+                  context.tr.actionsSheetSubtitle,
                   textAlign: TextAlign.right,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -103,31 +96,31 @@ class AppShellPage extends StatelessWidget {
                   runSpacing: AppSpacing.md,
                   children: <Widget>[
                     _ActionSheetItem(
-                      label: copy.deposit,
+                      label: context.tr.deposit,
                       icon: Icons.south_west_rounded,
                       onTap: () =>
                           _pushAction(context, '/transactions/deposit'),
                     ),
                     _ActionSheetItem(
-                      label: copy.withdraw,
+                      label: context.tr.withdraw,
                       icon: Icons.north_east_rounded,
                       onTap: () =>
                           _pushAction(context, '/transactions/withdraw'),
                     ),
                     _ActionSheetItem(
-                      label: copy.transfer,
+                      label: context.tr.transfer,
                       icon: Icons.swap_horiz_rounded,
                       onTap: () =>
                           _pushAction(context, '/transactions/transfer'),
                     ),
                     _ActionSheetItem(
-                      label: copy.exchange,
+                      label: context.tr.exchange,
                       icon: Icons.currency_exchange_rounded,
                       onTap: () =>
                           _pushAction(context, '/transactions/exchange'),
                     ),
                     _ActionSheetItem(
-                      label: copy.createDebt,
+                      label: context.tr.createDebt,
                       icon: Icons.receipt_long_rounded,
                       onTap: () => _pushAction(context, '/debts/create'),
                     ),

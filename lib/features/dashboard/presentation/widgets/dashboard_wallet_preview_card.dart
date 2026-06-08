@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/amount_formatter.dart';
 import '../../../wallets/domain/models/wallet_overview.dart';
-import 'dashboard_copy.dart';
 import 'dashboard_skeleton_block.dart';
 import 'dashboard_surface_card.dart';
 
@@ -67,9 +67,9 @@ class DashboardWalletPreviewCard extends StatelessWidget {
 
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
-    final DashboardCopy copy = DashboardCopy.of(context);
     final WalletOverview resolvedWalletOverview = walletOverview!;
     final wallet = resolvedWalletOverview.wallet;
+    final bool isArabic = Directionality.of(context) == TextDirection.rtl;
 
     return DashboardSurfaceCard(
       padding: EdgeInsets.zero,
@@ -87,8 +87,8 @@ class DashboardWalletPreviewCard extends StatelessWidget {
               children: <Widget>[
                 PositionedDirectional(
                   top: 0,
-                  start: copy.isArabic ? null : 0,
-                  end: copy.isArabic ? 0 : null,
+                  start: isArabic ? null : 0,
+                  end: isArabic ? 0 : null,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm,
@@ -103,7 +103,9 @@ class DashboardWalletPreviewCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                     child: Text(
-                      wallet.isArchived ? copy.archived : copy.active,
+                      wallet.isArchived
+                          ? context.tr.archived
+                          : context.tr.active,
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: wallet.isArchived
                             ? colorScheme.error
@@ -118,8 +120,8 @@ class DashboardWalletPreviewCard extends StatelessWidget {
                   children: <Widget>[
                     Padding(
                       padding: EdgeInsetsDirectional.only(
-                        start: copy.isArabic ? 0 : 80,
-                        end: copy.isArabic ? 80 : 0,
+                        start: isArabic ? 0 : 80,
+                        end: isArabic ? 80 : 0,
                       ),
                       child: Text(
                         wallet.name,
@@ -143,8 +145,8 @@ class DashboardWalletPreviewCard extends StatelessWidget {
                                         .sypBalance
                                         .amount,
                                   )
-                                : copy.hiddenValue,
-                            currency: copy.sypShort,
+                                : context.tr.hiddenValue,
+                            currency: context.tr.sypShort,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
@@ -157,8 +159,8 @@ class DashboardWalletPreviewCard extends StatelessWidget {
                                         .usdBalance
                                         .amount,
                                   )
-                                : copy.hiddenValue,
-                            currency: copy.usdShort,
+                                : context.tr.hiddenValue,
+                            currency: context.tr.usdShort,
                           ),
                         ),
                       ],

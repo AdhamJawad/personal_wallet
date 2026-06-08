@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/domain/enums/currency.dart';
@@ -41,9 +42,7 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
 
     if (_sourceWalletId == _destinationWalletId) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Source and destination wallets must be different.'),
-        ),
+        SnackBar(content: Text(context.tr.sourceDestinationWalletsDifferent)),
       );
       return;
     }
@@ -74,7 +73,7 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
       SnackBar(
         content: Text(
           ref.read(transactionControllerProvider).errorMessage ??
-              'Failed to create transfer.',
+              context.tr.failedCreateTransfer,
         ),
       ),
     );
@@ -89,7 +88,7 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
         .toList(growable: false);
 
     return TransactionPageShell(
-      title: 'Create Internal Transfer',
+      title: context.tr.createInternalTransferTitle,
       child: Form(
         key: _formKey,
         child: Column(
@@ -98,7 +97,7 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
           children: <Widget>[
             DropdownButtonFormField<String>(
               initialValue: _sourceWalletId,
-              decoration: const InputDecoration(labelText: 'Source wallet'),
+              decoration: InputDecoration(labelText: context.tr.sourceWallet),
               items: activeWallets
                   .map(
                     (item) => DropdownMenuItem(
@@ -111,13 +110,13 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
                 setState(() => _sourceWalletId = value);
               },
               validator: (String? value) =>
-                  value == null ? 'Source wallet is required.' : null,
+                  value == null ? context.tr.sourceWalletRequired : null,
             ),
             const SizedBox(height: AppSpacing.md),
             DropdownButtonFormField<String>(
               initialValue: _destinationWalletId,
-              decoration: const InputDecoration(
-                labelText: 'Destination wallet',
+              decoration: InputDecoration(
+                labelText: context.tr.destinationWallet,
               ),
               items: activeWallets
                   .map(
@@ -131,12 +130,12 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
                 setState(() => _destinationWalletId = value);
               },
               validator: (String? value) =>
-                  value == null ? 'Destination wallet is required.' : null,
+                  value == null ? context.tr.destinationWalletRequired : null,
             ),
             const SizedBox(height: AppSpacing.md),
             DropdownButtonFormField<Currency>(
               initialValue: _currency,
-              decoration: const InputDecoration(labelText: 'Currency'),
+              decoration: InputDecoration(labelText: context.tr.currency),
               items: Currency.values
                   .map(
                     (Currency currency) => DropdownMenuItem(
@@ -154,19 +153,19 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(
               controller: _amountController,
-              label: 'Amount',
+              label: context.tr.amount,
               keyboardType: TextInputType.number,
-              validator: amountValidator,
+              validator: (String? value) => amountValidator(context, value),
             ),
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(
               controller: _noteController,
-              label: 'Note',
+              label: context.tr.note,
               maxLines: 3,
             ),
             const SizedBox(height: AppSpacing.lg),
             PwButton.primary(
-              label: 'Save transfer',
+              label: context.tr.saveTransfer,
               isLoading: transactionState.isLoading,
               onPressed: _submit,
             ),

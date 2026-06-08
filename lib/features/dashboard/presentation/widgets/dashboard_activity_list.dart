@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/amount_formatter.dart';
 import '../../../../shared/domain/enums/transaction_type.dart';
 import '../../../transactions/domain/models/ledger_transaction.dart';
-import 'dashboard_copy.dart';
 import 'dashboard_empty_state.dart';
 import 'dashboard_formatters.dart';
 import 'dashboard_skeleton_block.dart';
@@ -33,20 +33,20 @@ class DashboardActivityData {
   static DashboardActivityData fromTransaction(
     LedgerTransaction transaction,
     String walletLabel,
-    DashboardCopy copy,
+    BuildContext context,
   ) {
     return DashboardActivityData(
       title: switch (transaction.type) {
-        TransactionType.deposit => copy.depositActivity,
-        TransactionType.withdraw => copy.withdrawActivity,
+        TransactionType.deposit => context.tr.depositActivity,
+        TransactionType.withdraw => context.tr.withdrawActivity,
         TransactionType.transfer => transaction.recipientUserId == null
-            ? copy.transferActivity
+            ? context.tr.transferActivity
             : transaction.debtSettlementId == null
-            ? copy.transferActivity
-            : copy.debtSettlementActivity,
-        TransactionType.exchange => copy.exchangeActivity,
-        TransactionType.reversal => copy.reversalActivity,
-        TransactionType.correction => copy.correctionActivity,
+            ? context.tr.transferActivity
+            : context.tr.debtSettlementActivity,
+        TransactionType.exchange => context.tr.exchangeActivity,
+        TransactionType.reversal => context.tr.reversalActivity,
+        TransactionType.correction => context.tr.correctionActivity,
       },
       subtitle: transaction.note?.trim().isNotEmpty == true
           ? transaction.note!.trim()
@@ -91,11 +91,10 @@ class DashboardActivityList extends StatelessWidget {
     }
 
     if (items.isEmpty) {
-      final DashboardCopy copy = DashboardCopy.of(context);
       return DashboardEmptyState(
         icon: Icons.receipt_long_rounded,
-        title: copy.noActivityTitle,
-        message: copy.noActivityMessage,
+        title: context.tr.noActivityTitle,
+        message: context.tr.noActivityMessage,
       );
     }
 

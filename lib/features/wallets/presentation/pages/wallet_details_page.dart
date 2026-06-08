@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/amount_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../shared/domain/enums/transaction_type.dart';
 import '../../../dashboard/presentation/widgets/dashboard_breakpoints.dart';
-import '../../../dashboard/presentation/widgets/dashboard_copy.dart';
 import '../../../dashboard/presentation/widgets/dashboard_empty_state.dart';
 import '../../../dashboard/presentation/widgets/dashboard_skeleton_block.dart';
 import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
@@ -41,7 +41,6 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final DashboardCopy copy = DashboardCopy.of(context);
     final walletState = ref.watch(walletControllerProvider);
     final transactionState = ref.watch(transactionControllerProvider);
     final walletOverview = walletState.selectedWallet;
@@ -57,14 +56,12 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
       _filter,
     );
 
-    return Directionality(
-      textDirection: copy.textDirection,
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           centerTitle: true,
           titleSpacing: AppSpacing.sm,
           title: walletOverview == null
-              ? Text(copy.walletDetails)
+              ? Text(context.tr.walletDetails)
               : Text(
                   walletOverview.wallet.name,
                   maxLines: 1,
@@ -74,7 +71,7 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
               ? null
               : <Widget>[
                   IconButton(
-                    tooltip: copy.openActions,
+                    tooltip: context.tr.openActions,
                     onPressed: () => showEditWalletSheet(
                       context,
                       walletId: walletOverview.wallet.id,
@@ -115,10 +112,10 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
                     horizontalPadding,
                     AppSpacing.xxl,
                   ),
-                  child: DashboardEmptyState(
-                    icon: Icons.account_balance_wallet_outlined,
-                    title: copy.walletDetails,
-                    message: copy.walletNotFound,
+                    child: DashboardEmptyState(
+                      icon: Icons.account_balance_wallet_outlined,
+                      title: context.tr.walletDetails,
+                      message: context.tr.walletNotFound,
                   ),
                 ),
               );
@@ -173,8 +170,8 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
                       else if (filteredTransactions.isEmpty)
                         DashboardEmptyState(
                           icon: Icons.receipt_long_outlined,
-                          title: copy.noWalletActivityTitle,
-                          message: copy.noWalletActivityMessage,
+                          title: context.tr.noWalletActivityTitle,
+                          message: context.tr.noWalletActivityMessage,
                         )
                       else
                         Column(
@@ -203,8 +200,7 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
             );
           },
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -215,7 +211,6 @@ class _WalletHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DashboardCopy copy = DashboardCopy.of(context);
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final wallet = walletOverview.wallet;
@@ -265,7 +260,7 @@ class _WalletHeroCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text(
-                  wallet.isArchived ? copy.archived : copy.active,
+                  wallet.isArchived ? context.tr.archived : context.tr.active,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: wallet.isArchived
                         ? colorScheme.onSurfaceVariant
@@ -278,14 +273,14 @@ class _WalletHeroCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            copy.balanceUsd,
+            context.tr.balanceUsd,
             style: theme.textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            '${AmountFormatter.format(walletOverview.balance.usdBalance.amount)} ${copy.usdShort}',
+            '${AmountFormatter.format(walletOverview.balance.usdBalance.amount)} ${context.tr.usdShort}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleLarge?.copyWith(
@@ -295,14 +290,14 @@ class _WalletHeroCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            copy.balanceSyp,
+            context.tr.balanceSyp,
             style: theme.textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            '${AmountFormatter.format(walletOverview.balance.sypBalance.amount)} ${copy.sypShort}',
+            '${AmountFormatter.format(walletOverview.balance.sypBalance.amount)} ${context.tr.sypShort}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
@@ -316,7 +311,7 @@ class _WalletHeroCard extends StatelessWidget {
             runSpacing: AppSpacing.xs,
             children: <Widget>[
               Text(
-                '${copy.lastUpdated}: ${_relativeUpdatedLabel(copy, wallet.updatedAt)}',
+                '${context.tr.lastUpdated}: ${_relativeUpdatedLabel(context, wallet.updatedAt)}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelMedium?.copyWith(
@@ -324,7 +319,7 @@ class _WalletHeroCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '${copy.createdLabel}: ${DateFormatter.short(wallet.createdAt)}',
+                '${context.tr.createdLabel}: ${DateFormatter.short(wallet.createdAt)}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelMedium?.copyWith(
@@ -354,33 +349,31 @@ class _WalletQuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DashboardCopy copy = DashboardCopy.of(context);
-
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: <Widget>[
           _WalletActionChip(
             icon: Icons.south_west_rounded,
-            label: copy.deposit,
+            label: context.tr.deposit,
             onTap: onDeposit,
           ),
           const SizedBox(width: AppSpacing.sm),
           _WalletActionChip(
             icon: Icons.north_east_rounded,
-            label: copy.withdraw,
+            label: context.tr.withdraw,
             onTap: onWithdraw,
           ),
           const SizedBox(width: AppSpacing.sm),
           _WalletActionChip(
             icon: Icons.swap_horiz_rounded,
-            label: copy.transfer,
+            label: context.tr.transfer,
             onTap: onTransfer,
           ),
           const SizedBox(width: AppSpacing.sm),
           _WalletActionChip(
             icon: Icons.currency_exchange_rounded,
-            label: copy.exchange,
+            label: context.tr.exchange,
             onTap: onExchange,
           ),
         ],
@@ -453,13 +446,11 @@ class _WalletActivityFilters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DashboardCopy copy = DashboardCopy.of(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
-          copy.recentActivity,
+          context.tr.recentActivity,
           style: Theme.of(
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -475,7 +466,7 @@ class _WalletActivityFilters extends StatelessWidget {
                       end: AppSpacing.sm,
                     ),
                     child: ChoiceChip(
-                      label: Text(_filterLabel(copy, filter)),
+                      label: Text(_filterLabel(context, filter)),
                       selected: selectedFilter == filter,
                       onSelected: (_) => onFilterSelected(filter),
                     ),
@@ -497,7 +488,6 @@ class _WalletActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DashboardCopy copy = DashboardCopy.of(context);
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
 
@@ -534,7 +524,7 @@ class _WalletActivityCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            _transactionTypeLabel(copy, transaction),
+                            _transactionTypeLabel(context, transaction),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleSmall?.copyWith(
@@ -586,7 +576,7 @@ class _WalletActivityCard extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '${copy.reference}: ${transaction.reference.value}',
+                  '${context.tr.reference}: ${transaction.reference.value}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
@@ -822,27 +812,27 @@ List<LedgerTransaction> _applyFilter(
   };
 }
 
-String _filterLabel(DashboardCopy copy, _WalletActivityFilter filter) {
+String _filterLabel(BuildContext context, _WalletActivityFilter filter) {
   return switch (filter) {
-    _WalletActivityFilter.all => copy.all,
-    _WalletActivityFilter.deposit => copy.deposits,
-    _WalletActivityFilter.withdraw => copy.withdrawals,
-    _WalletActivityFilter.transfer => copy.transfers,
-    _WalletActivityFilter.exchange => copy.exchanges,
+    _WalletActivityFilter.all => context.tr.all,
+    _WalletActivityFilter.deposit => context.tr.deposits,
+    _WalletActivityFilter.withdraw => context.tr.withdrawals,
+    _WalletActivityFilter.transfer => context.tr.transfers,
+    _WalletActivityFilter.exchange => context.tr.exchanges,
   };
 }
 
 String _transactionTypeLabel(
-  DashboardCopy copy,
+  BuildContext context,
   LedgerTransaction transaction,
 ) {
   return switch (transaction.type) {
-    TransactionType.deposit => copy.deposit,
-    TransactionType.withdraw => copy.withdraw,
-    TransactionType.transfer => copy.transfer,
-    TransactionType.exchange => copy.exchange,
-    TransactionType.reversal => copy.reversalActivity,
-    TransactionType.correction => copy.correctionActivity,
+    TransactionType.deposit => context.tr.deposit,
+    TransactionType.withdraw => context.tr.withdraw,
+    TransactionType.transfer => context.tr.transfer,
+    TransactionType.exchange => context.tr.exchange,
+    TransactionType.reversal => context.tr.reversalActivity,
+    TransactionType.correction => context.tr.correctionActivity,
   };
 }
 
@@ -910,27 +900,27 @@ Color _walletIndicatorColor(
   return palette[walletId.hashCode.abs() % palette.length];
 }
 
-String _relativeUpdatedLabel(DashboardCopy copy, DateTime updatedAt) {
+String _relativeUpdatedLabel(BuildContext context, DateTime updatedAt) {
   final DateTime now = DateTime.now();
   final DateTime localUpdatedAt = updatedAt.toLocal();
   final Duration difference = now.difference(localUpdatedAt);
 
   if (difference.inMinutes < 1) {
-    return copy.updatedJustNow;
+    return context.tr.updatedJustNow;
   }
   if (difference.inMinutes < 60) {
-    return copy.updatedMinutesAgo(difference.inMinutes);
+    return context.tr.updatedMinutesAgo(difference.inMinutes);
   }
   if (difference.inHours < 6) {
-    return copy.updatedHoursAgo(difference.inHours);
+    return context.tr.updatedHoursAgo(difference.inHours);
   }
   if (_isSameDate(now, localUpdatedAt)) {
-    return copy.updatedToday;
+    return context.tr.updatedToday;
   }
   if (_isSameDate(now.subtract(const Duration(days: 1)), localUpdatedAt)) {
-    return copy.updatedYesterday;
+    return context.tr.updatedYesterday;
   }
-  return copy.updatedDaysAgo(difference.inDays);
+  return context.tr.updatedDaysAgo(difference.inDays);
 }
 
 bool _isSameDate(DateTime left, DateTime right) {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -53,9 +54,8 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     final authState = ref.watch(authControllerProvider);
 
     return AuthPageShell(
-      title: 'Reset access',
-      subtitle:
-          'Enter your phone number and we will simulate the secure password reset flow.',
+      title: context.tr.resetAccess,
+      subtitle: context.tr.resetAccessSubtitle,
       child: Form(
         key: _formKey,
         child: Column(
@@ -63,12 +63,12 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
           children: <Widget>[
             PwTextField(
               controller: _phoneController,
-              label: 'Phone number',
+              label: context.tr.phoneNumber,
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.done,
               validator: (String? value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Phone number is required.';
+                  return context.tr.phoneNumberRequired;
                 }
                 return null;
               },
@@ -76,7 +76,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             ),
             const SizedBox(height: AppSpacing.lg),
             PwButton.primary(
-              label: 'Send instructions',
+              label: context.tr.sendInstructions,
               isLoading: authState.isBusy,
               onPressed: _submit,
             ),

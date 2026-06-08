@@ -1,5 +1,7 @@
 sealed class AppConstants {
   static const appName = 'Personal Wallet';
+  static const preferencesBox = 'preferences_box';
+  static const localePreferenceKey = 'locale';
   static const usersBox = 'users_box';
   static const sessionsBox = 'sessions_box';
   static const walletsBox = 'wallets_box';

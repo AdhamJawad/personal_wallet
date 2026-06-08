@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/amount_formatter.dart';
 import '../../domain/models/wallet_overview.dart';
-import '../../../dashboard/presentation/widgets/dashboard_copy.dart';
 import '../../../dashboard/presentation/widgets/dashboard_skeleton_block.dart';
 
 class WalletOverviewCard extends StatelessWidget {
@@ -27,7 +27,6 @@ class WalletOverviewCard extends StatelessWidget {
 
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
-    final DashboardCopy copy = DashboardCopy.of(context);
     final WalletOverview walletOverview = this.walletOverview!;
     final wallet = walletOverview.wallet;
     final Color indicatorColor = _walletIndicatorColor(
@@ -89,7 +88,9 @@ class WalletOverviewCard extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     _WalletStatusPill(
-                      label: wallet.isArchived ? copy.archived : copy.active,
+                      label: wallet.isArchived
+                          ? context.tr.archived
+                          : context.tr.active,
                       emphasized: !wallet.isArchived,
                     ),
                     const SizedBox(width: AppSpacing.xs),
@@ -104,23 +105,23 @@ class WalletOverviewCard extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _BalanceRow(
-                  label: copy.usdShort,
+                  label: context.tr.usdShort,
                   amount: AmountFormatter.format(
                     walletOverview.balance.usdBalance.amount,
                   ),
-                  currency: copy.usdShort,
+                  currency: context.tr.usdShort,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _BalanceRow(
-                  label: copy.sypShort,
+                  label: context.tr.sypShort,
                   amount: AmountFormatter.format(
                     walletOverview.balance.sypBalance.amount,
                   ),
-                  currency: copy.sypShort,
+                  currency: context.tr.sypShort,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  _relativeUpdatedLabel(copy, wallet.updatedAt),
+                  _relativeUpdatedLabel(context, wallet.updatedAt),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
@@ -299,26 +300,26 @@ Color _walletIndicatorColor(
   return palette[walletId.hashCode.abs() % palette.length];
 }
 
-String _relativeUpdatedLabel(DashboardCopy copy, DateTime updatedAt) {
+String _relativeUpdatedLabel(BuildContext context, DateTime updatedAt) {
   final DateTime now = DateTime.now();
   final Duration difference = now.difference(updatedAt.toLocal());
 
   if (difference.inMinutes < 1) {
-    return copy.updatedJustNow;
+    return context.tr.updatedJustNow;
   }
   if (difference.inMinutes < 60) {
-    return copy.updatedMinutesAgo(difference.inMinutes);
+    return context.tr.updatedMinutesAgo(difference.inMinutes);
   }
   if (difference.inHours < 6) {
-    return copy.updatedHoursAgo(difference.inHours);
+    return context.tr.updatedHoursAgo(difference.inHours);
   }
   if (_isSameDate(now, updatedAt.toLocal())) {
-    return copy.updatedToday;
+    return context.tr.updatedToday;
   }
   if (_isSameDate(now.subtract(const Duration(days: 1)), updatedAt.toLocal())) {
-    return copy.updatedYesterday;
+    return context.tr.updatedYesterday;
   }
-  return copy.updatedDaysAgo(difference.inDays);
+  return context.tr.updatedDaysAgo(difference.inDays);
 }
 
 bool _isSameDate(DateTime left, DateTime right) {

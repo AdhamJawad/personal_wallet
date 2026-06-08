@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/domain/enums/currency.dart';
@@ -66,7 +67,7 @@ class _CreateDepositPageState extends ConsumerState<CreateDepositPage> {
       SnackBar(
         content: Text(
           ref.read(transactionControllerProvider).errorMessage ??
-              'Failed to create deposit.',
+              context.tr.failedCreateDeposit,
         ),
       ),
     );
@@ -78,7 +79,7 @@ class _CreateDepositPageState extends ConsumerState<CreateDepositPage> {
     final transactionState = ref.watch(transactionControllerProvider);
 
     return TransactionPageShell(
-      title: 'Create Deposit',
+      title: context.tr.createDepositTitle,
       child: Form(
         key: _formKey,
         child: Column(
@@ -87,7 +88,7 @@ class _CreateDepositPageState extends ConsumerState<CreateDepositPage> {
           children: <Widget>[
             DropdownButtonFormField<String>(
               initialValue: _walletId,
-              decoration: const InputDecoration(labelText: 'Wallet'),
+              decoration: InputDecoration(labelText: context.tr.wallet),
               items: walletState.wallets
                   .where((item) => !item.wallet.isArchived)
                   .map(
@@ -101,12 +102,12 @@ class _CreateDepositPageState extends ConsumerState<CreateDepositPage> {
                 setState(() => _walletId = value);
               },
               validator: (String? value) =>
-                  value == null ? 'Wallet is required.' : null,
+                  value == null ? context.tr.walletRequired : null,
             ),
             const SizedBox(height: AppSpacing.md),
             DropdownButtonFormField<Currency>(
               initialValue: _currency,
-              decoration: const InputDecoration(labelText: 'Currency'),
+              decoration: InputDecoration(labelText: context.tr.currency),
               items: Currency.values
                   .map(
                     (Currency currency) => DropdownMenuItem(
@@ -124,25 +125,25 @@ class _CreateDepositPageState extends ConsumerState<CreateDepositPage> {
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(
               controller: _amountController,
-              label: 'Amount',
+              label: context.tr.amount,
               keyboardType: TextInputType.number,
-              validator: amountValidator,
+              validator: (String? value) => amountValidator(context, value),
             ),
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(
               controller: _noteController,
-              label: 'Note',
+              label: context.tr.note,
               maxLines: 3,
             ),
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(
               controller: _attachmentController,
-              label: 'Attachment label',
-              hint: 'receipt.jpg',
+              label: context.tr.attachmentLabel,
+              hint: context.tr.receiptFileHint,
             ),
             const SizedBox(height: AppSpacing.lg),
             PwButton.primary(
-              label: 'Save deposit',
+              label: context.tr.saveDeposit,
               isLoading: transactionState.isLoading,
               onPressed: _submit,
             ),

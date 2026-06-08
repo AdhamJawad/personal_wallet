@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -49,11 +50,11 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final phoneNumber =
-        authState.pendingVerification?.phoneNumber ?? 'your phone';
+        authState.pendingVerification?.phoneNumber ?? context.tr.yourPhone;
 
     return AuthPageShell(
-      title: 'Verify OTP',
-      subtitle: 'Enter the 6-digit code sent to $phoneNumber.',
+      title: context.tr.verifyOtp,
+      subtitle: context.tr.verifyOtpSubtitle(phoneNumber),
       child: Form(
         key: _formKey,
         child: Column(
@@ -65,12 +66,12 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
                 color: AppColors.canvasTop,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Text('Mock OTP: 123456'),
+              child: Text(context.tr.mockOtp),
             ),
             const SizedBox(height: AppSpacing.lg),
             PwTextField(
               controller: _otpController,
-              label: 'OTP code',
+              label: context.tr.otpCode,
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.done,
               maxLength: 6,
@@ -79,10 +80,10 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
               ],
               validator: (String? value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'OTP code is required.';
+                  return context.tr.otpCodeRequired;
                 }
                 if (value.trim().length != 6) {
-                  return 'OTP must be 6 digits.';
+                  return context.tr.otpMustBeSixDigits;
                 }
                 return null;
               },
@@ -90,7 +91,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
             ),
             const SizedBox(height: AppSpacing.lg),
             PwButton.primary(
-              label: 'Verify and continue',
+              label: context.tr.verifyAndContinue,
               isLoading: authState.isBusy,
               onPressed: _submit,
             ),

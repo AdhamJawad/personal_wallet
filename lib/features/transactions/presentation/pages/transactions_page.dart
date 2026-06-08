@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_scaffold.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
@@ -57,11 +58,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             (WalletOverview? item) => item?.wallet.id == walletId,
             orElse: () => null,
           );
-      return wallet?.wallet.name ?? 'Unknown wallet';
+      return wallet?.wallet.name ?? context.tr.unknownWallet;
     }
 
     return PwScaffold(
-      title: 'Transactions',
+      title: context.tr.transactions,
       body: ListView(
         children: <Widget>[
           Wrap(
@@ -72,20 +73,20 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 width: 320,
                 child: PwTextField(
                   controller: _searchController,
-                  label: 'Search transactions',
-                  hint: 'TX-2026-000001',
+                  label: context.tr.searchTransactions,
+                  hint: context.tr.transactionReferenceHint,
                 ),
               ),
               SizedBox(
                 width: 220,
                 child: DropdownButtonFormField<TransactionFilterOption>(
                   initialValue: transactionState.filterOption,
-                  decoration: const InputDecoration(labelText: 'Filter'),
+                  decoration: InputDecoration(labelText: context.tr.filter),
                   items: TransactionFilterOption.values
                       .map(
                         (TransactionFilterOption option) => DropdownMenuItem(
                           value: option,
-                          child: Text(_filterLabel(option)),
+                          child: Text(_filterLabel(context, option)),
                         ),
                       )
                       .toList(growable: false),
@@ -102,12 +103,12 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 width: 220,
                 child: DropdownButtonFormField<TransactionSortOption>(
                   initialValue: transactionState.sortOption,
-                  decoration: const InputDecoration(labelText: 'Sort'),
+                  decoration: InputDecoration(labelText: context.tr.sort),
                   items: TransactionSortOption.values
                       .map(
                         (TransactionSortOption option) => DropdownMenuItem(
                           value: option,
-                          child: Text(_sortLabel(option)),
+                          child: Text(_sortLabel(context, option)),
                         ),
                       )
                       .toList(growable: false),
@@ -128,19 +129,19 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             runSpacing: AppSpacing.md,
             children: <Widget>[
               PwButton.primary(
-                label: 'Deposit',
+                label: context.tr.deposit,
                 onPressed: () => context.push(AppRoutes.depositCreatePath),
               ),
               PwButton.secondary(
-                label: 'Withdraw',
+                label: context.tr.withdraw,
                 onPressed: () => context.push(AppRoutes.withdrawCreatePath),
               ),
               PwButton.secondary(
-                label: 'Transfer',
+                label: context.tr.transfer,
                 onPressed: () => context.push(AppRoutes.transferCreatePath),
               ),
               PwButton.secondary(
-                label: 'Exchange',
+                label: context.tr.exchange,
                 onPressed: () => context.push(AppRoutes.exchangeCreatePath),
               ),
             ],
@@ -149,9 +150,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           if (transactionState.isLoading)
             const Center(child: CircularProgressIndicator())
           else if (transactions.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Text('No transactions match the current filters.'),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Text(context.tr.noTransactionsForFilters),
             )
           else
             ...transactions.map(
@@ -172,30 +173,30 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 }
 
-String _filterLabel(TransactionFilterOption option) {
+String _filterLabel(BuildContext context, TransactionFilterOption option) {
   switch (option) {
     case TransactionFilterOption.all:
-      return 'All types';
+      return context.tr.allTypes;
     case TransactionFilterOption.deposit:
-      return 'Deposits';
+      return context.tr.deposits;
     case TransactionFilterOption.withdraw:
-      return 'Withdrawals';
+      return context.tr.withdrawals;
     case TransactionFilterOption.transfer:
-      return 'Transfers';
+      return context.tr.transfers;
     case TransactionFilterOption.exchange:
-      return 'Exchanges';
+      return context.tr.exchanges;
   }
 }
 
-String _sortLabel(TransactionSortOption option) {
+String _sortLabel(BuildContext context, TransactionSortOption option) {
   switch (option) {
     case TransactionSortOption.newest:
-      return 'Newest';
+      return context.tr.newest;
     case TransactionSortOption.oldest:
-      return 'Oldest';
+      return context.tr.oldest;
     case TransactionSortOption.highestAmount:
-      return 'Highest amount';
+      return context.tr.highestAmount;
     case TransactionSortOption.lowestAmount:
-      return 'Lowest amount';
+      return context.tr.lowestAmount;
   }
 }

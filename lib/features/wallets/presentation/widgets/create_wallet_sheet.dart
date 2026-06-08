@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../dashboard/presentation/widgets/dashboard_copy.dart';
 import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
 import '../../presentation/providers/wallet_providers.dart';
 
@@ -64,19 +64,17 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
       return;
     }
 
-    final DashboardCopy copy = DashboardCopy.of(context);
-
     if (success) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(copy.walletCreatedSuccess)));
+      ).showSnackBar(SnackBar(content: Text(context.tr.walletCreatedSuccess)));
       return;
     }
 
     final String errorMessage =
         ref.read(walletControllerProvider).errorMessage ??
-        copy.walletCreateFailure;
+        context.tr.walletCreateFailure;
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(errorMessage)));
@@ -84,12 +82,11 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final DashboardCopy copy = DashboardCopy.of(context);
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final bool isLoading = ref.watch(walletControllerProvider).isLoading;
     final String walletName = _nameController.text.trim().isEmpty
-        ? copy.walletNameHint
+        ? context.tr.walletNameHint
         : _nameController.text.trim();
 
     return GestureDetector(
@@ -116,14 +113,14 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
-                    copy.createWallet,
+                    context.tr.createWallet,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    copy.createWalletHelper,
+                    context.tr.createWalletHelper,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -136,22 +133,22 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
-                      labelText: copy.walletNameLabel,
-                      hintText: copy.walletNameHint,
+                      labelText: context.tr.walletNameLabel,
+                      hintText: context.tr.walletNameHint,
                     ),
                     validator: (String? value) {
                       if (value == null || value.trim().isEmpty) {
-                        return copy.walletNameRequired;
+                        return context.tr.walletNameRequired;
                       }
                       if (value.trim().length < 3) {
-                        return copy.walletNameTooShort;
+                        return context.tr.walletNameTooShort;
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    copy.walletColor,
+                    context.tr.walletColor,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -210,7 +207,7 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    copy.walletPreview,
+                    context.tr.walletPreview,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -218,7 +215,7 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
                   const SizedBox(height: AppSpacing.sm),
                   _WalletPreviewCard(
                     walletName: walletName,
-                    statusLabel: copy.active,
+                    statusLabel: context.tr.active,
                     selectedColor: _selectedColor,
                   ),
                   const SizedBox(height: AppSpacing.xl),
@@ -239,7 +236,7 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
                                 ),
                               ),
                             )
-                          : Text(copy.createWalletConfirm),
+                          : Text(context.tr.createWalletConfirm),
                     ),
                   ),
                 ],

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_wallet/l10n/app_localizations.dart';
 
 import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/domain/enums/currency.dart';
@@ -151,11 +153,7 @@ class _WalletTransactionSheetState
       case _WalletActionSheetMode.exchange:
         if (_sourceCurrency == _destinationCurrency) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Source and destination currencies must be different.',
-              ),
-            ),
+            SnackBar(content: Text(context.tr.sourceDestinationDifferent)),
           );
           return;
         }
@@ -185,9 +183,9 @@ class _WalletTransactionSheetState
     }
 
     final String fallback = switch (widget.mode) {
-      _WalletActionSheetMode.deposit => 'Failed to create deposit.',
-      _WalletActionSheetMode.withdraw => 'Failed to create withdrawal.',
-      _WalletActionSheetMode.exchange => 'Failed to create exchange.',
+      _WalletActionSheetMode.deposit => context.tr.failedCreateDeposit,
+      _WalletActionSheetMode.withdraw => context.tr.failedCreateWithdrawal,
+      _WalletActionSheetMode.exchange => context.tr.failedCreateExchange,
     };
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -205,17 +203,14 @@ class _WalletTransactionSheetState
     final ColorScheme colorScheme = theme.colorScheme;
     final bool isLoading = ref.watch(transactionControllerProvider).isLoading;
     final String title = switch (widget.mode) {
-      _WalletActionSheetMode.deposit => 'Create Deposit',
-      _WalletActionSheetMode.withdraw => 'Create Withdraw',
-      _WalletActionSheetMode.exchange => 'Create Exchange',
+      _WalletActionSheetMode.deposit => context.tr.createDepositTitle,
+      _WalletActionSheetMode.withdraw => context.tr.createWithdrawTitle,
+      _WalletActionSheetMode.exchange => context.tr.createExchangeTitle,
     };
     final String helper = switch (widget.mode) {
-      _WalletActionSheetMode.deposit =>
-        'Record a new deposit directly into this wallet.',
-      _WalletActionSheetMode.withdraw =>
-        'Record a withdrawal from this wallet.',
-      _WalletActionSheetMode.exchange =>
-        'Exchange balances within this wallet.',
+      _WalletActionSheetMode.deposit => context.tr.recordDepositHelper,
+      _WalletActionSheetMode.withdraw => context.tr.recordWithdrawHelper,
+      _WalletActionSheetMode.exchange => context.tr.recordExchangeHelper,
     };
 
     return GestureDetector(
@@ -255,7 +250,10 @@ class _WalletTransactionSheetState
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  _SheetValueCard(label: 'Wallet', value: widget.walletName),
+                  _SheetValueCard(
+                    label: context.tr.wallet,
+                    value: widget.walletName,
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   if (widget.mode ==
                       _WalletActionSheetMode.exchange) ...<Widget>[
@@ -264,8 +262,8 @@ class _WalletTransactionSheetState
                         Expanded(
                           child: DropdownButtonFormField<Currency>(
                             initialValue: _sourceCurrency,
-                            decoration: const InputDecoration(
-                              labelText: 'Source currency',
+                            decoration: InputDecoration(
+                              labelText: context.tr.sourceCurrency,
                             ),
                             items: Currency.values
                                 .map(
@@ -288,8 +286,8 @@ class _WalletTransactionSheetState
                         Expanded(
                           child: DropdownButtonFormField<Currency>(
                             initialValue: _destinationCurrency,
-                            decoration: const InputDecoration(
-                              labelText: 'Destination currency',
+                            decoration: InputDecoration(
+                              labelText: context.tr.destinationCurrency,
                             ),
                             items: Currency.values
                                 .map(
@@ -315,7 +313,9 @@ class _WalletTransactionSheetState
                   ] else
                     DropdownButtonFormField<Currency>(
                       initialValue: _currency,
-                      decoration: const InputDecoration(labelText: 'Currency'),
+                      decoration: InputDecoration(
+                        labelText: context.tr.currency,
+                      ),
                       items: Currency.values
                           .map(
                             (currency) => DropdownMenuItem(
@@ -336,39 +336,42 @@ class _WalletTransactionSheetState
                   TransactionFormTextField(
                     controller: _amountController,
                     label: widget.mode == _WalletActionSheetMode.exchange
-                        ? 'Amount given'
-                        : 'Amount',
+                        ? context.tr.amountGiven
+                        : context.tr.amount,
                     keyboardType: TextInputType.number,
-                    validator: amountValidator,
+                    validator: (String? value) =>
+                        amountValidator(context, value),
                   ),
                   if (widget.mode ==
                       _WalletActionSheetMode.exchange) ...<Widget>[
                     const SizedBox(height: AppSpacing.md),
                     TransactionFormTextField(
                       controller: _exchangeRateController,
-                      label: 'Exchange rate',
+                      label: context.tr.exchangeRate,
                       keyboardType: TextInputType.number,
-                      validator: amountValidator,
+                      validator: (String? value) =>
+                          amountValidator(context, value),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     TransactionFormTextField(
                       controller: _amountReceivedController,
-                      label: 'Amount received',
+                      label: context.tr.amountReceived,
                       keyboardType: TextInputType.number,
-                      validator: amountValidator,
+                      validator: (String? value) =>
+                          amountValidator(context, value),
                     ),
                   ],
                   const SizedBox(height: AppSpacing.md),
                   TransactionFormTextField(
                     controller: _noteController,
-                    label: 'Note',
+                    label: context.tr.note,
                     maxLines: 3,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   TransactionFormTextField(
                     controller: _attachmentController,
-                    label: 'Attachment label',
-                    hint: 'receipt.jpg',
+                    label: context.tr.attachmentLabel,
+                    hint: context.tr.receiptFileHint,
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   SizedBox(
@@ -377,14 +380,14 @@ class _WalletTransactionSheetState
                       onPressed: isLoading ? null : _submit,
                       child: Text(
                         isLoading
-                            ? 'Saving...'
+                            ? context.tr.saving
                             : switch (widget.mode) {
                                 _WalletActionSheetMode.deposit =>
-                                  'Save deposit',
+                                  context.tr.saveDeposit,
                                 _WalletActionSheetMode.withdraw =>
-                                  'Save withdrawal',
+                                  context.tr.saveWithdrawal,
                                 _WalletActionSheetMode.exchange =>
-                                  'Save exchange',
+                                  context.tr.saveExchange,
                               },
                       ),
                     ),
@@ -450,7 +453,7 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
 
     final errorMessage = ref.read(walletControllerProvider).errorMessage;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(errorMessage ?? 'Failed to save wallet.')),
+      SnackBar(content: Text(errorMessage ?? context.tr.failedSaveWallet)),
     );
   }
 
@@ -470,7 +473,7 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
 
     final errorMessage = ref.read(walletControllerProvider).errorMessage;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(errorMessage ?? 'Failed to archive wallet.')),
+      SnackBar(content: Text(errorMessage ?? context.tr.failedArchiveWallet)),
     );
   }
 
@@ -514,14 +517,14 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
-                    'Edit Wallet',
+                    context.tr.editWallet,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'Update the wallet name or archive it when needed.',
+                    context.tr.editWalletHelper,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -530,13 +533,15 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
                   TextFormField(
                     controller: _nameController,
                     enabled: !isLoading,
-                    decoration: const InputDecoration(labelText: 'Wallet name'),
+                    decoration: InputDecoration(
+                      labelText: context.tr.walletNameLabel,
+                    ),
                     validator: (String? value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Wallet name is required.';
+                        return context.tr.walletNameRequired;
                       }
                       if (value.trim().length < 3) {
-                        return 'Wallet name must be at least 3 characters.';
+                        return context.tr.walletNameTooShort;
                       }
                       return null;
                     },
@@ -545,7 +550,7 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
                   if (walletOverview != null) ...<Widget>[
                     const SizedBox(height: AppSpacing.lg),
                     Text(
-                      'Preview',
+                      context.tr.walletPreview,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -554,8 +559,8 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
                     _EditWalletPreviewCard(
                       walletName: previewName,
                       statusLabel: walletOverview.wallet.isArchived
-                          ? 'Archived'
-                          : 'Active',
+                          ? context.tr.archived
+                          : context.tr.active,
                       indicatorColor: _sheetWalletIndicatorColor(
                         previewName,
                         walletOverview.wallet.id,
@@ -569,7 +574,9 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: isLoading ? null : _save,
-                      child: Text(isLoading ? 'Saving...' : 'Save changes'),
+                      child: Text(
+                        isLoading ? context.tr.saving : context.tr.saveChanges,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -582,8 +589,8 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
                           : _archive,
                       child: Text(
                         walletOverview?.wallet.isArchived == true
-                            ? 'Wallet archived'
-                            : 'Archive wallet',
+                            ? context.tr.walletArchivedLabel
+                            : context.tr.archiveWallet,
                       ),
                     ),
                   ),
@@ -690,7 +697,7 @@ class _EditWalletPreviewCard extends StatelessWidget {
                   vertical: AppSpacing.xs,
                 ),
                 decoration: BoxDecoration(
-                  color: statusLabel == 'Active'
+                  color: statusLabel == AppLocalizations.of(context)!.active
                       ? colorScheme.primary.withValues(alpha: 0.10)
                       : colorScheme.surfaceContainerHighest.withValues(
                           alpha: 0.50,
@@ -700,7 +707,7 @@ class _EditWalletPreviewCard extends StatelessWidget {
                 child: Text(
                   statusLabel,
                   style: theme.textTheme.labelMedium?.copyWith(
-                    color: statusLabel == 'Active'
+                    color: statusLabel == AppLocalizations.of(context)!.active
                         ? colorScheme.primary
                         : colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
@@ -711,14 +718,14 @@ class _EditWalletPreviewCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'USD ${usdAmount.trim().isEmpty ? '0' : usdAmount}',
+            '${AppLocalizations.of(context)!.usdShort} ${usdAmount.trim().isEmpty ? '0' : usdAmount}',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'SYP ${sypAmount.trim().isEmpty ? '0' : sypAmount}',
+            '${AppLocalizations.of(context)!.sypShort} ${sypAmount.trim().isEmpty ? '0' : sypAmount}',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),

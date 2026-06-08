@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
-import 'dashboard_copy.dart';
 import 'dashboard_skeleton_block.dart';
 import 'dashboard_surface_card.dart';
 
@@ -47,8 +46,8 @@ class DashboardQuickActions extends StatelessWidget {
       );
     }
 
-    final DashboardCopy copy = DashboardCopy.of(context);
     final bool compactLayout = MediaQuery.sizeOf(context).width < 390;
+    final bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return DashboardSurfaceCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -60,7 +59,7 @@ class DashboardQuickActions extends StatelessWidget {
               (DashboardQuickActionItem action) => _QuickActionButton(
                 action: action,
                 compactLayout: compactLayout,
-                isArabic: copy.isArabic,
+                isArabic: isArabic,
               ),
             )
             .toList(growable: false),

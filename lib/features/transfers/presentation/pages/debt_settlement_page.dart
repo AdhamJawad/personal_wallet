@@ -166,7 +166,7 @@ class _DebtSettlementPageState extends ConsumerState<DebtSettlementPage> {
                     label: 'Settlement amount',
                     keyboardType: TextInputType.number,
                     validator: (String? value) {
-                      final String? basic = amountValidator(value);
+                      final String? basic = amountValidator(context, value);
                       if (basic != null) {
                         return basic;
                       }

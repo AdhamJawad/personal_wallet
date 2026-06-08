@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -73,13 +74,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final authState = ref.watch(authControllerProvider);
 
     return AuthPageShell(
-      title: 'Welcome back',
-      subtitle:
-          'Sign in with your phone number and password. Secure biometric access is available after setup.',
+      title: context.tr.welcomeBack,
+      subtitle: context.tr.loginSubtitle,
       footer: Center(
         child: TextButton(
           onPressed: () => context.go(AppRoutes.registerPath),
-          child: const Text('Create a new account'),
+          child: Text(context.tr.createNewAccount),
         ),
       ),
       child: Form(
@@ -93,17 +93,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 color: AppColors.canvasTop,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Text('Mock login: +963999999999 / 123456'),
+              child: Text(context.tr.mockLoginCredentials),
             ),
             const SizedBox(height: AppSpacing.lg),
             PwTextField(
               controller: _phoneController,
-              label: 'Phone number',
+              label: context.tr.phoneNumber,
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.next,
               validator: (String? value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Phone number is required.';
+                  return context.tr.phoneNumberRequired;
                 }
                 return null;
               },
@@ -111,12 +111,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             const SizedBox(height: AppSpacing.md),
             PwTextField(
               controller: _passwordController,
-              label: 'Password',
+              label: context.tr.password,
               obscureText: true,
               textInputAction: TextInputAction.done,
               validator: (String? value) {
                 if (value == null || value.isEmpty) {
-                  return 'Password is required.';
+                  return context.tr.passwordRequired;
                 }
                 return null;
               },
@@ -126,19 +126,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () => context.go(AppRoutes.forgotPasswordPath),
-                child: const Text('Forgot password?'),
+                child: Text(context.tr.forgotPassword),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
             PwButton.primary(
-              label: 'Sign in',
+              label: context.tr.signIn,
               isLoading: authState.isBusy,
               onPressed: _submit,
             ),
             if (authState.canUseBiometricLogin) ...<Widget>[
               const SizedBox(height: AppSpacing.md),
               PwButton.secondary(
-                label: 'Use Face ID / Fingerprint',
+                label: context.tr.useBiometricLogin,
                 isLoading: authState.isBusy,
                 onPressed: _submitBiometricLogin,
               ),

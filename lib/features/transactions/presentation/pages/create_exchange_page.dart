@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/domain/enums/currency.dart';
@@ -46,9 +47,7 @@ class _CreateExchangePageState extends ConsumerState<CreateExchangePage> {
 
     if (_sourceCurrency == _destinationCurrency) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Source and destination currencies must be different.'),
-        ),
+        SnackBar(content: Text(context.tr.sourceDestinationDifferent)),
       );
       return;
     }
@@ -84,7 +83,7 @@ class _CreateExchangePageState extends ConsumerState<CreateExchangePage> {
       SnackBar(
         content: Text(
           ref.read(transactionControllerProvider).errorMessage ??
-              'Failed to create exchange.',
+              context.tr.failedCreateExchange,
         ),
       ),
     );
@@ -96,7 +95,7 @@ class _CreateExchangePageState extends ConsumerState<CreateExchangePage> {
     final transactionState = ref.watch(transactionControllerProvider);
 
     return TransactionPageShell(
-      title: 'Create Exchange',
+      title: context.tr.createExchangeTitle,
       child: Form(
         key: _formKey,
         child: Column(
@@ -105,7 +104,7 @@ class _CreateExchangePageState extends ConsumerState<CreateExchangePage> {
           children: <Widget>[
             DropdownButtonFormField<String>(
               initialValue: _walletId,
-              decoration: const InputDecoration(labelText: 'Wallet'),
+              decoration: InputDecoration(labelText: context.tr.wallet),
               items: walletState.wallets
                   .where((item) => !item.wallet.isArchived)
                   .map(
@@ -119,7 +118,7 @@ class _CreateExchangePageState extends ConsumerState<CreateExchangePage> {
                 setState(() => _walletId = value);
               },
               validator: (String? value) =>
-                  value == null ? 'Wallet is required.' : null,
+                  value == null ? context.tr.walletRequired : null,
             ),
             const SizedBox(height: AppSpacing.md),
             Row(
@@ -127,8 +126,8 @@ class _CreateExchangePageState extends ConsumerState<CreateExchangePage> {
                 Expanded(
                   child: DropdownButtonFormField<Currency>(
                     initialValue: _sourceCurrency,
-                    decoration: const InputDecoration(
-                      labelText: 'Source currency',
+                    decoration: InputDecoration(
+                      labelText: context.tr.sourceCurrency,
                     ),
                     items: Currency.values
                         .map(
@@ -149,8 +148,8 @@ class _CreateExchangePageState extends ConsumerState<CreateExchangePage> {
                 Expanded(
                   child: DropdownButtonFormField<Currency>(
                     initialValue: _destinationCurrency,
-                    decoration: const InputDecoration(
-                      labelText: 'Destination currency',
+                    decoration: InputDecoration(
+                      labelText: context.tr.destinationCurrency,
                     ),
                     items: Currency.values
                         .map(
@@ -172,38 +171,38 @@ class _CreateExchangePageState extends ConsumerState<CreateExchangePage> {
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(
               controller: _amountGivenController,
-              label: 'Amount given',
+              label: context.tr.amountGiven,
               keyboardType: TextInputType.number,
-              validator: amountValidator,
+              validator: (String? value) => amountValidator(context, value),
             ),
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(
               controller: _exchangeRateController,
-              label: 'Exchange rate',
+              label: context.tr.exchangeRate,
               keyboardType: TextInputType.number,
-              validator: amountValidator,
+              validator: (String? value) => amountValidator(context, value),
             ),
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(
               controller: _amountReceivedController,
-              label: 'Amount received',
+              label: context.tr.amountReceived,
               keyboardType: TextInputType.number,
-              validator: amountValidator,
+              validator: (String? value) => amountValidator(context, value),
             ),
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(
               controller: _noteController,
-              label: 'Note',
+              label: context.tr.note,
               maxLines: 3,
             ),
             const SizedBox(height: AppSpacing.md),
             TransactionFormTextField(
               controller: _attachmentController,
-              label: 'Attachment label',
+              label: context.tr.attachmentLabel,
             ),
             const SizedBox(height: AppSpacing.lg),
             PwButton.primary(
-              label: 'Save exchange',
+              label: context.tr.saveExchange,
               isLoading: transactionState.isLoading,
               onPressed: _submit,
             ),

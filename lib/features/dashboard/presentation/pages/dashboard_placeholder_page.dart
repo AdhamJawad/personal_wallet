@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../transactions/domain/models/ledger_transaction.dart';
@@ -12,7 +13,6 @@ import '../../../wallets/presentation/providers/wallet_providers.dart';
 import '../../../wallets/presentation/widgets/create_wallet_sheet.dart';
 import '../widgets/dashboard_activity_list.dart';
 import '../widgets/dashboard_breakpoints.dart';
-import '../widgets/dashboard_copy.dart';
 import '../widgets/dashboard_empty_state.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/dashboard_section_title.dart';
@@ -34,7 +34,6 @@ class _DashboardPlaceholderPageState
 
   @override
   Widget build(BuildContext context) {
-    final DashboardCopy copy = DashboardCopy.of(context);
     final authState = ref.watch(authControllerProvider);
     final walletState = ref.watch(walletControllerProvider);
     final transactionState = ref.watch(transactionControllerProvider);
@@ -57,8 +56,8 @@ class _DashboardPlaceholderPageState
                 walletNames[transaction.sourceWalletId ??
                         transaction.destinationWalletId ??
                         ''] ??
-                    copy.walletFallback,
-                copy,
+                    context.tr.walletFallback,
+                context,
               ),
         )
         .toList(growable: false);
@@ -68,14 +67,12 @@ class _DashboardPlaceholderPageState
         walletState.isLoading && recentWallets.isEmpty;
     final bool isActivitiesLoading =
         transactionState.isLoading && recentActivities.isEmpty;
-    final String userName = session?.user.displayName ?? 'User';
+    final String userName = session?.user.displayName ?? context.tr.userFallback;
 
-    return Directionality(
-      textDirection: copy.textDirection,
-      child: Scaffold(
-        body: SafeArea(
-          child: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
+    return Scaffold(
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
               final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
                 constraints.maxWidth,
               );
@@ -108,7 +105,7 @@ class _DashboardPlaceholderPageState
                         const _DashboardHeaderSkeleton()
                       else
                         DashboardHeader(
-                          greeting: _resolveGreeting(copy),
+                          greeting: _resolveGreeting(context),
                           userName: userName,
                         ),
                       const SizedBox(height: AppSpacing.xl),
@@ -116,7 +113,7 @@ class _DashboardPlaceholderPageState
                         totalUsd: dashboardSnapshot?.totalUsd ?? '0',
                         totalSyp: dashboardSnapshot?.totalSyp ?? '0',
                         showBalances: _showBalances,
-                        updatedLabel: copy.updatedNow,
+                        updatedLabel: context.tr.updatedNow,
                         isLoading: isInitialDashboardLoading,
                         onToggleVisibility: () {
                           setState(() => _showBalances = !_showBalances);
@@ -124,8 +121,8 @@ class _DashboardPlaceholderPageState
                       ),
                       const SizedBox(height: AppSpacing.xl),
                       DashboardSectionTitle(
-                        title: copy.myWallets,
-                        actionLabel: copy.seeAll,
+                        title: context.tr.myWallets,
+                        actionLabel: context.tr.seeAll,
                         onActionPressed: () =>
                             context.go(AppRoutes.walletsPath),
                       ),
@@ -138,8 +135,8 @@ class _DashboardPlaceholderPageState
                       ),
                       const SizedBox(height: AppSpacing.xl),
                       DashboardSectionTitle(
-                        title: copy.recentActivity,
-                        actionLabel: copy.seeAll,
+                        title: context.tr.recentActivity,
+                        actionLabel: context.tr.seeAll,
                         onActionPressed: () =>
                             context.go(AppRoutes.transactionsPath),
                       ),
@@ -153,21 +150,20 @@ class _DashboardPlaceholderPageState
                 ),
               );
             },
-          ),
         ),
       ),
     );
   }
 
-  String _resolveGreeting(DashboardCopy copy) {
+  String _resolveGreeting(BuildContext context) {
     final int hour = DateTime.now().hour;
     if (hour < 12) {
-      return copy.goodMorning;
+      return context.tr.goodMorning;
     }
     if (hour < 18) {
-      return copy.goodAfternoon;
+      return context.tr.goodAfternoon;
     }
-    return copy.goodEvening;
+    return context.tr.goodEvening;
   }
 }
 
@@ -186,7 +182,6 @@ class _WalletsPreviewSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DashboardCopy copy = DashboardCopy.of(context);
     if (isLoading) {
       return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
@@ -234,9 +229,9 @@ class _WalletsPreviewSection extends StatelessWidget {
     if (wallets.isEmpty) {
       return DashboardEmptyState(
         icon: Icons.account_balance_wallet_outlined,
-        title: copy.noWalletsTitle,
-        message: copy.noWalletsMessage,
-        actionLabel: copy.createWallet,
+        title: context.tr.noWalletsTitle,
+        message: context.tr.noWalletsMessage,
+        actionLabel: context.tr.createWallet,
         onActionPressed: () => showCreateWalletSheet(context),
       );
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -35,10 +36,10 @@ class SplashPage extends StatelessWidget {
                         color: AppColors.brand,
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      Text('Personal Wallet', style: context.titleLarge),
+                      Text(context.tr.appName, style: context.titleLarge),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        'Preparing your secure session.',
+                        context.tr.preparingSecureSession,
                         style: context.bodyLarge,
                         textAlign: TextAlign.center,
                       ),

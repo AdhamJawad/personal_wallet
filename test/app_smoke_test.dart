@@ -58,7 +58,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.textContaining('Mock login'), findsOneWidget);
+    expect(find.text('مرحبًا بعودتك'), findsOneWidget);
+    expect(
+      find.text('بيانات دخول تجريبية: +963999999999 / 123456'),
+      findsOneWidget,
+    );
   });
 }

@@ -2,46 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/presentation/providers/app_preferences_provider.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
-import '../../../dashboard/presentation/widgets/dashboard_copy.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final DashboardCopy copy = DashboardCopy.of(context);
     final authState = ref.watch(authControllerProvider);
     final preferences = ref.watch(appPreferencesProvider);
     final session = authState.session;
     final user = session?.user;
     final String biometricLabel = authState.biometricCapability.hasFaceId
-        ? copy.faceId
+        ? context.tr.faceId
         : authState.biometricCapability.hasFingerprint
-        ? copy.fingerprint
-        : copy.notAvailable;
+        ? context.tr.fingerprint
+        : context.tr.notAvailable;
 
-    return Directionality(
-      textDirection: copy.textDirection,
-      child: Scaffold(
-        appBar: AppBar(title: Text(copy.profileTitle)),
-        body: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          children: <Widget>[
+    return Scaffold(
+      appBar: AppBar(title: Text(context.tr.profileTitle)),
+      body: ListView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        children: <Widget>[
             _ProfileSection(
-              title: copy.accountSection,
+              title: context.tr.accountSection,
               child: Column(
                 children: <Widget>[
                   _InfoTile(
-                    label: copy.displayName,
-                    value: user?.displayName ?? 'User',
+                    label: context.tr.displayName,
+                    value: user?.displayName ?? context.tr.userFallback,
                     icon: Icons.badge_rounded,
                   ),
                   const Divider(height: 1),
                   _InfoTile(
-                    label: copy.userIdentifier,
+                    label: context.tr.userIdentifier,
                     value: user?.id ?? '--',
                     icon: Icons.tag_rounded,
                   ),
@@ -50,12 +47,12 @@ class ProfilePage extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             _ProfileSection(
-              title: copy.securitySection,
+              title: context.tr.securitySection,
               child: Column(
                 children: <Widget>[
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(copy.biometricLogin),
+                    title: Text(context.tr.biometricLogin),
                     subtitle: Text(biometricLabel),
                     value: authState.isBiometricLoginEnabled,
                     onChanged: (bool value) async {
@@ -76,12 +73,12 @@ class ProfilePage extends ConsumerWidget {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.password_rounded),
-                    title: Text(copy.changePassword),
-                    subtitle: Text(copy.comingSoon),
+                    title: Text(context.tr.changePassword),
+                    subtitle: Text(context.tr.comingSoon),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(copy.comingSoon)),
+                        SnackBar(content: Text(context.tr.comingSoon)),
                       );
                     },
                   ),
@@ -90,12 +87,12 @@ class ProfilePage extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             _ProfileSection(
-              title: copy.preferencesSection,
+              title: context.tr.preferencesSection,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text(
-                    copy.language,
+                    context.tr.language,
                     textAlign: TextAlign.right,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -107,11 +104,11 @@ class ProfilePage extends ConsumerWidget {
                     segments: <ButtonSegment<String>>[
                       ButtonSegment<String>(
                         value: 'en',
-                        label: Text(copy.english),
+                        label: Text(context.tr.english),
                       ),
                       ButtonSegment<String>(
                         value: 'ar',
-                        label: Text(copy.arabic),
+                        label: Text(context.tr.arabic),
                       ),
                     ],
                     selected: <String>{preferences.locale.languageCode},
@@ -123,7 +120,7 @@ class ProfilePage extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    copy.theme,
+                    context.tr.theme,
                     textAlign: TextAlign.right,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -135,15 +132,15 @@ class ProfilePage extends ConsumerWidget {
                     segments: <ButtonSegment<ThemeMode>>[
                       ButtonSegment<ThemeMode>(
                         value: ThemeMode.light,
-                        label: Text(copy.light),
+                        label: Text(context.tr.light),
                       ),
                       ButtonSegment<ThemeMode>(
                         value: ThemeMode.dark,
-                        label: Text(copy.dark),
+                        label: Text(context.tr.dark),
                       ),
                       ButtonSegment<ThemeMode>(
                         value: ThemeMode.system,
-                        label: Text(copy.system),
+                        label: Text(context.tr.system),
                       ),
                     ],
                     selected: <ThemeMode>{preferences.themeMode},
@@ -158,11 +155,11 @@ class ProfilePage extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             _ProfileSection(
-              title: copy.applicationSection,
+              title: context.tr.applicationSection,
               child: Column(
                 children: <Widget>[
                   _InfoTile(
-                    label: copy.version,
+                    label: context.tr.version,
                     value: '1.0.0+1',
                     icon: Icons.info_outline_rounded,
                   ),
@@ -170,7 +167,7 @@ class ProfilePage extends ConsumerWidget {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.logout_rounded),
-                    title: Text(copy.logout),
+                    title: Text(context.tr.logout),
                     onTap: () async {
                       final result = await ref
                           .read(authControllerProvider.notifier)
@@ -188,8 +185,7 @@ class ProfilePage extends ConsumerWidget {
                 ],
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

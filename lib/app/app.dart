@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_wallet/l10n/app_localizations.dart';
 
+import '../core/localization/localization_extensions.dart';
 import 'presentation/providers/app_preferences_provider.dart';
 import '../core/theme/app_theme.dart';
 import 'router/app_router.dart';
@@ -15,7 +17,7 @@ class PersonalWalletApp extends ConsumerWidget {
     final preferences = ref.watch(appPreferencesProvider);
 
     return MaterialApp.router(
-      title: 'Personal Wallet',
+      onGenerateTitle: (BuildContext context) => context.tr.appName,
       debugShowCheckedModeBanner: false,
       themeMode: preferences.themeMode,
       theme: AppTheme.light(),
@@ -23,6 +25,7 @@ class PersonalWalletApp extends ConsumerWidget {
       locale: preferences.locale,
       supportedLocales: const <Locale>[Locale('en'), Locale('ar')],
       localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

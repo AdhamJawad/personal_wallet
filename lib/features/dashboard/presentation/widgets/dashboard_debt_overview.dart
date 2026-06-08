@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/amount_formatter.dart';
-import 'dashboard_copy.dart';
 import 'dashboard_empty_state.dart';
 import 'dashboard_skeleton_block.dart';
 import 'dashboard_surface_card.dart';
@@ -67,13 +67,12 @@ class DashboardDebtOverview extends StatelessWidget {
       );
     }
 
-    final DashboardCopy copy = DashboardCopy.of(context);
     if (data.isEmpty) {
       return DashboardEmptyState(
         icon: Icons.account_balance_wallet_outlined,
-        title: copy.noDebtsTitle,
-        message: copy.noDebtsMessage,
-        actionLabel: onCreateDebtPressed == null ? null : copy.createDebt,
+        title: context.tr.noDebtsTitle,
+        message: context.tr.noDebtsMessage,
+        actionLabel: onCreateDebtPressed == null ? null : context.tr.createDebt,
         onActionPressed: onCreateDebtPressed,
       );
     }
@@ -83,21 +82,21 @@ class DashboardDebtOverview extends StatelessWidget {
         final bool useGrid = constraints.maxWidth >= 600;
         final List<Widget> cards = <Widget>[
           _DebtSummaryCard(
-            title: copy.owedToMe,
+            title: context.tr.owedToMe,
             usdValue: data.owedToMeUsd,
             sypValue: data.owedToMeSyp,
             tone: AppColors.success,
           ),
           _DebtSummaryCard(
-            title: copy.iOwe,
+            title: context.tr.iOwe,
             usdValue: data.iOweUsd,
             sypValue: data.iOweSyp,
             tone: AppColors.warning,
           ),
           _DebtCountCard(
             count: data.outstandingCount,
-            title: copy.outstandingDebts,
-            caption: copy.outstandingDebtCaption,
+            title: context.tr.outstandingDebts,
+            caption: context.tr.outstandingDebtCaption,
           ),
         ];
 
@@ -162,13 +161,13 @@ class _DebtSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           _DebtAmountLine(
-            label: 'USD',
+            label: context.tr.usdShort,
             value: AmountFormatter.format(usdValue),
             tone: tone,
           ),
           const SizedBox(height: AppSpacing.sm),
           _DebtAmountLine(
-            label: 'SYP',
+            label: context.tr.sypShort,
             value: AmountFormatter.format(sypValue),
             tone: colorScheme.onSurface,
           ),

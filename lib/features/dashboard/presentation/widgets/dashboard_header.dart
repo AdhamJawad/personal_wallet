@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
-import 'dashboard_copy.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({
@@ -16,8 +15,8 @@ class DashboardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
-    final DashboardCopy copy = DashboardCopy.of(context);
     final String initials = _resolveInitials(userName);
+    final bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -85,14 +84,14 @@ class DashboardHeader extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 userName,
-                textAlign: TextAlign.right,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: copy.isArabic ? 0 : -0.4,
+                  textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: isArabic ? 0 : -0.4,
+                  ),
                 ),
-              ),
             ],
           ),
         ),

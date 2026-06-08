@@ -7,6 +7,7 @@ sealed class HiveInitializer {
     await Hive.initFlutter();
 
     await Future.wait(<Future<Box<String>>>[
+      Hive.openBox<String>(AppConstants.preferencesBox),
       Hive.openBox<String>(AppConstants.usersBox),
       Hive.openBox<String>(AppConstants.sessionsBox),
       Hive.openBox<String>(AppConstants.walletsBox),

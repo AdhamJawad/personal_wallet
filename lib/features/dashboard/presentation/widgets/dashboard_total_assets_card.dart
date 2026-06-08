@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/amount_formatter.dart';
-import 'dashboard_copy.dart';
 import 'dashboard_skeleton_block.dart';
 import 'dashboard_surface_card.dart';
 
@@ -63,7 +63,7 @@ class DashboardTotalAssetsCard extends StatelessWidget {
 
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
-    final DashboardCopy copy = DashboardCopy.of(context);
+    final bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return DashboardSurfaceCard(
       padding: const EdgeInsets.all(AppSpacing.xl),
@@ -78,7 +78,7 @@ class DashboardTotalAssetsCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      copy.totalAssets,
+                      context.tr.totalAssets,
                       textAlign: TextAlign.right,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
@@ -108,7 +108,9 @@ class DashboardTotalAssetsCard extends StatelessWidget {
                 child: IconButton(
                   onPressed: onToggleVisibility,
                   padding: EdgeInsets.zero,
-                  tooltip: showBalances ? copy.hideBalances : copy.showBalances,
+                  tooltip: showBalances
+                      ? context.tr.hideBalances
+                      : context.tr.showBalances,
                   icon: Icon(
                     showBalances
                         ? Icons.visibility_off_rounded
@@ -124,11 +126,11 @@ class DashboardTotalAssetsCard extends StatelessWidget {
           _AssetAmountLine(
             value: showBalances
                 ? AmountFormatter.format(totalUsd)
-                : copy.hiddenValue,
-            currency: copy.usdShort,
+                : context.tr.hiddenValue,
+            currency: context.tr.usdShort,
             textStyle: theme.textTheme.displaySmall?.copyWith(
               fontWeight: FontWeight.w700,
-              letterSpacing: copy.isArabic ? 0 : -0.8,
+              letterSpacing: isArabic ? 0 : -0.8,
               height: 1,
             ),
           ),
@@ -136,8 +138,8 @@ class DashboardTotalAssetsCard extends StatelessWidget {
           _AssetAmountLine(
             value: showBalances
                 ? AmountFormatter.format(totalSyp)
-                : copy.hiddenValue,
-            currency: copy.sypShort,
+                : context.tr.hiddenValue,
+            currency: context.tr.sypShort,
             textStyle: theme.textTheme.titleLarge?.copyWith(
               color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
@@ -145,7 +147,7 @@ class DashboardTotalAssetsCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            copy.activeWalletsHint,
+            context.tr.activeWalletsHint,
             textAlign: TextAlign.right,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,

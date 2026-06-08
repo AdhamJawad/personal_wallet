@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -43,7 +44,7 @@ class TransactionListCard extends StatelessWidget {
                           style: context.titleMedium,
                         ),
                         const SizedBox(height: AppSpacing.xs),
-                        Text(_transactionTypeLabel(transaction)),
+                        Text(_transactionTypeLabel(context, transaction)),
                       ],
                     ),
                   ),
@@ -63,7 +64,7 @@ class TransactionListCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              Text(_walletSummary()),
+              Text(_walletSummary(context)),
               const SizedBox(height: AppSpacing.sm),
               Text(DateFormatter.full(transaction.createdAt)),
               if ((transaction.note ?? '').isNotEmpty) ...<Widget>[
@@ -77,47 +78,62 @@ class TransactionListCard extends StatelessWidget {
     );
   }
 
-  String _walletSummary() {
+  String _walletSummary(BuildContext context) {
     switch (transaction.type) {
       case TransactionType.deposit:
-        return 'To ${walletNameResolver(transaction.destinationWalletId)}';
+        return context.tr.toWallet(
+          walletNameResolver(transaction.destinationWalletId),
+        );
       case TransactionType.withdraw:
-        return 'From ${walletNameResolver(transaction.sourceWalletId)}';
+        return context.tr.fromWallet(
+          walletNameResolver(transaction.sourceWalletId),
+        );
       case TransactionType.transfer:
         if (transaction.recipientUserId != null) {
           if (transaction.sourceWalletId != null) {
-            return '${walletNameResolver(transaction.sourceWalletId)} -> ${transaction.recipientDisplayName ?? 'User'}';
+            return context.tr.walletToUser(
+              walletNameResolver(transaction.sourceWalletId),
+              transaction.recipientDisplayName ?? context.tr.userFallback,
+            );
           }
-          return 'From ${transaction.senderDisplayName ?? 'User'} to ${walletNameResolver(transaction.destinationWalletId)}';
+          return context.tr.userToWallet(
+            transaction.senderDisplayName ?? context.tr.userFallback,
+            walletNameResolver(transaction.destinationWalletId),
+          );
         }
-        return '${walletNameResolver(transaction.sourceWalletId)} -> ${walletNameResolver(transaction.destinationWalletId)}';
+        return context.tr.walletToWallet(
+          walletNameResolver(transaction.sourceWalletId),
+          walletNameResolver(transaction.destinationWalletId),
+        );
       case TransactionType.exchange:
-        return 'Exchange in ${walletNameResolver(transaction.sourceWalletId)}';
+        return context.tr.exchangeInWallet(
+          walletNameResolver(transaction.sourceWalletId),
+        );
       case TransactionType.reversal:
       case TransactionType.correction:
-        return 'Ledger correction';
+        return context.tr.ledgerCorrection;
     }
   }
 }
 
-String _transactionTypeLabel(LedgerTransaction transaction) {
+String _transactionTypeLabel(BuildContext context, LedgerTransaction transaction) {
   switch (transaction.type) {
     case TransactionType.deposit:
-      return 'Deposit';
+      return context.tr.deposit;
     case TransactionType.withdraw:
-      return 'Withdraw';
+      return context.tr.withdraw;
     case TransactionType.transfer:
       if (transaction.recipientUserId == null) {
-        return 'Internal Transfer';
+        return context.tr.internalTransfer;
       }
       return transaction.debtSettlementId == null
-          ? 'User Transfer'
-          : 'Debt Settlement Transfer';
+          ? context.tr.userTransfer
+          : context.tr.debtSettlementTransfer;
     case TransactionType.exchange:
-      return 'Exchange';
+      return context.tr.exchange;
     case TransactionType.reversal:
-      return 'Reversal';
+      return context.tr.reversalActivity;
     case TransactionType.correction:
-      return 'Correction';
+      return context.tr.correctionActivity;
   }
 }

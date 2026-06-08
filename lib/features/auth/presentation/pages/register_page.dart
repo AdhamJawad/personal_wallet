@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -58,9 +59,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final authState = ref.watch(authControllerProvider);
 
     return AuthPageShell(
-      title: 'Create account',
-      subtitle:
-          'Register for secure wallet access. Your account will be verified with a one-time OTP code.',
+      title: context.tr.createAccount,
+      subtitle: context.tr.registerSubtitle,
       child: Form(
         key: _formKey,
         child: Column(
@@ -68,11 +68,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           children: <Widget>[
             PwTextField(
               controller: _fullNameController,
-              label: 'Full name',
+              label: context.tr.fullName,
               textInputAction: TextInputAction.next,
               validator: (String? value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Full name is required.';
+                  return context.tr.fullNameRequired;
                 }
                 return null;
               },
@@ -80,12 +80,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             const SizedBox(height: AppSpacing.md),
             PwTextField(
               controller: _phoneController,
-              label: 'Phone number',
+              label: context.tr.phoneNumber,
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.next,
               validator: (String? value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Phone number is required.';
+                  return context.tr.phoneNumberRequired;
                 }
                 return null;
               },
@@ -93,12 +93,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             const SizedBox(height: AppSpacing.md),
             PwTextField(
               controller: _passwordController,
-              label: 'Password',
+              label: context.tr.password,
               obscureText: true,
               textInputAction: TextInputAction.next,
               validator: (String? value) {
                 if (value == null || value.isEmpty) {
-                  return 'Password is required.';
+                  return context.tr.passwordRequired;
                 }
                 return null;
               },
@@ -106,15 +106,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             const SizedBox(height: AppSpacing.md),
             PwTextField(
               controller: _confirmPasswordController,
-              label: 'Confirm password',
+              label: context.tr.confirmPassword,
               obscureText: true,
               textInputAction: TextInputAction.done,
               validator: (String? value) {
                 if (value == null || value.isEmpty) {
-                  return 'Confirm password is required.';
+                  return context.tr.confirmPasswordRequired;
                 }
                 if (value != _passwordController.text) {
-                  return 'Passwords do not match.';
+                  return context.tr.passwordsDoNotMatch;
                 }
                 return null;
               },
@@ -122,7 +122,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             ),
             const SizedBox(height: AppSpacing.lg),
             PwButton.primary(
-              label: 'Continue to OTP',
+              label: context.tr.continueToOtp,
               isLoading: authState.isBusy,
               onPressed: _submit,
             ),

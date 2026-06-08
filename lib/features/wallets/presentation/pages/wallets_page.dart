@@ -5,11 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/amount_formatter.dart';
 import '../../../dashboard/presentation/widgets/dashboard_breakpoints.dart';
-import '../../../dashboard/presentation/widgets/dashboard_copy.dart';
 import '../../../dashboard/presentation/widgets/dashboard_empty_state.dart';
 import '../../../dashboard/presentation/widgets/dashboard_skeleton_block.dart';
 import '../../domain/enums/wallet_sort_option.dart';
@@ -73,7 +73,6 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
 
   @override
   Widget build(BuildContext context) {
-    final DashboardCopy copy = DashboardCopy.of(context);
     final walletState = ref.watch(walletControllerProvider);
     final List<WalletOverview> visibleWallets = walletState.visibleWallets;
     final bool isInitialLoading =
@@ -92,20 +91,18 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
       );
     }
 
-    return Directionality(
-      textDirection: copy.textDirection,
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Scaffold(
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
           appBar: AppBar(
             titleSpacing: AppSpacing.lg,
-            title: Text(copy.wallets),
+            title: Text(context.tr.wallets),
             actions: <Widget>[
               Padding(
                 padding: const EdgeInsetsDirectional.only(end: AppSpacing.lg),
                 child: _CreateWalletAction(
-                  tooltip: copy.createWallet,
+                  tooltip: context.tr.createWallet,
                   onPressed: () => showCreateWalletSheet(context),
                 ),
               ),
@@ -153,9 +150,9 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
                         _WalletSearchBar(
                           controller: _searchController,
                           focusNode: _searchFocusNode,
-                          label: copy.searchWallets,
-                          hint: copy.searchWalletsHint,
-                          sortLabel: copy.sortWallets,
+                          label: context.tr.searchWallets,
+                          hint: context.tr.searchWalletsHint,
+                          sortLabel: context.tr.sortWallets,
                           activeSortOption: walletState.sortOption,
                           onSortSelected: (WalletSortOption option) {
                             ref
@@ -170,18 +167,18 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
                             walletState.wallets.isEmpty)
                           DashboardEmptyState(
                             icon: Icons.account_balance_wallet_outlined,
-                            title: copy.noWalletsTitle,
-                            message: copy.noWalletsMessage,
-                            actionLabel: copy.createWallet,
+                            title: context.tr.noWalletsTitle,
+                            message: context.tr.noWalletsMessage,
+                            actionLabel: context.tr.createWallet,
                             onActionPressed: () =>
                                 showCreateWalletSheet(context),
                           )
                         else if (visibleWallets.isEmpty && hasSearchQuery)
                           DashboardEmptyState(
                             icon: Icons.search_off_rounded,
-                            title: copy.noWalletSearchResultsTitle,
-                            message: copy.noWalletSearchResultsMessage,
-                            actionLabel: copy.clearSearch,
+                            title: context.tr.noWalletSearchResultsTitle,
+                            message: context.tr.noWalletSearchResultsMessage,
+                            actionLabel: context.tr.clearSearch,
                             onActionPressed: () {
                               _searchController.clear();
                               ref
@@ -209,8 +206,7 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
             },
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -269,7 +265,6 @@ class _WalletSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
-    final DashboardCopy copy = DashboardCopy.of(context);
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
@@ -313,7 +308,7 @@ class _WalletSearchBar extends StatelessWidget {
                         (WalletSortOption option) =>
                             PopupMenuItem<WalletSortOption>(
                               value: option,
-                              child: Text(_sortLabel(copy, option)),
+                              child: Text(_sortLabel(context, option)),
                             ),
                       )
                       .toList(growable: false);
@@ -342,7 +337,7 @@ class _WalletSearchBar extends StatelessWidget {
                         ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 92),
                           child: Text(
-                            _sortLabel(copy, activeSortOption),
+                            _sortLabel(context, activeSortOption),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.labelMedium?.copyWith(
@@ -370,8 +365,6 @@ class _WalletSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DashboardCopy copy = DashboardCopy.of(context);
-
     return _WalletPageSurface(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -386,20 +379,20 @@ class _WalletSummaryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 _SummaryLine(
-                  label: copy.totalWallets,
+                  label: context.tr.totalWallets,
                   value: '${summary.walletCount}',
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _SummaryLine(
-                  label: copy.usdTotal,
+                  label: context.tr.usdTotal,
                   value:
-                      '${AmountFormatter.format(summary.totalUsd)} ${copy.usdShort}',
+                      '${AmountFormatter.format(summary.totalUsd)} ${context.tr.usdShort}',
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _SummaryLine(
-                  label: copy.sypTotal,
+                  label: context.tr.sypTotal,
                   value:
-                      '${AmountFormatter.format(summary.totalSyp)} ${copy.sypShort}',
+                      '${AmountFormatter.format(summary.totalSyp)} ${context.tr.sypShort}',
                 ),
               ],
             );
@@ -412,24 +405,24 @@ class _WalletSummaryCard extends StatelessWidget {
                 children: <Widget>[
                   Expanded(
                     child: _SummaryLine(
-                      label: copy.totalWallets,
+                      label: context.tr.totalWallets,
                       value: '${summary.walletCount}',
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: _SummaryLine(
-                      label: copy.usdTotal,
+                      label: context.tr.usdTotal,
                       value:
-                          '${AmountFormatter.format(summary.totalUsd)} ${copy.usdShort}',
+                          '${AmountFormatter.format(summary.totalUsd)} ${context.tr.usdShort}',
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: _SummaryLine(
-                      label: copy.sypTotal,
+                      label: context.tr.sypTotal,
                       value:
-                          '${AmountFormatter.format(summary.totalSyp)} ${copy.sypShort}',
+                          '${AmountFormatter.format(summary.totalSyp)} ${context.tr.sypShort}',
                     ),
                   ),
                 ],
@@ -701,13 +694,13 @@ class _WalletSummary {
   final String totalSyp;
 }
 
-String _sortLabel(DashboardCopy copy, WalletSortOption option) {
+String _sortLabel(BuildContext context, WalletSortOption option) {
   return switch (option) {
-    WalletSortOption.newest => copy.newest,
-    WalletSortOption.oldest => copy.oldest,
-    WalletSortOption.nameAscending => copy.nameAscending,
-    WalletSortOption.nameDescending => copy.nameDescending,
-    WalletSortOption.highestUsd => copy.highestUsd,
-    WalletSortOption.highestSyp => copy.highestSyp,
+    WalletSortOption.newest => context.tr.newest,
+    WalletSortOption.oldest => context.tr.oldest,
+    WalletSortOption.nameAscending => context.tr.nameAscending,
+    WalletSortOption.nameDescending => context.tr.nameDescending,
+    WalletSortOption.highestUsd => context.tr.highestUsd,
+    WalletSortOption.highestSyp => context.tr.highestSyp,
   };
 }

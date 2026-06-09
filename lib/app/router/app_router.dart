@@ -31,10 +31,7 @@ import '../../features/transfers/presentation/pages/debt_settlement_success_page
 import '../../features/transfers/presentation/pages/transfer_confirmation_page.dart';
 import '../../features/transfers/presentation/pages/transfer_page.dart';
 import '../../features/transfers/presentation/pages/transfer_success_page.dart';
-import '../../features/transactions/presentation/pages/create_deposit_page.dart';
-import '../../features/transactions/presentation/pages/create_exchange_page.dart';
 import '../../features/transactions/presentation/pages/create_transfer_page.dart';
-import '../../features/transactions/presentation/pages/create_withdraw_page.dart';
 import '../../features/transactions/presentation/pages/transaction_details_page.dart';
 import '../../features/transactions/presentation/pages/transactions_page.dart';
 import '../../features/wallets/presentation/pages/create_wallet_page.dart';
@@ -293,31 +290,10 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
         },
         routes: <RouteBase>[
           GoRoute(
-            path: 'deposit',
-            name: AppRoutes.depositCreate,
-            builder: (BuildContext context, GoRouterState state) {
-              return const CreateDepositPage();
-            },
-          ),
-          GoRoute(
-            path: 'withdraw',
-            name: AppRoutes.withdrawCreate,
-            builder: (BuildContext context, GoRouterState state) {
-              return const CreateWithdrawPage();
-            },
-          ),
-          GoRoute(
             path: 'transfer',
             name: AppRoutes.transferCreate,
             builder: (BuildContext context, GoRouterState state) {
               return const CreateTransferPage();
-            },
-          ),
-          GoRoute(
-            path: 'exchange',
-            name: AppRoutes.exchangeCreate,
-            builder: (BuildContext context, GoRouterState state) {
-              return const CreateExchangePage();
             },
           ),
           GoRoute(

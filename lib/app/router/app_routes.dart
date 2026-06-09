@@ -11,10 +11,7 @@ sealed class AppRoutes {
   static const walletDetails = 'walletDetails';
   static const walletEdit = 'walletEdit';
   static const transactions = 'transactions';
-  static const depositCreate = 'depositCreate';
-  static const withdrawCreate = 'withdrawCreate';
   static const transferCreate = 'transferCreate';
-  static const exchangeCreate = 'exchangeCreate';
   static const transactionDetails = 'transactionDetails';
   static const debts = 'debts';
   static const debtCreate = 'debtCreate';
@@ -47,10 +44,7 @@ sealed class AppRoutes {
   static const walletsPath = '/wallets';
   static const walletCreatePath = '/wallets/create';
   static const transactionsPath = '/transactions';
-  static const depositCreatePath = '/transactions/deposit';
-  static const withdrawCreatePath = '/transactions/withdraw';
   static const transferCreatePath = '/transactions/transfer';
-  static const exchangeCreatePath = '/transactions/exchange';
   static const debtsPath = '/debts';
   static const debtCreatePath = '/debts/create';
   static const contactsPath = '/contacts';

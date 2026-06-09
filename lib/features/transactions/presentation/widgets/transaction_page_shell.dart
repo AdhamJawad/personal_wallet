@@ -18,16 +18,23 @@ class TransactionPageShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return PwScaffold(
       title: title,
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760),
-          child: PwSectionCard(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: child,
+      body: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: constraints.maxWidth > 920 ? 820 : 760,
+                minHeight: constraints.maxHeight,
+              ),
+              child: PwSectionCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: child,
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

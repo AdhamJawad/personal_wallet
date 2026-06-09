@@ -1525,6 +1525,456 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to archive wallet.'**
   String get failedArchiveWallet;
+
+  /// No description provided for @moveMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Move Money'**
+  String get moveMoney;
+
+  /// No description provided for @noTransactionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions found'**
+  String get noTransactionsTitle;
+
+  /// No description provided for @selectWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Select wallet'**
+  String get selectWallet;
+
+  /// No description provided for @walletBalanceSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{usdAmount} USD · {sypAmount} SYP'**
+  String walletBalanceSummary(Object usdAmount, Object sypAmount);
+
+  /// No description provided for @selectCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Select currency'**
+  String get selectCurrency;
+
+  /// No description provided for @selectSourceCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Select source currency'**
+  String get selectSourceCurrency;
+
+  /// No description provided for @selectDestinationCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Select destination currency'**
+  String get selectDestinationCurrency;
+
+  /// No description provided for @walletPickerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Main Wallet'**
+  String get walletPickerHint;
+
+  /// No description provided for @enterAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter amount'**
+  String get enterAmountHint;
+
+  /// No description provided for @enterExchangeRateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter exchange rate'**
+  String get enterExchangeRateHint;
+
+  /// No description provided for @transactionNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary payment, travel expenses, loan repayment'**
+  String get transactionNoteHint;
+
+  /// No description provided for @addAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Attachment'**
+  String get addAttachment;
+
+  /// No description provided for @attachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments'**
+  String get attachments;
+
+  /// No description provided for @attachmentsSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} attachments selected'**
+  String attachmentsSelected(int count);
+
+  /// No description provided for @removeAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove attachment'**
+  String get removeAttachment;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @takePhotoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture a photo with the device camera.'**
+  String get takePhotoSubtitle;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose From Gallery'**
+  String get chooseFromGallery;
+
+  /// No description provided for @chooseFromGallerySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an image from the device gallery.'**
+  String get chooseFromGallerySubtitle;
+
+  /// No description provided for @preparingPicker.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing picker...'**
+  String get preparingPicker;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @continueReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Review'**
+  String get continueReview;
+
+  /// No description provided for @confirmDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Deposit'**
+  String get confirmDeposit;
+
+  /// No description provided for @confirmWithdrawal.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Withdrawal'**
+  String get confirmWithdrawal;
+
+  /// No description provided for @confirmExchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Exchange'**
+  String get confirmExchange;
+
+  /// No description provided for @confirmTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Transfer'**
+  String get confirmTransfer;
+
+  /// No description provided for @review.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get review;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @success.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get success;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @returnAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Return'**
+  String get returnAction;
+
+  /// No description provided for @depositSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit recorded successfully.'**
+  String get depositSuccessMessage;
+
+  /// No description provided for @withdrawSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawal recorded successfully.'**
+  String get withdrawSuccessMessage;
+
+  /// No description provided for @exchangeSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange recorded successfully.'**
+  String get exchangeSuccessMessage;
+
+  /// No description provided for @transferSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer recorded successfully.'**
+  String get transferSuccessMessage;
+
+  /// No description provided for @transactionSubmitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to complete this transaction.'**
+  String get transactionSubmitFailed;
+
+  /// No description provided for @transactionAttachmentSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The transaction was recorded, but one or more attachments could not be saved.'**
+  String get transactionAttachmentSaveFailed;
+
+  /// No description provided for @transferAttachmentSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The transfer was created, but one or more attachments could not be saved.'**
+  String get transferAttachmentSaveFailed;
+
+  /// No description provided for @transactionReferenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{operation} {reference}'**
+  String transactionReferenceLabel(Object operation, Object reference);
+
+  /// No description provided for @noTransactionWalletsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No wallets available'**
+  String get noTransactionWalletsTitle;
+
+  /// No description provided for @noTransactionWalletsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a wallet before starting a new transaction.'**
+  String get noTransactionWalletsMessage;
+
+  /// No description provided for @noTransferWalletsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a wallet before sending money.'**
+  String get noTransferWalletsMessage;
+
+  /// No description provided for @noDescriptionAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'No description added'**
+  String get noDescriptionAdded;
+
+  /// No description provided for @noAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'No attachments'**
+  String get noAttachments;
+
+  /// No description provided for @transferRecipientTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient'**
+  String get transferRecipientTitle;
+
+  /// No description provided for @transferRecipientRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient is required.'**
+  String get transferRecipientRequired;
+
+  /// No description provided for @recipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient'**
+  String get recipient;
+
+  /// No description provided for @recipientUserId.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient user ID'**
+  String get recipientUserId;
+
+  /// No description provided for @recipientName.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient name'**
+  String get recipientName;
+
+  /// No description provided for @enterRecipientUserIdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter user ID'**
+  String get enterRecipientUserIdHint;
+
+  /// No description provided for @enterRecipientNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter recipient name'**
+  String get enterRecipientNameHint;
+
+  /// No description provided for @qrScan.
+  ///
+  /// In en, this message translates to:
+  /// **'QR Scan'**
+  String get qrScan;
+
+  /// No description provided for @scanQrRecipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR recipient'**
+  String get scanQrRecipient;
+
+  /// No description provided for @scanRecipientHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan or select a recipient profile'**
+  String get scanRecipientHint;
+
+  /// No description provided for @contacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get contacts;
+
+  /// No description provided for @manualEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual Entry'**
+  String get manualEntry;
+
+  /// No description provided for @selectContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Select contact'**
+  String get selectContact;
+
+  /// No description provided for @selectSavedContactHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a saved contact'**
+  String get selectSavedContactHint;
+
+  /// No description provided for @noQrRecipientsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No QR recipients available'**
+  String get noQrRecipientsTitle;
+
+  /// No description provided for @noQrRecipientsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try contacts or manual entry.'**
+  String get noQrRecipientsMessage;
+
+  /// No description provided for @noTransferContactsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts available'**
+  String get noTransferContactsTitle;
+
+  /// No description provided for @noTransferContactsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a registered contact first, or use manual entry.'**
+  String get noTransferContactsMessage;
+
+  /// No description provided for @transactionDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction Details'**
+  String get transactionDetailsTitle;
+
+  /// No description provided for @transactionNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction not found.'**
+  String get transactionNotFound;
+
+  /// No description provided for @attachmentsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments'**
+  String get attachmentsButton;
+
+  /// No description provided for @detailDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get detailDate;
+
+  /// No description provided for @detailType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get detailType;
+
+  /// No description provided for @detailDestinationWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination wallet'**
+  String get detailDestinationWallet;
+
+  /// No description provided for @detailSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender'**
+  String get detailSender;
+
+  /// No description provided for @detailReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get detailReceived;
+
+  /// No description provided for @detailTransferId.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer ID'**
+  String get detailTransferId;
+
+  /// No description provided for @detailSettlementId.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement ID'**
+  String get detailSettlementId;
+
+  /// No description provided for @detailNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get detailNotes;
+
+  /// No description provided for @detailAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment'**
+  String get detailAttachment;
+
+  /// No description provided for @none.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
 }
 
 class _AppLocalizationsDelegate

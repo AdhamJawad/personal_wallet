@@ -12,14 +12,21 @@ class PwScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(title: Text(title, style: context.titleMedium)),
       body: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: <Color>[AppColors.canvasTop, AppColors.canvasBottom],
+            colors: isDark
+                ? <Color>[
+                    AppColors.brandDark,
+                    AppColors.surfaceDark,
+                  ]
+                : <Color>[AppColors.canvasTop, AppColors.canvasBottom],
           ),
         ),
         child: Padding(

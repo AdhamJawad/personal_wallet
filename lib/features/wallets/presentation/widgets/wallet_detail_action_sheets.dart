@@ -6,11 +6,9 @@ import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../shared/domain/enums/currency.dart';
 import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
-import '../../../transactions/presentation/providers/transaction_providers.dart';
-import '../../../transactions/presentation/widgets/transaction_form_text_field.dart';
-import '../../../transactions/presentation/widgets/transaction_form_validators.dart';
+import '../../../transactions/presentation/widgets/transaction_bottom_sheet.dart';
+import '../../../transactions/presentation/widgets/transaction_operation_flow.dart';
 import '../providers/wallet_providers.dart';
 
 Future<void> showWalletDepositSheet(
@@ -18,16 +16,10 @@ Future<void> showWalletDepositSheet(
   required String walletId,
   required String walletName,
 }) {
-  return showAppModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    builder: (BuildContext context) {
-      return _WalletTransactionSheet(
-        walletId: walletId,
-        walletName: walletName,
-        mode: _WalletActionSheetMode.deposit,
-      );
-    },
+  return showTransactionBottomSheet(
+    context,
+    type: TransactionOperationType.deposit,
+    initialWalletId: walletId,
   );
 }
 
@@ -36,16 +28,10 @@ Future<void> showWalletWithdrawSheet(
   required String walletId,
   required String walletName,
 }) {
-  return showAppModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    builder: (BuildContext context) {
-      return _WalletTransactionSheet(
-        walletId: walletId,
-        walletName: walletName,
-        mode: _WalletActionSheetMode.withdraw,
-      );
-    },
+  return showTransactionBottomSheet(
+    context,
+    type: TransactionOperationType.withdraw,
+    initialWalletId: walletId,
   );
 }
 
@@ -54,16 +40,10 @@ Future<void> showWalletExchangeSheet(
   required String walletId,
   required String walletName,
 }) {
-  return showAppModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    builder: (BuildContext context) {
-      return _WalletTransactionSheet(
-        walletId: walletId,
-        walletName: walletName,
-        mode: _WalletActionSheetMode.exchange,
-      );
-    },
+  return showTransactionBottomSheet(
+    context,
+    type: TransactionOperationType.exchange,
+    initialWalletId: walletId,
   );
 }
 
@@ -78,328 +58,6 @@ Future<void> showEditWalletSheet(
       return _EditWalletSheet(walletId: walletId);
     },
   );
-}
-
-enum _WalletActionSheetMode { deposit, withdraw, exchange }
-
-class _WalletTransactionSheet extends ConsumerStatefulWidget {
-  const _WalletTransactionSheet({
-    required this.walletId,
-    required this.walletName,
-    required this.mode,
-  });
-
-  final String walletId;
-  final String walletName;
-  final _WalletActionSheetMode mode;
-
-  @override
-  ConsumerState<_WalletTransactionSheet> createState() =>
-      _WalletTransactionSheetState();
-}
-
-class _WalletTransactionSheetState
-    extends ConsumerState<_WalletTransactionSheet> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _noteController = TextEditingController();
-  final TextEditingController _attachmentController = TextEditingController();
-  final TextEditingController _exchangeRateController = TextEditingController();
-  final TextEditingController _amountReceivedController =
-      TextEditingController();
-
-  Currency _currency = Currency.usd;
-  Currency _sourceCurrency = Currency.usd;
-  Currency _destinationCurrency = Currency.syp;
-
-  @override
-  void dispose() {
-    _amountController.dispose();
-    _noteController.dispose();
-    _attachmentController.dispose();
-    _exchangeRateController.dispose();
-    _amountReceivedController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    bool success = false;
-
-    switch (widget.mode) {
-      case _WalletActionSheetMode.deposit:
-        success = await ref
-            .read(transactionControllerProvider.notifier)
-            .createDeposit(
-              walletId: widget.walletId,
-              currency: _currency,
-              amount: _amountController.text.trim(),
-              note: _nullableText(_noteController),
-              attachmentLabel: _nullableText(_attachmentController),
-            );
-      case _WalletActionSheetMode.withdraw:
-        success = await ref
-            .read(transactionControllerProvider.notifier)
-            .createWithdraw(
-              walletId: widget.walletId,
-              currency: _currency,
-              amount: _amountController.text.trim(),
-              note: _nullableText(_noteController),
-              attachmentLabel: _nullableText(_attachmentController),
-            );
-      case _WalletActionSheetMode.exchange:
-        if (_sourceCurrency == _destinationCurrency) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.tr.sourceDestinationDifferent)),
-          );
-          return;
-        }
-
-        success = await ref
-            .read(transactionControllerProvider.notifier)
-            .createExchange(
-              walletId: widget.walletId,
-              sourceCurrency: _sourceCurrency,
-              destinationCurrency: _destinationCurrency,
-              amountGiven: _amountController.text.trim(),
-              exchangeRate: _exchangeRateController.text.trim(),
-              amountReceived: _amountReceivedController.text.trim(),
-              note: _nullableText(_noteController),
-              attachmentLabel: _nullableText(_attachmentController),
-            );
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    if (success) {
-      ref.read(walletControllerProvider.notifier).initialize();
-      Navigator.of(context).pop();
-      return;
-    }
-
-    final String fallback = switch (widget.mode) {
-      _WalletActionSheetMode.deposit => context.tr.failedCreateDeposit,
-      _WalletActionSheetMode.withdraw => context.tr.failedCreateWithdrawal,
-      _WalletActionSheetMode.exchange => context.tr.failedCreateExchange,
-    };
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ref.read(transactionControllerProvider).errorMessage ?? fallback,
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
-    final bool isLoading = ref.watch(transactionControllerProvider).isLoading;
-    final String title = switch (widget.mode) {
-      _WalletActionSheetMode.deposit => context.tr.createDepositTitle,
-      _WalletActionSheetMode.withdraw => context.tr.createWithdrawTitle,
-      _WalletActionSheetMode.exchange => context.tr.createExchangeTitle,
-    };
-    final String helper = switch (widget.mode) {
-      _WalletActionSheetMode.deposit => context.tr.recordDepositHelper,
-      _WalletActionSheetMode.withdraw => context.tr.recordWithdrawHelper,
-      _WalletActionSheetMode.exchange => context.tr.recordExchangeHelper,
-    };
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.md,
-          right: AppSpacing.md,
-          bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.md,
-        ),
-        child: DashboardSurfaceCard(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.xl,
-            AppSpacing.md,
-            AppSpacing.xl,
-            AppSpacing.xl,
-          ),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    title,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    helper,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  _SheetValueCard(
-                    label: context.tr.wallet,
-                    value: widget.walletName,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  if (widget.mode ==
-                      _WalletActionSheetMode.exchange) ...<Widget>[
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: DropdownButtonFormField<Currency>(
-                            initialValue: _sourceCurrency,
-                            decoration: InputDecoration(
-                              labelText: context.tr.sourceCurrency,
-                            ),
-                            items: Currency.values
-                                .map(
-                                  (currency) => DropdownMenuItem(
-                                    value: currency,
-                                    child: Text(currency.name.toUpperCase()),
-                                  ),
-                                )
-                                .toList(growable: false),
-                            onChanged: isLoading
-                                ? null
-                                : (Currency? value) {
-                                    if (value != null) {
-                                      setState(() => _sourceCurrency = value);
-                                    }
-                                  },
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: DropdownButtonFormField<Currency>(
-                            initialValue: _destinationCurrency,
-                            decoration: InputDecoration(
-                              labelText: context.tr.destinationCurrency,
-                            ),
-                            items: Currency.values
-                                .map(
-                                  (currency) => DropdownMenuItem(
-                                    value: currency,
-                                    child: Text(currency.name.toUpperCase()),
-                                  ),
-                                )
-                                .toList(growable: false),
-                            onChanged: isLoading
-                                ? null
-                                : (Currency? value) {
-                                    if (value != null) {
-                                      setState(
-                                        () => _destinationCurrency = value,
-                                      );
-                                    }
-                                  },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ] else
-                    DropdownButtonFormField<Currency>(
-                      initialValue: _currency,
-                      decoration: InputDecoration(
-                        labelText: context.tr.currency,
-                      ),
-                      items: Currency.values
-                          .map(
-                            (currency) => DropdownMenuItem(
-                              value: currency,
-                              child: Text(currency.name.toUpperCase()),
-                            ),
-                          )
-                          .toList(growable: false),
-                      onChanged: isLoading
-                          ? null
-                          : (Currency? value) {
-                              if (value != null) {
-                                setState(() => _currency = value);
-                              }
-                            },
-                    ),
-                  const SizedBox(height: AppSpacing.md),
-                  TransactionFormTextField(
-                    controller: _amountController,
-                    label: widget.mode == _WalletActionSheetMode.exchange
-                        ? context.tr.amountGiven
-                        : context.tr.amount,
-                    keyboardType: TextInputType.number,
-                    validator: (String? value) =>
-                        amountValidator(context, value),
-                  ),
-                  if (widget.mode ==
-                      _WalletActionSheetMode.exchange) ...<Widget>[
-                    const SizedBox(height: AppSpacing.md),
-                    TransactionFormTextField(
-                      controller: _exchangeRateController,
-                      label: context.tr.exchangeRate,
-                      keyboardType: TextInputType.number,
-                      validator: (String? value) =>
-                          amountValidator(context, value),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TransactionFormTextField(
-                      controller: _amountReceivedController,
-                      label: context.tr.amountReceived,
-                      keyboardType: TextInputType.number,
-                      validator: (String? value) =>
-                          amountValidator(context, value),
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.md),
-                  TransactionFormTextField(
-                    controller: _noteController,
-                    label: context.tr.note,
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TransactionFormTextField(
-                    controller: _attachmentController,
-                    label: context.tr.attachmentLabel,
-                    hint: context.tr.receiptFileHint,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: isLoading ? null : _submit,
-                      child: Text(
-                        isLoading
-                            ? context.tr.saving
-                            : switch (widget.mode) {
-                                _WalletActionSheetMode.deposit =>
-                                  context.tr.saveDeposit,
-                                _WalletActionSheetMode.withdraw =>
-                                  context.tr.saveWithdrawal,
-                                _WalletActionSheetMode.exchange =>
-                                  context.tr.saveExchange,
-                              },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _EditWalletSheet extends ConsumerStatefulWidget {
@@ -604,46 +262,6 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
   }
 }
 
-class _SheetValueCard extends StatelessWidget {
-  const _SheetValueCard({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: colorScheme.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.10)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            label,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            value,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _EditWalletPreviewCard extends StatelessWidget {
   const _EditWalletPreviewCard({
     required this.walletName,
@@ -734,11 +352,6 @@ class _EditWalletPreviewCard extends StatelessWidget {
       ),
     );
   }
-}
-
-String? _nullableText(TextEditingController controller) {
-  final String value = controller.text.trim();
-  return value.isEmpty ? null : value;
 }
 
 Color _sheetWalletIndicatorColor(String walletName, String walletId) {

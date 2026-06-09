@@ -10,14 +10,23 @@ class PwSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.outlineSoft),
-        boxShadow: const <BoxShadow>[
+        border: Border.all(
+          color: isDark
+              ? AppColors.outlineSoft.withValues(alpha: 0.18)
+              : AppColors.outlineSoft,
+        ),
+        boxShadow: <BoxShadow>[
           BoxShadow(
-            color: AppColors.shadow,
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.18)
+                : AppColors.shadow,
             blurRadius: 20,
             offset: Offset(0, 12),
           ),

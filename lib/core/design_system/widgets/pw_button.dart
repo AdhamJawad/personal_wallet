@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_spacing.dart';
+
 class PwButton extends StatelessWidget {
   const PwButton.primary({
     required this.label,
@@ -23,10 +25,13 @@ class PwButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Widget child = isLoading
-        ? const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
+        ? const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              _PwButtonLoadingBar(),
+              SizedBox(width: AppSpacing.sm),
+              _PwButtonLoadingBar(isShort: true),
+            ],
           )
         : Text(label);
 
@@ -38,5 +43,23 @@ class PwButton extends StatelessWidget {
     }
 
     return FilledButton(onPressed: isLoading ? null : onPressed, child: child);
+  }
+}
+
+class _PwButtonLoadingBar extends StatelessWidget {
+  const _PwButtonLoadingBar({this.isShort = false});
+
+  final bool isShort;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: isShort ? 18 : 30,
+      height: 10,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(999),
+      ),
+    );
   }
 }

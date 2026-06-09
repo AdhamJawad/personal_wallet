@@ -45,9 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<key>UIUserInterfaceStyle</key>
-	<string>Light</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Personal Wallet uses Face ID to unlock your saved login securely.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Personal Wallet uses the camera to capture transaction attachments and proof of payment.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Personal Wallet uses your photo library so you can attach receipts and supporting images.</string>
 </dict>
 </plist>

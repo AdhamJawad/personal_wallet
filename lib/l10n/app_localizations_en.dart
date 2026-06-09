@@ -757,4 +757,242 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failedArchiveWallet => 'Failed to archive wallet.';
+
+  @override
+  String get moveMoney => 'Move Money';
+
+  @override
+  String get noTransactionsTitle => 'No transactions found';
+
+  @override
+  String get selectWallet => 'Select wallet';
+
+  @override
+  String walletBalanceSummary(Object usdAmount, Object sypAmount) {
+    return '$usdAmount USD · $sypAmount SYP';
+  }
+
+  @override
+  String get selectCurrency => 'Select currency';
+
+  @override
+  String get selectSourceCurrency => 'Select source currency';
+
+  @override
+  String get selectDestinationCurrency => 'Select destination currency';
+
+  @override
+  String get walletPickerHint => 'Main Wallet';
+
+  @override
+  String get enterAmountHint => 'Enter amount';
+
+  @override
+  String get enterExchangeRateHint => 'Enter exchange rate';
+
+  @override
+  String get transactionNoteHint =>
+      'Salary payment, travel expenses, loan repayment';
+
+  @override
+  String get addAttachment => 'Add Attachment';
+
+  @override
+  String get attachments => 'Attachments';
+
+  @override
+  String attachmentsSelected(int count) {
+    return '$count attachments selected';
+  }
+
+  @override
+  String get removeAttachment => 'Remove attachment';
+
+  @override
+  String get takePhoto => 'Take Photo';
+
+  @override
+  String get takePhotoSubtitle => 'Capture a photo with the device camera.';
+
+  @override
+  String get chooseFromGallery => 'Choose From Gallery';
+
+  @override
+  String get chooseFromGallerySubtitle =>
+      'Select an image from the device gallery.';
+
+  @override
+  String get preparingPicker => 'Preparing picker...';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get continueReview => 'Continue Review';
+
+  @override
+  String get confirmDeposit => 'Confirm Deposit';
+
+  @override
+  String get confirmWithdrawal => 'Confirm Withdrawal';
+
+  @override
+  String get confirmExchange => 'Confirm Exchange';
+
+  @override
+  String get confirmTransfer => 'Confirm Transfer';
+
+  @override
+  String get review => 'Review';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get success => 'Success';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get returnAction => 'Return';
+
+  @override
+  String get depositSuccessMessage => 'Deposit recorded successfully.';
+
+  @override
+  String get withdrawSuccessMessage => 'Withdrawal recorded successfully.';
+
+  @override
+  String get exchangeSuccessMessage => 'Exchange recorded successfully.';
+
+  @override
+  String get transferSuccessMessage => 'Transfer recorded successfully.';
+
+  @override
+  String get transactionSubmitFailed => 'Unable to complete this transaction.';
+
+  @override
+  String get transactionAttachmentSaveFailed =>
+      'The transaction was recorded, but one or more attachments could not be saved.';
+
+  @override
+  String get transferAttachmentSaveFailed =>
+      'The transfer was created, but one or more attachments could not be saved.';
+
+  @override
+  String transactionReferenceLabel(Object operation, Object reference) {
+    return '$operation $reference';
+  }
+
+  @override
+  String get noTransactionWalletsTitle => 'No wallets available';
+
+  @override
+  String get noTransactionWalletsMessage =>
+      'Create a wallet before starting a new transaction.';
+
+  @override
+  String get noTransferWalletsMessage =>
+      'Create a wallet before sending money.';
+
+  @override
+  String get noDescriptionAdded => 'No description added';
+
+  @override
+  String get noAttachments => 'No attachments';
+
+  @override
+  String get transferRecipientTitle => 'Recipient';
+
+  @override
+  String get transferRecipientRequired => 'Recipient is required.';
+
+  @override
+  String get recipient => 'Recipient';
+
+  @override
+  String get recipientUserId => 'Recipient user ID';
+
+  @override
+  String get recipientName => 'Recipient name';
+
+  @override
+  String get enterRecipientUserIdHint => 'Enter user ID';
+
+  @override
+  String get enterRecipientNameHint => 'Enter recipient name';
+
+  @override
+  String get qrScan => 'QR Scan';
+
+  @override
+  String get scanQrRecipient => 'Scan QR recipient';
+
+  @override
+  String get scanRecipientHint => 'Scan or select a recipient profile';
+
+  @override
+  String get contacts => 'Contacts';
+
+  @override
+  String get manualEntry => 'Manual Entry';
+
+  @override
+  String get selectContact => 'Select contact';
+
+  @override
+  String get selectSavedContactHint => 'Select a saved contact';
+
+  @override
+  String get noQrRecipientsTitle => 'No QR recipients available';
+
+  @override
+  String get noQrRecipientsMessage => 'Try contacts or manual entry.';
+
+  @override
+  String get noTransferContactsTitle => 'No contacts available';
+
+  @override
+  String get noTransferContactsMessage =>
+      'Add a registered contact first, or use manual entry.';
+
+  @override
+  String get transactionDetailsTitle => 'Transaction Details';
+
+  @override
+  String get transactionNotFound => 'Transaction not found.';
+
+  @override
+  String get attachmentsButton => 'Attachments';
+
+  @override
+  String get detailDate => 'Date';
+
+  @override
+  String get detailType => 'Type';
+
+  @override
+  String get detailDestinationWallet => 'Destination wallet';
+
+  @override
+  String get detailSender => 'Sender';
+
+  @override
+  String get detailReceived => 'Received';
+
+  @override
+  String get detailTransferId => 'Transfer ID';
+
+  @override
+  String get detailSettlementId => 'Settlement ID';
+
+  @override
+  String get detailNotes => 'Notes';
+
+  @override
+  String get detailAttachment => 'Attachment';
+
+  @override
+  String get none => 'None';
 }

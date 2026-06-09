@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'app_modal_bottom_sheet.dart';
+import '../../../features/transactions/presentation/widgets/transaction_bottom_sheet.dart';
+import '../../../features/transactions/presentation/widgets/transaction_operation_flow.dart';
 import '../../../core/localization/localization_extensions.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -98,14 +100,20 @@ class AppShellPage extends StatelessWidget {
                     _ActionSheetItem(
                       label: context.tr.deposit,
                       icon: Icons.south_west_rounded,
-                      onTap: () =>
-                          _pushAction(context, '/transactions/deposit'),
+                      onTap: () => _openSheetAction(
+                        context,
+                        modalContext,
+                        TransactionOperationType.deposit,
+                      ),
                     ),
                     _ActionSheetItem(
                       label: context.tr.withdraw,
                       icon: Icons.north_east_rounded,
-                      onTap: () =>
-                          _pushAction(context, '/transactions/withdraw'),
+                      onTap: () => _openSheetAction(
+                        context,
+                        modalContext,
+                        TransactionOperationType.withdraw,
+                      ),
                     ),
                     _ActionSheetItem(
                       label: context.tr.transfer,
@@ -116,8 +124,11 @@ class AppShellPage extends StatelessWidget {
                     _ActionSheetItem(
                       label: context.tr.exchange,
                       icon: Icons.currency_exchange_rounded,
-                      onTap: () =>
-                          _pushAction(context, '/transactions/exchange'),
+                      onTap: () => _openSheetAction(
+                        context,
+                        modalContext,
+                        TransactionOperationType.exchange,
+                      ),
                     ),
                     _ActionSheetItem(
                       label: context.tr.createDebt,
@@ -137,6 +148,15 @@ class AppShellPage extends StatelessWidget {
   void _pushAction(BuildContext context, String location) {
     Navigator.of(context).pop();
     context.push(location);
+  }
+
+  void _openSheetAction(
+    BuildContext pageContext,
+    BuildContext modalContext,
+    TransactionOperationType type,
+  ) {
+    Navigator.of(modalContext).pop();
+    showTransactionBottomSheet(pageContext, type: type);
   }
 }
 

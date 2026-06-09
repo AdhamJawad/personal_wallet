@@ -754,4 +754,238 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get failedArchiveWallet => 'تعذر أرشفة المحفظة.';
+
+  @override
+  String get moveMoney => 'تحريك الأموال';
+
+  @override
+  String get noTransactionsTitle => 'لا توجد عمليات';
+
+  @override
+  String get selectWallet => 'اختر المحفظة';
+
+  @override
+  String walletBalanceSummary(Object usdAmount, Object sypAmount) {
+    return '$usdAmount USD · $sypAmount SYP';
+  }
+
+  @override
+  String get selectCurrency => 'اختر العملة';
+
+  @override
+  String get selectSourceCurrency => 'اختر عملة المصدر';
+
+  @override
+  String get selectDestinationCurrency => 'اختر عملة الوجهة';
+
+  @override
+  String get walletPickerHint => 'المحفظة الرئيسية';
+
+  @override
+  String get enterAmountHint => 'أدخل المبلغ';
+
+  @override
+  String get enterExchangeRateHint => 'أدخل سعر الصرف';
+
+  @override
+  String get transactionNoteHint => 'راتب، مصاريف سفر، سداد قرض';
+
+  @override
+  String get addAttachment => 'إضافة مرفق';
+
+  @override
+  String get attachments => 'المرفقات';
+
+  @override
+  String attachmentsSelected(int count) {
+    return 'تم اختيار $count مرفقات';
+  }
+
+  @override
+  String get removeAttachment => 'إزالة المرفق';
+
+  @override
+  String get takePhoto => 'التقاط صورة';
+
+  @override
+  String get takePhotoSubtitle => 'التقط صورة باستخدام كاميرا الجهاز.';
+
+  @override
+  String get chooseFromGallery => 'اختيار من المعرض';
+
+  @override
+  String get chooseFromGallerySubtitle => 'اختر صورة من معرض الجهاز.';
+
+  @override
+  String get preparingPicker => 'جارٍ تجهيز المنتقي...';
+
+  @override
+  String get cancel => 'إلغاء';
+
+  @override
+  String get continueReview => 'متابعة المراجعة';
+
+  @override
+  String get confirmDeposit => 'تأكيد الإيداع';
+
+  @override
+  String get confirmWithdrawal => 'تأكيد السحب';
+
+  @override
+  String get confirmExchange => 'تأكيد الصرف';
+
+  @override
+  String get confirmTransfer => 'تأكيد التحويل';
+
+  @override
+  String get review => 'مراجعة';
+
+  @override
+  String get back => 'رجوع';
+
+  @override
+  String get success => 'نجاح';
+
+  @override
+  String get done => 'تم';
+
+  @override
+  String get returnAction => 'عودة';
+
+  @override
+  String get depositSuccessMessage => 'تم تسجيل الإيداع بنجاح.';
+
+  @override
+  String get withdrawSuccessMessage => 'تم تسجيل السحب بنجاح.';
+
+  @override
+  String get exchangeSuccessMessage => 'تم تسجيل الصرف بنجاح.';
+
+  @override
+  String get transferSuccessMessage => 'تم تسجيل التحويل بنجاح.';
+
+  @override
+  String get transactionSubmitFailed => 'تعذر إكمال هذه العملية.';
+
+  @override
+  String get transactionAttachmentSaveFailed =>
+      'تم تسجيل العملية، لكن تعذر حفظ مرفق واحد أو أكثر.';
+
+  @override
+  String get transferAttachmentSaveFailed =>
+      'تم إنشاء التحويل، لكن تعذر حفظ مرفق واحد أو أكثر.';
+
+  @override
+  String transactionReferenceLabel(Object operation, Object reference) {
+    return '$operation $reference';
+  }
+
+  @override
+  String get noTransactionWalletsTitle => 'لا توجد محافظ متاحة';
+
+  @override
+  String get noTransactionWalletsMessage => 'أنشئ محفظة قبل بدء عملية جديدة.';
+
+  @override
+  String get noTransferWalletsMessage => 'أنشئ محفظة قبل إرسال الأموال.';
+
+  @override
+  String get noDescriptionAdded => 'لم تتم إضافة وصف';
+
+  @override
+  String get noAttachments => 'لا توجد مرفقات';
+
+  @override
+  String get transferRecipientTitle => 'المستلم';
+
+  @override
+  String get transferRecipientRequired => 'المستلم مطلوب.';
+
+  @override
+  String get recipient => 'المستلم';
+
+  @override
+  String get recipientUserId => 'معرف المستخدم للمستلم';
+
+  @override
+  String get recipientName => 'اسم المستلم';
+
+  @override
+  String get enterRecipientUserIdHint => 'أدخل معرف المستخدم';
+
+  @override
+  String get enterRecipientNameHint => 'أدخل اسم المستلم';
+
+  @override
+  String get qrScan => 'مسح QR';
+
+  @override
+  String get scanQrRecipient => 'مسح مستلم QR';
+
+  @override
+  String get scanRecipientHint => 'امسح أو اختر ملف المستلم';
+
+  @override
+  String get contacts => 'جهات الاتصال';
+
+  @override
+  String get manualEntry => 'إدخال يدوي';
+
+  @override
+  String get selectContact => 'اختر جهة اتصال';
+
+  @override
+  String get selectSavedContactHint => 'اختر جهة اتصال محفوظة';
+
+  @override
+  String get noQrRecipientsTitle => 'لا توجد ملفات QR متاحة';
+
+  @override
+  String get noQrRecipientsMessage => 'جرّب جهات الاتصال أو الإدخال اليدوي.';
+
+  @override
+  String get noTransferContactsTitle => 'لا توجد جهات اتصال';
+
+  @override
+  String get noTransferContactsMessage =>
+      'أضف جهة اتصال مسجلة أولاً أو استخدم الإدخال اليدوي.';
+
+  @override
+  String get transactionDetailsTitle => 'تفاصيل العملية';
+
+  @override
+  String get transactionNotFound => 'لم يتم العثور على العملية.';
+
+  @override
+  String get attachmentsButton => 'المرفقات';
+
+  @override
+  String get detailDate => 'التاريخ';
+
+  @override
+  String get detailType => 'النوع';
+
+  @override
+  String get detailDestinationWallet => 'محفظة الوجهة';
+
+  @override
+  String get detailSender => 'المرسل';
+
+  @override
+  String get detailReceived => 'المبلغ المستلم';
+
+  @override
+  String get detailTransferId => 'معرف التحويل';
+
+  @override
+  String get detailSettlementId => 'معرف التسوية';
+
+  @override
+  String get detailNotes => 'الملاحظات';
+
+  @override
+  String get detailAttachment => 'المرفق';
+
+  @override
+  String get none => 'لا يوجد';
 }

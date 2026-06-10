@@ -43,10 +43,10 @@ class TransactionBottomSheet extends StatelessWidget {
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Padding(
           padding: const EdgeInsets.only(
-            left: AppSpacing.lg,
-            right: AppSpacing.lg,
+            left: AppSpacing.md,
+            right: AppSpacing.md,
             top: AppSpacing.md,
-            bottom: AppSpacing.lg,
+            bottom: AppSpacing.md,
           ),
           child: TransactionOperationFlow(
             operationType: type,

@@ -57,11 +57,11 @@ class _TransferPageState extends ConsumerState<TransferPage> {
   String? _senderWalletId;
   String? _recipientUserId;
   String? _recipientDisplayName;
-  String? _walletError;
   String? _recipientError;
   Currency _currency = Currency.usd;
   bool _showReview = false;
   bool _showSuccess = false;
+  bool _isRouteReversed = false;
   String? _attachmentWarning;
 
   @override
@@ -111,7 +111,6 @@ class _TransferPageState extends ConsumerState<TransferPage> {
     if (result != null) {
       setState(() {
         _senderWalletId = result.wallet.id;
-        _walletError = null;
       });
     }
   }
@@ -212,10 +211,6 @@ class _TransferPageState extends ConsumerState<TransferPage> {
     final bool hasWallet = _senderWalletId != null;
     final bool hasRecipient = _validateRecipient();
 
-    setState(() {
-      _walletError = hasWallet ? null : context.tr.walletRequired;
-    });
-
     return isFormValid && hasWallet && hasRecipient;
   }
 
@@ -309,7 +304,6 @@ class _TransferPageState extends ConsumerState<TransferPage> {
       _showSuccess = false;
       _showReview = false;
       _senderWalletId = null;
-      _walletError = null;
       _recipientError = null;
       _attachmentWarning = null;
       _currency = Currency.usd;
@@ -417,19 +411,28 @@ class _TransferPageState extends ConsumerState<TransferPage> {
           children: <Widget>[
             TransactionFormSection(
               title: context.tr.transferRecipientTitle,
+              subtitle: context.tr.transferRecipientDescription,
               compact: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
+                  Text(
+                    context.tr.recipientMethodHint,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
                   Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
                     children: _RecipientMethod.values
                         .map(
-                          (_RecipientMethod method) => ChoiceChip(
-                            label: Text(_recipientMethodLabel(method)),
+                          (_RecipientMethod method) => _CompactSelectionChip(
+                            icon: _recipientMethodIcon(method),
+                            label: _recipientMethodLabel(method),
                             selected: _recipientMethod == method,
-                            onSelected: (_) {
+                            onTap: () {
                               setState(() {
                                 _recipientMethod = method;
                                 _recipientError = null;
@@ -454,6 +457,7 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                                 value: _recipientDisplayName,
                                 hint: context.tr.scanRecipientHint,
                                 errorText: _recipientError,
+                                leading: const Icon(Icons.qr_code_scanner_rounded),
                                 onTap: () => _pickQrIdentity(identities),
                               ),
                   if (_recipientMethod == _RecipientMethod.contacts)
@@ -470,6 +474,7 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                                 value: _recipientDisplayName,
                                 hint: context.tr.selectSavedContactHint,
                                 errorText: _recipientError,
+                                leading: const Icon(Icons.person_outline_rounded),
                                 onTap: () => _pickContact(contacts),
                               ),
                   if (_recipientMethod == _RecipientMethod.manual) ...<Widget>[
@@ -478,6 +483,7 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                       focusNode: _manualUserIdFocusNode,
                       label: context.tr.recipientUserId,
                       hint: context.tr.enterRecipientUserIdHint,
+                      prefixIcon: const Icon(Icons.badge_outlined),
                       textInputAction: TextInputAction.next,
                       validator: (String? value) {
                         if (_recipientMethod != _RecipientMethod.manual) {
@@ -498,6 +504,7 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                       focusNode: _manualNameFocusNode,
                       label: context.tr.recipientName,
                       hint: context.tr.enterRecipientNameHint,
+                      prefixIcon: const Icon(Icons.person_outline_rounded),
                       textInputAction: TextInputAction.next,
                       validator: (String? value) {
                         if (_recipientMethod != _RecipientMethod.manual) {
@@ -527,18 +534,32 @@ class _TransferPageState extends ConsumerState<TransferPage> {
             ),
             const SizedBox(height: AppSpacing.md),
             TransactionFormSection(
+              title: context.tr.transferRouteTitle,
+              subtitle: context.tr.transferRouteDescription,
+              compact: true,
+              child: _TransferRouteFlow(
+                isReversed: _isRouteReversed,
+                sourceLabel: context.tr.transferRouteSourceLabel,
+                destinationLabel: context.tr.transferRouteDestinationLabel,
+                sourceValue: selectedWallet?.wallet.name,
+                destinationValue: _recipientDisplayName,
+                sourceHint: context.tr.transferRouteSourceHint,
+                destinationHint: context.tr.transferRecipientPreviewHint,
+                onSourceTap: () => _pickWallet(wallets),
+                onSwapTap: () {
+                  setState(() => _isRouteReversed = !_isRouteReversed);
+                },
+                swapLabel: context.tr.transferRouteSwap,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TransactionFormSection(
+              title: context.tr.transferDetailsTitle,
+              subtitle: context.tr.transferDetailsDescription,
               compact: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  TransactionPickerField(
-                    label: context.tr.wallet,
-                    value: selectedWallet?.wallet.name,
-                    hint: context.tr.walletPickerHint,
-                    errorText: _walletError,
-                    onTap: () => _pickWallet(wallets),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
@@ -548,6 +569,7 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                           focusNode: _amountFocusNode,
                           label: context.tr.amount,
                           hint: context.tr.enterAmountHint,
+                          prefixIcon: const Icon(Icons.payments_outlined),
                           keyboardType:
                               const TextInputType.numberWithOptions(decimal: true),
                           textInputAction: TextInputAction.next,
@@ -562,6 +584,7 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                       CurrencyChip(
                         value: _currency,
                         label: _currency.name.toUpperCase(),
+                        icon: Icons.currency_exchange_rounded,
                         options: currencyOptions,
                         onSelected: (Currency value) {
                           setState(() => _currency = value);
@@ -575,6 +598,8 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                     focusNode: _noteFocusNode,
                     label: context.tr.note,
                     hint: context.tr.transactionNoteHint,
+                    helper: context.tr.transactionNoteHint,
+                    prefixIcon: const Icon(Icons.edit_note_rounded),
                     maxLines: 2,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) {
@@ -590,6 +615,7 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                       fileName:
                           _attachments.isEmpty ? null : _attachments.first.fileName,
                     ),
+                    subtitle: context.tr.debtAttachmentHint,
                     onTap: _addAttachment,
                     thumbnails: _attachmentThumbnails(),
                   ),
@@ -727,6 +753,252 @@ class _TransferPageState extends ConsumerState<TransferPage> {
       case _RecipientMethod.manual:
         return context.tr.manualEntry;
     }
+  }
+
+  IconData _recipientMethodIcon(_RecipientMethod method) {
+    switch (method) {
+      case _RecipientMethod.qr:
+        return Icons.qr_code_scanner_rounded;
+      case _RecipientMethod.contacts:
+        return Icons.person_outline_rounded;
+      case _RecipientMethod.manual:
+        return Icons.edit_outlined;
+    }
+  }
+}
+
+class _TransferRouteFlow extends StatelessWidget {
+  const _TransferRouteFlow({
+    required this.isReversed,
+    required this.sourceLabel,
+    required this.destinationLabel,
+    required this.sourceValue,
+    required this.destinationValue,
+    required this.sourceHint,
+    required this.destinationHint,
+    required this.onSourceTap,
+    required this.onSwapTap,
+    required this.swapLabel,
+  });
+
+  final bool isReversed;
+  final String sourceLabel;
+  final String destinationLabel;
+  final String? sourceValue;
+  final String? destinationValue;
+  final String sourceHint;
+  final String destinationHint;
+  final VoidCallback onSourceTap;
+  final VoidCallback onSwapTap;
+  final String swapLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> nodes = <Widget>[
+      _RouteNode(
+        label: sourceLabel,
+        value: sourceValue,
+        hint: sourceHint,
+        icon: Icons.account_balance_wallet_outlined,
+        onTap: onSourceTap,
+        interactive: true,
+      ),
+      _TransferRouteSwapButton(label: swapLabel, onTap: onSwapTap),
+      _RouteNode(
+        label: destinationLabel,
+        value: destinationValue,
+        hint: destinationHint,
+        icon: Icons.person_outline_rounded,
+      ),
+    ];
+
+    return Column(
+      children: (isReversed ? nodes.reversed : nodes).toList(growable: false),
+    );
+  }
+}
+
+class _RouteNode extends StatelessWidget {
+  const _RouteNode({
+    required this.label,
+    required this.hint,
+    required this.icon,
+    this.value,
+    this.onTap,
+    this.interactive = false,
+  });
+
+  final String label;
+  final String hint;
+  final IconData icon;
+  final String? value;
+  final VoidCallback? onTap;
+  final bool interactive;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+
+    final Widget child = Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, color: colorScheme.primary),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value?.trim().isNotEmpty == true ? value! : hint,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: value?.trim().isNotEmpty == true
+                      ? theme.textTheme.titleSmall
+                      : theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                ),
+              ],
+            ),
+          ),
+          if (interactive)
+            Icon(Icons.chevron_right_rounded, color: colorScheme.onSurfaceVariant),
+        ],
+      ),
+    );
+
+    if (!interactive) {
+      return child;
+    }
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: child,
+    );
+  }
+}
+
+class _TransferRouteSwapButton extends StatelessWidget {
+  const _TransferRouteSwapButton({
+    required this.label,
+    required this.onTap,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color = Theme.of(context).colorScheme.onSurfaceVariant;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Column(
+        children: <Widget>[
+          Icon(Icons.south_rounded, color: color),
+          const SizedBox(height: 4),
+          OutlinedButton.icon(
+            onPressed: onTap,
+            icon: const Icon(Icons.swap_vert_rounded, size: 18),
+            label: Text(label),
+          ),
+          const SizedBox(height: 4),
+          Icon(Icons.south_rounded, color: color),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactSelectionChip extends StatelessWidget {
+  const _CompactSelectionChip({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? colorScheme.primary.withValues(alpha: 0.12)
+              : colorScheme.surface,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected
+                ? colorScheme.primary.withValues(alpha: 0.28)
+                : colorScheme.outline.withValues(alpha: 0.18),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              icon,
+              size: 16,
+              color: selected
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              label,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: selected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

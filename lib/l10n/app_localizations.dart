@@ -704,6 +704,78 @@ abstract class AppLocalizations {
   /// **'I Owe'**
   String get iOwe;
 
+  /// No description provided for @openStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openStatus;
+
+  /// No description provided for @settledStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get settledStatus;
+
+  /// No description provided for @remainingAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get remainingAmountLabel;
+
+  /// No description provided for @openRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Records'**
+  String get openRecords;
+
+  /// No description provided for @searchDebts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search debts'**
+  String get searchDebts;
+
+  /// No description provided for @searchDebtsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact, note, or reference'**
+  String get searchDebtsHint;
+
+  /// No description provided for @noDebtRecordsYetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Debt Records Yet'**
+  String get noDebtRecordsYetTitle;
+
+  /// No description provided for @noDebtRecordsYetMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first debt record to track money owed to you and money you owe.'**
+  String get noDebtRecordsYetMessage;
+
+  /// No description provided for @noDebtSearchResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Matching Debts'**
+  String get noDebtSearchResultsTitle;
+
+  /// No description provided for @noDebtSearchResultsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another contact, note, or reference.'**
+  String get noDebtSearchResultsMessage;
+
+  /// No description provided for @noDebtFilterResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Debts In This View'**
+  String get noDebtFilterResultsTitle;
+
+  /// No description provided for @noDebtFilterResultsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another filter to view more debt records.'**
+  String get noDebtFilterResultsMessage;
+
   /// No description provided for @outstandingDebts.
   ///
   /// In en, this message translates to:
@@ -1499,7 +1571,7 @@ abstract class AppLocalizations {
   /// No description provided for @saveChanges.
   ///
   /// In en, this message translates to:
-  /// **'Save changes'**
+  /// **'Save Changes'**
   String get saveChanges;
 
   /// No description provided for @failedSaveWallet.
@@ -1796,6 +1868,12 @@ abstract class AppLocalizations {
   /// **'Recipient'**
   String get transferRecipientTitle;
 
+  /// No description provided for @transferRecipientDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how you want to identify the recipient, then confirm their details.'**
+  String get transferRecipientDescription;
+
   /// No description provided for @transferRecipientRequired.
   ///
   /// In en, this message translates to:
@@ -1832,6 +1910,12 @@ abstract class AppLocalizations {
   /// **'Enter recipient name'**
   String get enterRecipientNameHint;
 
+  /// No description provided for @recipientMethodHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the fastest way to find the right person.'**
+  String get recipientMethodHint;
+
   /// No description provided for @qrScan.
   ///
   /// In en, this message translates to:
@@ -1861,6 +1945,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manual Entry'**
   String get manualEntry;
+
+  /// No description provided for @transferRouteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer Route'**
+  String get transferRouteTitle;
+
+  /// No description provided for @transferRouteDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Review where the money leaves from and who will receive it.'**
+  String get transferRouteDescription;
+
+  /// No description provided for @transferRouteSourceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the wallet to send from'**
+  String get transferRouteSourceHint;
+
+  /// No description provided for @transferRouteDestinationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient details appear here'**
+  String get transferRouteDestinationHint;
+
+  /// No description provided for @transferRouteSwap.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap View'**
+  String get transferRouteSwap;
+
+  /// No description provided for @transferRouteSourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source Wallet'**
+  String get transferRouteSourceLabel;
+
+  /// No description provided for @transferRouteDestinationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient'**
+  String get transferRouteDestinationLabel;
+
+  /// No description provided for @transferDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer Details'**
+  String get transferDetailsTitle;
+
+  /// No description provided for @transferDetailsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the transfer amount, currency, note, and any supporting attachment.'**
+  String get transferDetailsDescription;
+
+  /// No description provided for @transferRecipientPreviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a recipient to continue'**
+  String get transferRecipientPreviewHint;
 
   /// No description provided for @selectContact.
   ///
@@ -1897,6 +2041,336 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a registered contact first, or use manual entry.'**
   String get noTransferContactsMessage;
+
+  /// No description provided for @debtFormDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a debt record with clear direction, contact details, amount, and optional evidence.'**
+  String get debtFormDescription;
+
+  /// No description provided for @debtDirectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Direction'**
+  String get debtDirectionTitle;
+
+  /// No description provided for @debtDirectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose whether the money is owed to you or owed by you.'**
+  String get debtDirectionDescription;
+
+  /// No description provided for @debtContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get debtContactTitle;
+
+  /// No description provided for @debtContactDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the person related to this debt record.'**
+  String get debtContactDescription;
+
+  /// No description provided for @debtContactRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact is required.'**
+  String get debtContactRequired;
+
+  /// No description provided for @debtContactHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a contact'**
+  String get debtContactHint;
+
+  /// No description provided for @debtDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Details'**
+  String get debtDetailsTitle;
+
+  /// No description provided for @debtDetailsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture the amount, currency, note, and any supporting attachment.'**
+  String get debtDetailsDescription;
+
+  /// No description provided for @debtRepaymentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Repayment'**
+  String get debtRepaymentTitle;
+
+  /// No description provided for @debtRepaymentDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a repayment amount and keep a supporting note or attachment if needed.'**
+  String get debtRepaymentDescription;
+
+  /// No description provided for @saveDebtRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Debt'**
+  String get saveDebtRecord;
+
+  /// No description provided for @saveRepayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Repayment'**
+  String get saveRepayment;
+
+  /// No description provided for @failedCreateDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create debt.'**
+  String get failedCreateDebt;
+
+  /// No description provided for @failedCreateRepayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to record repayment.'**
+  String get failedCreateRepayment;
+
+  /// No description provided for @debtNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt not found.'**
+  String get debtNotFound;
+
+  /// No description provided for @debtFinancialSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Summary'**
+  String get debtFinancialSummaryTitle;
+
+  /// No description provided for @ofAmountPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'of'**
+  String get ofAmountPrefix;
+
+  /// No description provided for @originalAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Original Amount'**
+  String get originalAmountLabel;
+
+  /// No description provided for @paidAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get paidAmountLabel;
+
+  /// No description provided for @debtProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get debtProgressTitle;
+
+  /// No description provided for @remainingPercentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% Remaining'**
+  String remainingPercentLabel(int percent);
+
+  /// No description provided for @recordPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Payment'**
+  String get recordPayment;
+
+  /// No description provided for @openAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openAction;
+
+  /// No description provided for @editDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Debt'**
+  String get editDebt;
+
+  /// No description provided for @editDebtHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust the debt details, note, and any supporting attachment.'**
+  String get editDebtHelper;
+
+  /// No description provided for @closeDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Debt'**
+  String get closeDebt;
+
+  /// No description provided for @closeDebtConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to mark this debt as settled?'**
+  String get closeDebtConfirmation;
+
+  /// No description provided for @markAsSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as Settled'**
+  String get markAsSettled;
+
+  /// No description provided for @reopenDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen Debt'**
+  String get reopenDebt;
+
+  /// No description provided for @reopenDebtConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to reopen this debt record?'**
+  String get reopenDebtConfirmation;
+
+  /// No description provided for @viewHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'View History'**
+  String get viewHistory;
+
+  /// No description provided for @currentRemainingAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Remaining Amount'**
+  String get currentRemainingAmount;
+
+  /// No description provided for @debtEditUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing debt records is not available yet.'**
+  String get debtEditUnavailable;
+
+  /// No description provided for @debtCloseUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing debt records is not available yet.'**
+  String get debtCloseUnavailable;
+
+  /// No description provided for @debtReopenUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopening debt records is not available yet.'**
+  String get debtReopenUnavailable;
+
+  /// No description provided for @previewAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get previewAttachment;
+
+  /// No description provided for @downloadAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get downloadAttachment;
+
+  /// No description provided for @openAttachmentViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Attachments'**
+  String get openAttachmentViewer;
+
+  /// No description provided for @attachmentPreviewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview is not available for this file.'**
+  String get attachmentPreviewUnavailable;
+
+  /// No description provided for @attachmentDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'{fileName} was downloaded.'**
+  String attachmentDownloaded(Object fileName);
+
+  /// No description provided for @attachmentDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment could not be downloaded.'**
+  String get attachmentDownloadFailed;
+
+  /// No description provided for @attachmentDownloadUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading attachments is not supported on this device yet.'**
+  String get attachmentDownloadUnsupported;
+
+  /// No description provided for @timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get timeline;
+
+  /// No description provided for @debtCreatedEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Created'**
+  String get debtCreatedEvent;
+
+  /// No description provided for @partialPaymentEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial Payment'**
+  String get partialPaymentEvent;
+
+  /// No description provided for @fullSettlementEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Settlement'**
+  String get fullSettlementEvent;
+
+  /// No description provided for @attachmentAddedEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment Added'**
+  String get attachmentAddedEvent;
+
+  /// No description provided for @debtAttachmentSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The debt was saved, but one or more attachments could not be stored.'**
+  String get debtAttachmentSaveFailed;
+
+  /// No description provided for @repaymentAttachmentSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The repayment was saved, but one or more attachments could not be stored.'**
+  String get repaymentAttachmentSaveFailed;
+
+  /// No description provided for @debtAttachmentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add receipts, agreements, or proof of repayment.'**
+  String get debtAttachmentHint;
+
+  /// No description provided for @debtDirectionOwedToMeShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Owed to me'**
+  String get debtDirectionOwedToMeShort;
+
+  /// No description provided for @debtDirectionIOweShort.
+  ///
+  /// In en, this message translates to:
+  /// **'I owe'**
+  String get debtDirectionIOweShort;
+
+  /// No description provided for @completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completed;
+
+  /// No description provided for @noDebtRecordsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No debt records found.'**
+  String get noDebtRecordsFound;
 
   /// No description provided for @transactionDetailsTitle.
   ///

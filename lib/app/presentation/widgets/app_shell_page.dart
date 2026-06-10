@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'app_modal_bottom_sheet.dart';
+import '../../../features/debts/presentation/pages/create_debt_page.dart';
+import '../../../features/transactions/presentation/pages/create_transfer_page.dart';
 import '../../../features/transactions/presentation/widgets/transaction_bottom_sheet.dart';
 import '../../../features/transactions/presentation/widgets/transaction_operation_flow.dart';
 import '../../../core/localization/localization_extensions.dart';
@@ -118,8 +120,10 @@ class AppShellPage extends StatelessWidget {
                     _ActionSheetItem(
                       label: context.tr.transfer,
                       icon: Icons.swap_horiz_rounded,
-                      onTap: () =>
-                          _pushAction(context, '/transactions/transfer'),
+                      onTap: () => _openCreateTransferAction(
+                        context,
+                        modalContext,
+                      ),
                     ),
                     _ActionSheetItem(
                       label: context.tr.exchange,
@@ -133,7 +137,7 @@ class AppShellPage extends StatelessWidget {
                     _ActionSheetItem(
                       label: context.tr.createDebt,
                       icon: Icons.receipt_long_rounded,
-                      onTap: () => _pushAction(context, '/debts/create'),
+                      onTap: () => _openCreateDebtAction(context, modalContext),
                     ),
                   ],
                 ),
@@ -145,11 +149,6 @@ class AppShellPage extends StatelessWidget {
     );
   }
 
-  void _pushAction(BuildContext context, String location) {
-    Navigator.of(context).pop();
-    context.push(location);
-  }
-
   void _openSheetAction(
     BuildContext pageContext,
     BuildContext modalContext,
@@ -157,6 +156,22 @@ class AppShellPage extends StatelessWidget {
   ) {
     Navigator.of(modalContext).pop();
     showTransactionBottomSheet(pageContext, type: type);
+  }
+
+  void _openCreateDebtAction(
+    BuildContext pageContext,
+    BuildContext modalContext,
+  ) {
+    Navigator.of(modalContext).pop();
+    showCreateDebtSheet(pageContext);
+  }
+
+  void _openCreateTransferAction(
+    BuildContext pageContext,
+    BuildContext modalContext,
+  ) {
+    Navigator.of(modalContext).pop();
+    showCreateTransferSheet(pageContext);
   }
 }
 

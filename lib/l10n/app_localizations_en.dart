@@ -325,6 +325,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get iOwe => 'I Owe';
 
   @override
+  String get openStatus => 'Open';
+
+  @override
+  String get settledStatus => 'Settled';
+
+  @override
+  String get remainingAmountLabel => 'Remaining';
+
+  @override
+  String get openRecords => 'Open Records';
+
+  @override
+  String get searchDebts => 'Search debts';
+
+  @override
+  String get searchDebtsHint => 'Contact, note, or reference';
+
+  @override
+  String get noDebtRecordsYetTitle => 'No Debt Records Yet';
+
+  @override
+  String get noDebtRecordsYetMessage =>
+      'Create your first debt record to track money owed to you and money you owe.';
+
+  @override
+  String get noDebtSearchResultsTitle => 'No Matching Debts';
+
+  @override
+  String get noDebtSearchResultsMessage =>
+      'Try another contact, note, or reference.';
+
+  @override
+  String get noDebtFilterResultsTitle => 'No Debts In This View';
+
+  @override
+  String get noDebtFilterResultsMessage =>
+      'Choose another filter to view more debt records.';
+
+  @override
   String get outstandingDebts => 'Outstanding Debts';
 
   @override
@@ -744,7 +783,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Update the wallet name or archive it when needed.';
 
   @override
-  String get saveChanges => 'Save changes';
+  String get saveChanges => 'Save Changes';
 
   @override
   String get failedSaveWallet => 'Failed to save wallet.';
@@ -906,6 +945,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transferRecipientTitle => 'Recipient';
 
   @override
+  String get transferRecipientDescription =>
+      'Choose how you want to identify the recipient, then confirm their details.';
+
+  @override
   String get transferRecipientRequired => 'Recipient is required.';
 
   @override
@@ -924,6 +967,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterRecipientNameHint => 'Enter recipient name';
 
   @override
+  String get recipientMethodHint =>
+      'Pick the fastest way to find the right person.';
+
+  @override
   String get qrScan => 'QR Scan';
 
   @override
@@ -937,6 +984,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manualEntry => 'Manual Entry';
+
+  @override
+  String get transferRouteTitle => 'Transfer Route';
+
+  @override
+  String get transferRouteDescription =>
+      'Review where the money leaves from and who will receive it.';
+
+  @override
+  String get transferRouteSourceHint => 'Choose the wallet to send from';
+
+  @override
+  String get transferRouteDestinationHint => 'Recipient details appear here';
+
+  @override
+  String get transferRouteSwap => 'Swap View';
+
+  @override
+  String get transferRouteSourceLabel => 'Source Wallet';
+
+  @override
+  String get transferRouteDestinationLabel => 'Recipient';
+
+  @override
+  String get transferDetailsTitle => 'Transfer Details';
+
+  @override
+  String get transferDetailsDescription =>
+      'Enter the transfer amount, currency, note, and any supporting attachment.';
+
+  @override
+  String get transferRecipientPreviewHint => 'Select a recipient to continue';
 
   @override
   String get selectContact => 'Select contact';
@@ -956,6 +1035,192 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noTransferContactsMessage =>
       'Add a registered contact first, or use manual entry.';
+
+  @override
+  String get debtFormDescription =>
+      'Create a debt record with clear direction, contact details, amount, and optional evidence.';
+
+  @override
+  String get debtDirectionTitle => 'Direction';
+
+  @override
+  String get debtDirectionDescription =>
+      'Choose whether the money is owed to you or owed by you.';
+
+  @override
+  String get debtContactTitle => 'Contact';
+
+  @override
+  String get debtContactDescription =>
+      'Select the person related to this debt record.';
+
+  @override
+  String get debtContactRequired => 'Contact is required.';
+
+  @override
+  String get debtContactHint => 'Select a contact';
+
+  @override
+  String get debtDetailsTitle => 'Debt Details';
+
+  @override
+  String get debtDetailsDescription =>
+      'Capture the amount, currency, note, and any supporting attachment.';
+
+  @override
+  String get debtRepaymentTitle => 'Record Repayment';
+
+  @override
+  String get debtRepaymentDescription =>
+      'Record a repayment amount and keep a supporting note or attachment if needed.';
+
+  @override
+  String get saveDebtRecord => 'Save Debt';
+
+  @override
+  String get saveRepayment => 'Save Repayment';
+
+  @override
+  String get failedCreateDebt => 'Failed to create debt.';
+
+  @override
+  String get failedCreateRepayment => 'Failed to record repayment.';
+
+  @override
+  String get debtNotFound => 'Debt not found.';
+
+  @override
+  String get debtFinancialSummaryTitle => 'Financial Summary';
+
+  @override
+  String get ofAmountPrefix => 'of';
+
+  @override
+  String get originalAmountLabel => 'Original Amount';
+
+  @override
+  String get paidAmountLabel => 'Paid';
+
+  @override
+  String get debtProgressTitle => 'Progress';
+
+  @override
+  String remainingPercentLabel(int percent) {
+    return '$percent% Remaining';
+  }
+
+  @override
+  String get recordPayment => 'Record Payment';
+
+  @override
+  String get openAction => 'Open';
+
+  @override
+  String get editDebt => 'Edit Debt';
+
+  @override
+  String get editDebtHelper =>
+      'Adjust the debt details, note, and any supporting attachment.';
+
+  @override
+  String get closeDebt => 'Close Debt';
+
+  @override
+  String get closeDebtConfirmation =>
+      'Are you sure you want to mark this debt as settled?';
+
+  @override
+  String get markAsSettled => 'Mark as Settled';
+
+  @override
+  String get reopenDebt => 'Reopen Debt';
+
+  @override
+  String get reopenDebtConfirmation =>
+      'Are you sure you want to reopen this debt record?';
+
+  @override
+  String get viewHistory => 'View History';
+
+  @override
+  String get currentRemainingAmount => 'Current Remaining Amount';
+
+  @override
+  String get debtEditUnavailable =>
+      'Editing debt records is not available yet.';
+
+  @override
+  String get debtCloseUnavailable =>
+      'Closing debt records is not available yet.';
+
+  @override
+  String get debtReopenUnavailable =>
+      'Reopening debt records is not available yet.';
+
+  @override
+  String get previewAttachment => 'Preview';
+
+  @override
+  String get downloadAttachment => 'Download';
+
+  @override
+  String get openAttachmentViewer => 'Open Attachments';
+
+  @override
+  String get attachmentPreviewUnavailable =>
+      'Preview is not available for this file.';
+
+  @override
+  String attachmentDownloaded(Object fileName) {
+    return '$fileName was downloaded.';
+  }
+
+  @override
+  String get attachmentDownloadFailed =>
+      'The attachment could not be downloaded.';
+
+  @override
+  String get attachmentDownloadUnsupported =>
+      'Downloading attachments is not supported on this device yet.';
+
+  @override
+  String get timeline => 'Timeline';
+
+  @override
+  String get debtCreatedEvent => 'Debt Created';
+
+  @override
+  String get partialPaymentEvent => 'Partial Payment';
+
+  @override
+  String get fullSettlementEvent => 'Full Settlement';
+
+  @override
+  String get attachmentAddedEvent => 'Attachment Added';
+
+  @override
+  String get debtAttachmentSaveFailed =>
+      'The debt was saved, but one or more attachments could not be stored.';
+
+  @override
+  String get repaymentAttachmentSaveFailed =>
+      'The repayment was saved, but one or more attachments could not be stored.';
+
+  @override
+  String get debtAttachmentHint =>
+      'Add receipts, agreements, or proof of repayment.';
+
+  @override
+  String get debtDirectionOwedToMeShort => 'Owed to me';
+
+  @override
+  String get debtDirectionIOweShort => 'I owe';
+
+  @override
+  String get completed => 'Completed';
+
+  @override
+  String get noDebtRecordsFound => 'No debt records found.';
 
   @override
   String get transactionDetailsTitle => 'Transaction Details';

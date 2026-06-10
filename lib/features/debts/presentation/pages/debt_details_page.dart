@@ -1,15 +1,32 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
-import '../../../../core/design_system/widgets/pw_scaffold.dart';
-import '../../../../core/design_system/widgets/pw_section_card.dart';
+import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/localization/localization_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/amount_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../features/attachments/domain/enums/attachment_reference_type.dart';
+import '../../../../features/attachments/domain/models/attachment.dart';
+import '../../../../features/attachments/domain/models/attachment_reference.dart';
+import '../../../../shared/domain/enums/currency.dart';
+import '../../../attachments/presentation/providers/attachment_providers.dart';
+import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
+import '../../../transactions/presentation/widgets/transaction_attachment_picker.dart';
+import '../../../transactions/presentation/widgets/transaction_flow_support.dart';
+import '../../../transactions/presentation/widgets/transaction_form_validators.dart';
+import '../../domain/models/debt_summary.dart';
+import '../../domain/models/settlement_summary.dart';
+import 'create_debt_repayment_page.dart';
 import '../providers/debt_providers.dart';
 
 class DebtDetailsPage extends ConsumerStatefulWidget {
@@ -22,174 +39,1537 @@ class DebtDetailsPage extends ConsumerStatefulWidget {
 }
 
 class _DebtDetailsPageState extends ConsumerState<DebtDetailsPage> {
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _timelineKey = GlobalKey();
+
+  AttachmentReference get _attachmentReference => AttachmentReference(
+    type: AttachmentReferenceType.debt,
+    entityId: widget.debtId,
+  );
+
   @override
   void initState() {
     super.initState();
-    Future<void>.microtask(() {
-      ref.read(debtControllerProvider.notifier).loadDebt(widget.debtId);
-    });
+    Future<void>.microtask(_loadData);
+  }
+
+  @override
+  void didUpdateWidget(covariant DebtDetailsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.debtId != widget.debtId) {
+      Future<void>.microtask(_loadData);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    await ref.read(debtControllerProvider.notifier).loadDebt(widget.debtId);
+    if (!mounted) {
+      return;
+    }
+    await ref
+        .read(attachmentControllerProvider.notifier)
+        .loadReference(_attachmentReference);
+  }
+
+  Future<void> _scrollToTimeline() async {
+    final BuildContext? timelineContext = _timelineKey.currentContext;
+    if (timelineContext == null) {
+      return;
+    }
+    await Scrollable.ensureVisible(
+      timelineContext,
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOut,
+      alignment: 0.08,
+    );
+  }
+
+  void _showUnavailableMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _downloadAttachment(Attachment attachment) async {
+    final File source = File(attachment.localUri);
+    if (!await source.exists()) {
+      if (!mounted) {
+        return;
+      }
+      _showUnavailableMessage(context.tr.attachmentDownloadFailed);
+      return;
+    }
+
+    final String? downloadsDirectoryPath = _downloadsDirectoryPath();
+    if (downloadsDirectoryPath == null) {
+      if (!mounted) {
+        return;
+      }
+      _showUnavailableMessage(context.tr.attachmentDownloadUnsupported);
+      return;
+    }
+
+    try {
+      final Directory downloadsDirectory = Directory(downloadsDirectoryPath);
+      if (!await downloadsDirectory.exists()) {
+        await downloadsDirectory.create(recursive: true);
+      }
+
+      final String targetPath = await _uniqueDownloadPath(
+        directory: downloadsDirectory.path,
+        fileName: attachment.fileName,
+      );
+      await source.copy(targetPath);
+
+      if (!mounted) {
+        return;
+      }
+      _showUnavailableMessage(
+        context.tr.attachmentDownloaded(attachment.fileName),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showUnavailableMessage(context.tr.attachmentDownloadFailed);
+    }
+  }
+
+  String? _downloadsDirectoryPath() {
+    if (Platform.isWindows) {
+      final String? userProfile = Platform.environment['USERPROFILE'];
+      return userProfile == null ? null : '$userProfile\\Downloads';
+    }
+    if (Platform.isLinux || Platform.isMacOS) {
+      final String? home = Platform.environment['HOME'];
+      return home == null ? null : '$home/Downloads';
+    }
+    return null;
+  }
+
+  Future<String> _uniqueDownloadPath({
+    required String directory,
+    required String fileName,
+  }) async {
+    final int extensionIndex = fileName.lastIndexOf('.');
+    final String baseName = extensionIndex <= 0
+        ? fileName
+        : fileName.substring(0, extensionIndex);
+    final String extension = extensionIndex <= 0
+        ? ''
+        : fileName.substring(extensionIndex);
+
+    String candidate = '$directory${Platform.pathSeparator}$fileName';
+    int suffix = 1;
+
+    while (await File(candidate).exists()) {
+      candidate =
+          '$directory${Platform.pathSeparator}$baseName-$suffix$extension';
+      suffix += 1;
+    }
+
+    return candidate;
+  }
+
+  Future<void> _showAttachmentPreview(Attachment attachment) async {
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        final ThemeData theme = Theme.of(context);
+        final bool isImage = _isImageAttachment(attachment);
+
+        return Dialog(
+          insetPadding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          attachment.fileName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  if (isImage)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      child: Image.file(
+                        File(attachment.localUri),
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => _AttachmentFallbackPreview(
+                          title: context.tr.attachmentPreviewUnavailable,
+                          subtitle: attachment.fileName,
+                        ),
+                      ),
+                    )
+                  else
+                    _AttachmentFallbackPreview(
+                      title: context.tr.attachmentPreviewUnavailable,
+                      subtitle: attachment.fileName,
+                    ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    '${context.tr.createdLabel}: ${DateFormatter.short(attachment.createdAt)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditDebtSheet(DebtSummary summary) {
+    return showAppModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return _EditDebtSheet(summary: summary);
+      },
+    );
+  }
+
+  Future<void> _showCloseDebtSheet(DebtSummary summary) {
+    return showAppModalBottomSheet<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return _DebtStateChangeSheet(
+          title: context.tr.closeDebt,
+          description: context.tr.closeDebtConfirmation,
+          primaryLabel: context.tr.markAsSettled,
+          amountLabel: _formatMoney(
+            context,
+            summary.remainingAmount,
+            summary.currency,
+          ),
+          onConfirm: () {
+            Navigator.of(context).pop();
+            _showUnavailableMessage(context.tr.debtCloseUnavailable);
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showReopenDebtSheet(DebtSummary summary) {
+    return showAppModalBottomSheet<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return _DebtStateChangeSheet(
+          title: context.tr.reopenDebt,
+          description: context.tr.reopenDebtConfirmation,
+          primaryLabel: context.tr.reopenDebt,
+          amountLabel: _formatMoney(
+            context,
+            summary.remainingAmount,
+            summary.currency,
+          ),
+          onConfirm: () {
+            Navigator.of(context).pop();
+            _showUnavailableMessage(context.tr.debtReopenUnavailable);
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final debtState = ref.watch(debtControllerProvider);
-    final summary = debtState.selectedDebt;
+    final attachmentState = ref.watch(attachmentControllerProvider);
+    final DebtSummary? summary = debtState.selectedDebt;
+    final bool isAttachmentReferenceActive =
+        attachmentState.activeReference?.type == _attachmentReference.type &&
+        attachmentState.activeReference?.entityId ==
+            _attachmentReference.entityId;
+    final List<Attachment> attachments = isAttachmentReferenceActive
+        ? attachmentState.attachments
+        : const <Attachment>[];
+    final List<_DebtTimelineEvent> timelineEvents = summary == null
+        ? const <_DebtTimelineEvent>[]
+        : _buildTimelineEvents(context, summary, attachments: attachments);
 
-    return PwScaffold(
-      title: 'Debt Details',
-      body: debtState.isLoading && summary == null
-          ? const Center(child: CircularProgressIndicator())
-          : summary == null
-          ? const Center(child: Text('Debt not found.'))
-          : ListView(
-              children: <Widget>[
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(summary.contact.name, style: context.titleLarge),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            summary.debt.isOwedToMe
-                                ? 'This contact owes you'
-                                : 'You owe this contact',
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(context.tr.debtDetailsTitle, style: context.titleMedium),
+      ),
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? <Color>[AppColors.brandDark, AppColors.surfaceDark]
+                : <Color>[AppColors.canvasTop, AppColors.canvasBottom],
+          ),
+        ),
+        child: debtState.isLoading && summary == null
+            ? const Center(child: CircularProgressIndicator())
+            : summary == null
+            ? Center(child: Text(context.tr.debtNotFound))
+            : RefreshIndicator(
+                onRefresh: _loadData,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 820),
+                    child: ListView(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.lg,
+                        AppSpacing.lg,
+                        AppSpacing.lg,
+                      ),
+                      children: <Widget>[
+                        _DebtHeaderCard(summary: summary),
+                        const SizedBox(height: AppSpacing.md),
+                        _DebtQuickActionsRow(
+                          summary: summary,
+                          onRecordPayment: () => showCreateDebtRepaymentSheet(
+                            context,
+                            debtId: summary.debt.id,
+                          ),
+                          onEditDebt: () => _showEditDebtSheet(summary),
+                          onCloseDebt: () => _showCloseDebtSheet(summary),
+                          onReopenDebt: () => _showReopenDebtSheet(summary),
+                          onViewHistory: _scrollToTimeline,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _DebtFinancialSummaryCard(summary: summary),
+                        if ((summary.debt.note ?? '')
+                            .trim()
+                            .isNotEmpty) ...<Widget>[
+                          const SizedBox(height: AppSpacing.md),
+                          _DebtNotesCard(note: summary.debt.note!.trim()),
+                        ],
+                        if (attachmentState.isLoading &&
+                            isAttachmentReferenceActive)
+                          const Padding(
+                            padding: EdgeInsets.only(top: AppSpacing.md),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        else if (attachments.isNotEmpty) ...<Widget>[
+                          const SizedBox(height: AppSpacing.md),
+                          _DebtAttachmentsCard(
+                            attachments: attachments,
+                            onPreview: _showAttachmentPreview,
+                            onOpen: () => context.push(
+                              '${AppRoutes.attachmentViewerPath}?entityType=debt&entityId=${Uri.encodeComponent(summary.debt.id)}&label=${Uri.encodeComponent(summary.contact.name)}',
+                            ),
+                            onDownload: _downloadAttachment,
                           ),
                         ],
-                      ),
-                    ),
-                    Wrap(
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.sm,
-                      children: <Widget>[
-                        PwButton.secondary(
-                          label: 'Record repayment',
-                          onPressed: () => context.push(
-                            AppRoutes.debtRepaymentLocation(summary.debt.id),
-                          ),
-                        ),
-                        if (summary.contact.linkedUserId != null &&
-                            !summary.isCompleted)
-                          PwButton.primary(
-                            label: 'Settle with transfer',
-                            onPressed: () => context.push(
-                              AppRoutes.debtSettlementLocation(summary.debt.id),
-                            ),
-                          ),
-                        PwButton.secondary(
-                          label: 'Attachments',
-                          onPressed: () => context.push(
-                            '${AppRoutes.attachmentViewerPath}?entityType=debt&entityId=${Uri.encodeComponent(summary.debt.id)}&label=${Uri.encodeComponent(summary.contact.name)}',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                PwSectionCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text('Debt Summary', style: context.titleMedium),
                         const SizedBox(height: AppSpacing.md),
-                        _DebtMetricRow(
-                          label: 'Original amount',
-                          value:
-                              '${AmountFormatter.format(summary.debt.originalAmount)} ${summary.currency.name.toUpperCase()}',
-                        ),
-                        _DebtMetricRow(
-                          label: 'Recovered amount',
-                          value:
-                              '${AmountFormatter.format(summary.repaidAmount)} ${summary.currency.name.toUpperCase()}',
-                        ),
-                        _DebtMetricRow(
-                          label: 'Remaining amount',
-                          value:
-                              '${AmountFormatter.format(summary.remainingAmount)} ${summary.currency.name.toUpperCase()}',
+                        _DebtTimelineCard(
+                          key: _timelineKey,
+                          events: timelineEvents,
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                PwSectionCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text('Timeline', style: context.titleMedium),
-                        const SizedBox(height: AppSpacing.md),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Debt Created'),
-                          subtitle: Text(summary.debt.note ?? 'Initial debt'),
-                          trailing: Text(
-                            DateFormatter.short(summary.debt.createdAt),
-                          ),
-                        ),
-                        ...summary.repayments.map((repayment) {
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(
-                              'Repayment ${AmountFormatter.format(repayment.amount)} ${summary.currency.name.toUpperCase()}',
-                            ),
-                            subtitle: Text(repayment.note ?? 'Manual repayment'),
-                            trailing: Text(
-                              DateFormatter.short(repayment.createdAt),
-                            ),
-                          );
-                        }),
-                        ...summary.settlements.map((settlement) {
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            onTap: () => context.push(
-                              '${AppRoutes.attachmentViewerPath}?entityType=debtSettlement&entityId=${Uri.encodeComponent(settlement.settlement.id)}&label=${Uri.encodeComponent(settlement.transferReference)}',
-                            ),
-                            title: Text(
-                              'Settlement ${AmountFormatter.format(settlement.settlement.amount)} ${summary.currency.name.toUpperCase()}',
-                            ),
-                            subtitle: Text(
-                              '${settlement.counterpartyDisplayName} | ${settlement.transferReference}',
-                            ),
-                            trailing: Text(
-                              DateFormatter.short(
-                                settlement.settlement.createdAt,
-                              ),
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+      ),
     );
   }
 }
 
-class _DebtMetricRow extends StatelessWidget {
-  const _DebtMetricRow({required this.label, required this.value});
+class _DebtHeaderCard extends StatelessWidget {
+  const _DebtHeaderCard({required this.summary});
+
+  final DebtSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+    final Color directionColor = summary.debt.isOwedToMe
+        ? AppColors.success
+        : AppColors.warning;
+    final bool isOpen = !summary.isCompleted;
+    final Color statusColor = isOpen
+        ? colorScheme.primary
+        : colorScheme.onSurfaceVariant;
+
+    final num original = num.tryParse(summary.debt.originalAmount) ?? 0;
+    final num remaining = num.tryParse(summary.remainingAmount) ?? 0;
+    final num paid = num.tryParse(summary.repaidAmount) ?? 0;
+    final double progressValue = original <= 0
+        ? 0
+        : (paid / original).clamp(0, 1).toDouble();
+    final int remainingPercent = original <= 0
+        ? 0
+        : ((remaining / original) * 100).round().clamp(0, 100);
+
+    return DashboardSurfaceCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            summary.contact.name,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              height: 1.04,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              Text(
+                summary.debt.isOwedToMe ? context.tr.owedToMe : context.tr.iOwe,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: directionColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                '•',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              _DebtInfoChip(
+                label: isOpen
+                    ? context.tr.openStatus
+                    : context.tr.settledStatus,
+                backgroundColor: statusColor.withValues(alpha: 0.10),
+                foregroundColor: statusColor,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            '${_formatMoney(context, summary.remainingAmount, summary.currency)} ${context.tr.remainingAmountLabel}',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            '${context.tr.ofAmountPrefix} ${_formatMoney(context, summary.debt.originalAmount, summary.currency)}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: LinearProgressIndicator(minHeight: 8, value: progressValue),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            context.tr.remainingPercentLabel(remainingPercent),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebtQuickActionsRow extends StatelessWidget {
+  const _DebtQuickActionsRow({
+    required this.summary,
+    required this.onRecordPayment,
+    required this.onEditDebt,
+    required this.onCloseDebt,
+    required this.onReopenDebt,
+    required this.onViewHistory,
+  });
+
+  final DebtSummary summary;
+  final VoidCallback onRecordPayment;
+  final VoidCallback onEditDebt;
+  final VoidCallback onCloseDebt;
+  final VoidCallback onReopenDebt;
+  final VoidCallback onViewHistory;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> actions = summary.isCompleted
+        ? <Widget>[
+            _DebtActionIconButton(
+              icon: Icons.refresh_rounded,
+              label: context.tr.reopenDebt,
+              onTap: onReopenDebt,
+            ),
+            _DebtActionIconButton(
+              icon: Icons.history_rounded,
+              label: context.tr.viewHistory,
+              onTap: onViewHistory,
+            ),
+          ]
+        : <Widget>[
+            _DebtActionIconButton(
+              icon: Icons.payments_outlined,
+              label: context.tr.recordPayment,
+              onTap: onRecordPayment,
+            ),
+            _DebtActionIconButton(
+              icon: Icons.edit_outlined,
+              label: context.tr.editDebt,
+              onTap: onEditDebt,
+            ),
+            _DebtActionIconButton(
+              icon: Icons.task_alt_rounded,
+              label: context.tr.closeDebt,
+              onTap: onCloseDebt,
+            ),
+          ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: actions
+            .map(
+              (Widget action) => Padding(
+                padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
+                child: action,
+              ),
+            )
+            .toList(growable: false),
+      ),
+    );
+  }
+}
+
+class _DebtFinancialSummaryCard extends StatelessWidget {
+  const _DebtFinancialSummaryCard({required this.summary});
+
+  final DebtSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardSurfaceCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final List<Widget> metrics = <Widget>[
+            _DebtSummaryMetric(
+              label: context.tr.originalAmountLabel,
+              value: _formatMoney(
+                context,
+                summary.debt.originalAmount,
+                summary.currency,
+              ),
+            ),
+            _DebtSummaryMetric(
+              label: context.tr.paidAmountLabel,
+              value: _formatMoney(
+                context,
+                summary.repaidAmount,
+                summary.currency,
+              ),
+            ),
+            _DebtSummaryMetric(
+              label: context.tr.remainingAmountLabel,
+              value: _formatMoney(
+                context,
+                summary.remainingAmount,
+                summary.currency,
+              ),
+              emphasized: true,
+            ),
+          ];
+
+          if (constraints.maxWidth >= 640) {
+            return Row(
+              children: metrics
+                  .map(
+                    (Widget item) => Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: item,
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
+            );
+          }
+
+          return Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: metrics
+                .map(
+                  (Widget item) => SizedBox(
+                    width: constraints.maxWidth < 420
+                        ? constraints.maxWidth
+                        : (constraints.maxWidth - AppSpacing.sm) / 2,
+                    child: item,
+                  ),
+                )
+                .toList(growable: false),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _DebtNotesCard extends StatelessWidget {
+  const _DebtNotesCard({required this.note});
+
+  final String note;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardSurfaceCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            context.tr.detailNotes,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(note, style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebtAttachmentsCard extends StatelessWidget {
+  const _DebtAttachmentsCard({
+    required this.attachments,
+    required this.onPreview,
+    required this.onOpen,
+    required this.onDownload,
+  });
+
+  final List<Attachment> attachments;
+  final ValueChanged<Attachment> onPreview;
+  final VoidCallback onOpen;
+  final ValueChanged<Attachment> onDownload;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardSurfaceCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  context.tr.attachments,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              TextButton(
+                onPressed: onOpen,
+                child: Text(context.tr.openAttachmentViewer),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: attachments
+                .map(
+                  (Attachment attachment) => _DebtAttachmentCard(
+                    attachment: attachment,
+                    onPreview: () => onPreview(attachment),
+                    onOpen: onOpen,
+                    onDownload: () => onDownload(attachment),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebtAttachmentCard extends StatelessWidget {
+  const _DebtAttachmentCard({
+    required this.attachment,
+    required this.onPreview,
+    required this.onOpen,
+    required this.onDownload,
+  });
+
+  final Attachment attachment;
+  final VoidCallback onPreview;
+  final VoidCallback onOpen;
+  final VoidCallback onDownload;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+
+    return SizedBox(
+      width: 160,
+      child: InkWell(
+        onTap: onPreview,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Ink(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: AppColors.outlineSoft),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Center(child: _AttachmentThumbnail(attachment: attachment)),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                attachment.fileName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                DateFormatter.short(attachment.createdAt),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                children: <Widget>[
+                  _MiniIconAction(
+                    icon: Icons.visibility_outlined,
+                    onTap: onPreview,
+                  ),
+                  const SizedBox(width: 4),
+                  _MiniIconAction(
+                    icon: Icons.open_in_new_rounded,
+                    onTap: onOpen,
+                  ),
+                  const SizedBox(width: 4),
+                  _MiniIconAction(
+                    icon: Icons.download_rounded,
+                    onTap: onDownload,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DebtTimelineCard extends StatelessWidget {
+  const _DebtTimelineCard({required this.events, super.key});
+
+  final List<_DebtTimelineEvent> events;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardSurfaceCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            context.tr.timeline,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          ...events.asMap().entries.map((
+            MapEntry<int, _DebtTimelineEvent> entry,
+          ) {
+            return _DebtTimelineTile(
+              event: entry.value,
+              isLast: entry.key == events.length - 1,
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebtTimelineTile extends StatelessWidget {
+  const _DebtTimelineTile({required this.event, required this.isLast});
+
+  final _DebtTimelineEvent event;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      decoration: BoxDecoration(
+        border: isLast
+            ? null
+            : Border(
+                bottom: BorderSide(
+                  color: AppColors.outlineSoft.withValues(alpha: 0.9),
+                ),
+              ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(event.icon, size: 16, color: event.color),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  DateFormatter.short(event.createdAt),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  event.title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (event.amountLabel != null) ...<Widget>[
+                  const SizedBox(height: 1),
+                  Text(
+                    event.amountLabel!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: event.color,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+                if (event.subtitle != null &&
+                    event.subtitle!.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 1),
+                  Text(
+                    event.subtitle!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebtInfoChip extends StatelessWidget {
+  const _DebtInfoChip({
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+  });
+
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: foregroundColor,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _DebtActionIconButton extends StatelessWidget {
+  const _DebtActionIconButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      child: Ink(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(color: AppColors.outlineSoft),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(icon, size: 18, color: theme.colorScheme.primary),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              label,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DebtSummaryMetric extends StatelessWidget {
+  const _DebtSummaryMetric({
+    required this.label,
+    required this.value,
+    this.emphasized = false,
+  });
 
   final String label;
   final String value;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: emphasized
+            ? colorScheme.primary.withValues(alpha: 0.08)
+            : colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: emphasized
+              ? colorScheme.primary.withValues(alpha: 0.18)
+              : AppColors.outlineSoft,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            value,
+            style:
+                (emphasized
+                        ? theme.textTheme.titleLarge
+                        : theme.textTheme.titleMedium)
+                    ?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: emphasized ? colorScheme.primary : null,
+                      height: 1.08,
+                    ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniIconAction extends StatelessWidget {
+  const _MiniIconAction({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Ink(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          icon,
+          size: 16,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
+class _AttachmentThumbnail extends StatelessWidget {
+  const _AttachmentThumbnail({required this.attachment});
+
+  final Attachment attachment;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    if (_isImageAttachment(attachment)) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Image.file(
+          File(attachment.localUri),
+          width: 56,
+          height: 56,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => _AttachmentThumbnailFallback(theme: theme),
+        ),
+      );
+    }
+
+    return _AttachmentThumbnailFallback(theme: theme);
+  }
+}
+
+class _AttachmentThumbnailFallback extends StatelessWidget {
+  const _AttachmentThumbnailFallback({required this.theme});
+
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(
+        Icons.insert_drive_file_outlined,
+        color: theme.colorScheme.primary,
+      ),
+    );
+  }
+}
+
+class _AttachmentFallbackPreview extends StatelessWidget {
+  const _AttachmentFallbackPreview({
+    required this.title,
+    required this.subtitle,
+  });
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        children: <Widget>[
+          const Icon(Icons.insert_drive_file_outlined, size: 42),
+          const SizedBox(height: AppSpacing.sm),
+          Text(title, style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebtStateChangeSheet extends StatelessWidget {
+  const _DebtStateChangeSheet({
+    required this.title,
+    required this.description,
+    required this.primaryLabel,
+    required this.amountLabel,
+    required this.onConfirm,
+  });
+
+  final String title;
+  final String description;
+  final String primaryLabel;
+  final String amountLabel;
+  final VoidCallback onConfirm;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Row(
-        children: <Widget>[
-          Expanded(child: Text(label)),
-          Text(value, style: context.bodyLarge),
-        ],
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: DashboardSurfaceCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              '${context.tr.currentRemainingAmount}: $amountLabel',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(description, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: PwButton.secondary(
+                    label: context.tr.cancel,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: PwButton.primary(
+                    label: primaryLabel,
+                    onPressed: onConfirm,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
+  }
+}
+
+class _EditDebtSheet extends ConsumerStatefulWidget {
+  const _EditDebtSheet({required this.summary});
+
+  final DebtSummary summary;
+
+  @override
+  ConsumerState<_EditDebtSheet> createState() => _EditDebtSheetState();
+}
+
+class _EditDebtSheetState extends ConsumerState<_EditDebtSheet> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _noteController = TextEditingController();
+  final List<TransactionAttachmentDraft> _attachments =
+      <TransactionAttachmentDraft>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController.text = widget.summary.debt.originalAmount;
+    _noteController.text = widget.summary.debt.note ?? '';
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addAttachment() async {
+    final TransactionAttachmentDraft? attachment =
+        await showTransactionAttachmentSourceSheet(context: context);
+    if (attachment != null) {
+      setState(() => _attachments.add(attachment));
+    }
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.tr.debtEditUnavailable)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.md,
+        right: AppSpacing.md,
+        top: AppSpacing.md,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.md,
+      ),
+      child: DashboardSurfaceCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  context.tr.editDebt,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  context.tr.editDebtHelper,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.xs,
+                  children: <Widget>[
+                    _DebtInfoChip(
+                      label: widget.summary.contact.name,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    _DebtInfoChip(
+                      label: widget.summary.debt.isOwedToMe
+                          ? context.tr.owedToMe
+                          : context.tr.iOwe,
+                      backgroundColor:
+                          (widget.summary.debt.isOwedToMe
+                                  ? AppColors.success
+                                  : AppColors.warning)
+                              .withValues(alpha: 0.10),
+                      foregroundColor: widget.summary.debt.isOwedToMe
+                          ? AppColors.success
+                          : AppColors.warning,
+                    ),
+                    _DebtInfoChip(
+                      label: _currencyLabel(context, widget.summary.currency),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.10),
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PwTextField(
+                  controller: _amountController,
+                  label: context.tr.amount,
+                  hint: context.tr.enterAmountHint,
+                  prefixIcon: const Icon(Icons.payments_outlined),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: (String? value) => amountValidator(context, value),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PwTextField(
+                  controller: _noteController,
+                  label: context.tr.note,
+                  hint: context.tr.transactionNoteHint,
+                  prefixIcon: const Icon(Icons.edit_note_rounded),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AttachmentCompactField(
+                  label: context.tr.addAttachment,
+                  value: transactionAttachmentSummary(
+                    context,
+                    _attachments.length,
+                    fileName: _attachments.isEmpty
+                        ? null
+                        : _attachments.first.fileName,
+                  ),
+                  onTap: _addAttachment,
+                  thumbnails: _attachments
+                      .take(3)
+                      .map(
+                        (TransactionAttachmentDraft attachment) => Padding(
+                          padding: const EdgeInsetsDirectional.only(start: 4),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.memory(
+                              attachment.bytes,
+                              width: 24,
+                              height: 24,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
+                if (_attachments.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: AppSpacing.xs),
+                  TransactionAttachmentList(
+                    attachments: _attachments,
+                    onRemove: (TransactionAttachmentDraft item) {
+                      setState(() => _attachments.remove(item));
+                    },
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: PwButton.secondary(
+                        label: context.tr.cancel,
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: PwButton.primary(
+                        label: context.tr.saveChanges,
+                        onPressed: _submit,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DebtTimelineEvent {
+  const _DebtTimelineEvent({
+    required this.createdAt,
+    required this.title,
+    required this.icon,
+    required this.color,
+    this.amountLabel,
+    this.subtitle,
+  });
+
+  final DateTime createdAt;
+  final String title;
+  final IconData icon;
+  final Color color;
+  final String? amountLabel;
+  final String? subtitle;
+}
+
+List<_DebtTimelineEvent> _buildTimelineEvents(
+  BuildContext context,
+  DebtSummary summary, {
+  required List<Attachment> attachments,
+}) {
+  final List<_DebtTimelineEvent> timeline = <_DebtTimelineEvent>[
+    _DebtTimelineEvent(
+      createdAt: summary.debt.createdAt,
+      title: context.tr.debtCreatedEvent,
+      subtitle: (summary.debt.note ?? '').trim().isEmpty
+          ? null
+          : summary.debt.note!.trim(),
+      icon: Icons.receipt_long_rounded,
+      color: Theme.of(context).colorScheme.primary,
+    ),
+  ];
+
+  final num originalAmount = num.tryParse(summary.debt.originalAmount) ?? 0;
+  num runningRemaining = originalAmount;
+  final List<_DebtEventRecord> paymentEvents = <_DebtEventRecord>[
+    ...summary.repayments.map(
+      (repayment) => _DebtEventRecord(
+        createdAt: repayment.createdAt,
+        amount: num.tryParse(repayment.amount) ?? 0,
+        note: repayment.note,
+        isSettlement: false,
+      ),
+    ),
+    ...summary.settlements.map(
+      (SettlementSummary settlement) => _DebtEventRecord(
+        createdAt: settlement.settlement.createdAt,
+        amount: num.tryParse(settlement.settlement.amount) ?? 0,
+        note: settlement.settlement.note,
+        isSettlement: true,
+        transferReference: settlement.transferReference,
+        counterpartyDisplayName: settlement.counterpartyDisplayName,
+      ),
+    ),
+  ]..sort((left, right) => left.createdAt.compareTo(right.createdAt));
+
+  for (final _DebtEventRecord event in paymentEvents) {
+    runningRemaining -= event.amount;
+    final bool completed = runningRemaining <= 0;
+    timeline.add(
+      _DebtTimelineEvent(
+        createdAt: event.createdAt,
+        title: completed
+            ? context.tr.fullSettlementEvent
+            : context.tr.partialPaymentEvent,
+        amountLabel: _formatMoney(
+          context,
+          event.amount.toString(),
+          summary.currency,
+        ),
+        subtitle: _timelineSubtitle(event),
+        icon: event.isSettlement
+            ? Icons.swap_horiz_rounded
+            : Icons.payments_outlined,
+        color: completed ? AppColors.success : AppColors.warning,
+      ),
+    );
+  }
+
+  for (final Attachment attachment in attachments) {
+    timeline.add(
+      _DebtTimelineEvent(
+        createdAt: attachment.createdAt,
+        title: context.tr.attachmentAddedEvent,
+        subtitle: attachment.fileName,
+        icon: Icons.attach_file_rounded,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+
+  timeline.sort((left, right) => left.createdAt.compareTo(right.createdAt));
+  return timeline;
+}
+
+String? _timelineSubtitle(_DebtEventRecord event) {
+  final String note = (event.note ?? '').trim();
+  final String transferReference = (event.transferReference ?? '').trim();
+  final String counterpartyDisplayName = (event.counterpartyDisplayName ?? '')
+      .trim();
+
+  final List<String> segments = <String>[
+    if (counterpartyDisplayName.isNotEmpty) counterpartyDisplayName,
+    if (transferReference.isNotEmpty) transferReference,
+    if (note.isNotEmpty) note,
+  ];
+
+  return segments.isEmpty ? null : segments.join(' | ');
+}
+
+class _DebtEventRecord {
+  const _DebtEventRecord({
+    required this.createdAt,
+    required this.amount,
+    required this.isSettlement,
+    this.note,
+    this.transferReference,
+    this.counterpartyDisplayName,
+  });
+
+  final DateTime createdAt;
+  final num amount;
+  final bool isSettlement;
+  final String? note;
+  final String? transferReference;
+  final String? counterpartyDisplayName;
+}
+
+bool _isImageAttachment(Attachment attachment) {
+  final String mimeType = (attachment.mimeType ?? '').toLowerCase();
+  final String lowerPath = attachment.localUri.toLowerCase();
+  return mimeType.startsWith('image/') ||
+      lowerPath.endsWith('.png') ||
+      lowerPath.endsWith('.jpg') ||
+      lowerPath.endsWith('.jpeg') ||
+      lowerPath.endsWith('.gif') ||
+      lowerPath.endsWith('.webp');
+}
+
+String _formatMoney(BuildContext context, String amount, Currency currency) {
+  return '\u2066${AmountFormatter.format(amount)} ${_currencyLabel(context, currency)}\u2069';
+}
+
+String _currencyLabel(BuildContext context, Currency currency) {
+  switch (currency) {
+    case Currency.usd:
+      return context.tr.usdShort;
+    case Currency.syp:
+      return context.tr.sypShort;
   }
 }

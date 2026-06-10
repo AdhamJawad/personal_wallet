@@ -28,7 +28,7 @@ class TransferPageShell extends StatelessWidget {
               ),
               child: PwSectionCard(
                 child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: child,
                 ),
               ),

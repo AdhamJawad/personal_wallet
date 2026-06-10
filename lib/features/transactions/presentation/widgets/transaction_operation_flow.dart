@@ -397,6 +397,8 @@ class _TransactionOperationFlowState
     List<WalletOverview> wallets,
     WalletOverview? selectedWallet,
   ) {
+    final double gap = widget.embeddedInSheet ? AppSpacing.sm : AppSpacing.md;
+
     if (isWalletLoading) {
       return const TransactionFormSkeleton();
     }
@@ -445,7 +447,7 @@ class _TransactionOperationFlowState
                     errorText: _walletError,
                     onTap: () => _selectWallet(wallets),
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: gap),
                   if (_isExchange) ...<Widget>[
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -480,7 +482,7 @@ class _TransactionOperationFlowState
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: gap),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
@@ -523,7 +525,7 @@ class _TransactionOperationFlowState
                             ),
                       ),
                     ],
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: gap),
                     KeyedSubtree(
                       key: _exchangeRateFieldKey,
                       child: PwTextField(
@@ -576,7 +578,7 @@ class _TransactionOperationFlowState
                       ],
                     ),
                   ],
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: gap),
                   KeyedSubtree(
                     key: _noteFieldKey,
                     child: PwTextField(
@@ -591,7 +593,7 @@ class _TransactionOperationFlowState
                       },
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: gap),
                   AttachmentCompactField(
                     label: context.tr.addAttachment,
                     value: transactionAttachmentSummary(
@@ -604,7 +606,7 @@ class _TransactionOperationFlowState
                     thumbnails: _attachmentThumbnails(context),
                   ),
                   if (_attachments.isNotEmpty) ...<Widget>[
-                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(height: widget.embeddedInSheet ? AppSpacing.xs : AppSpacing.sm),
                     TransactionAttachmentList(
                       attachments: _attachments,
                       onRemove: (TransactionAttachmentDraft attachment) {
@@ -756,10 +758,10 @@ class _PickerSheet<T> extends StatelessWidget {
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
+          left: AppSpacing.md,
+          right: AppSpacing.md,
           top: AppSpacing.md,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

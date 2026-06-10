@@ -7,6 +7,7 @@ class PwTextField extends StatelessWidget {
     required this.label,
     this.hint,
     this.helper,
+    this.prefixIcon,
     this.focusNode,
     this.keyboardType,
     this.obscureText = false,
@@ -27,6 +28,7 @@ class PwTextField extends StatelessWidget {
   final String label;
   final String? hint;
   final String? helper;
+  final Widget? prefixIcon;
   final FocusNode? focusNode;
   final TextInputType? keyboardType;
   final bool obscureText;
@@ -61,6 +63,7 @@ class PwTextField extends StatelessWidget {
         labelText: label,
         hintText: hint,
         helperText: helper,
+        prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         counterText: '',
       ),

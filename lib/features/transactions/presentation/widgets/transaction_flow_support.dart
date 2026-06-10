@@ -30,36 +30,39 @@ class TransactionFlowLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final EdgeInsets contentPadding = EdgeInsets.only(
-      bottom:
-          (compact ? AppSpacing.md : AppSpacing.lg) + extraScrollBottomSpacing,
-    );
-    final Widget scrollableContent = SingleChildScrollView(
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: contentPadding,
-      child: content,
-    );
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final EdgeInsets contentPadding = EdgeInsets.only(
+          bottom:
+              (compact ? AppSpacing.xs : AppSpacing.lg) + extraScrollBottomSpacing,
+        );
+        final Widget scrollableContent = SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: contentPadding,
+          child: content,
+        );
+        final Widget actionBar = _StickyActionBar(
+          primaryLabel: primaryLabel,
+          onPrimaryPressed: onPrimaryPressed,
+          secondaryLabel: secondaryLabel,
+          onSecondaryPressed: onSecondaryPressed,
+          isPrimaryLoading: isPrimaryLoading,
+        );
+        final bool canUseFlex = constraints.hasBoundedHeight;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Column(
-        mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
-        children: <Widget>[
-          if (compact)
-            Flexible(fit: FlexFit.loose, child: scrollableContent)
-          else
-            Expanded(child: scrollableContent),
-          const SizedBox(height: AppSpacing.md),
-          _StickyActionBar(
-            primaryLabel: primaryLabel,
-            onPrimaryPressed: onPrimaryPressed,
-            secondaryLabel: secondaryLabel,
-            onSecondaryPressed: onSecondaryPressed,
-            isPrimaryLoading: isPrimaryLoading,
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Column(
+            mainAxisSize: canUseFlex ? MainAxisSize.max : MainAxisSize.min,
+            children: <Widget>[
+              if (canUseFlex) Expanded(child: scrollableContent) else scrollableContent,
+              SizedBox(height: compact ? AppSpacing.xs : AppSpacing.md),
+              actionBar,
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -82,8 +85,9 @@ class TransactionFormSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return PwSectionCard(
       child: Padding(
-        padding: EdgeInsets.all(compact ? AppSpacing.md : AppSpacing.lg),
+        padding: EdgeInsets.all(compact ? AppSpacing.sm : AppSpacing.lg),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             if (title != null) ...<Widget>[
@@ -95,7 +99,7 @@ class TransactionFormSection extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: compact ? AppSpacing.sm : AppSpacing.md),
             ],
             child,
           ],
@@ -114,6 +118,8 @@ class TransactionPickerField extends StatelessWidget {
     this.errorText,
     this.enabled = true,
     this.trailing,
+    this.leading,
+    this.subtitle,
     super.key,
   });
 
@@ -124,6 +130,8 @@ class TransactionPickerField extends StatelessWidget {
   final VoidCallback onTap;
   final bool enabled;
   final Widget? trailing;
+  final Widget? leading;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -151,17 +159,39 @@ class TransactionPickerField extends StatelessWidget {
               border: Border.all(color: borderColor),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
+                if (leading != null) ...<Widget>[
+                  leading!,
+                  const SizedBox(width: AppSpacing.sm),
+                ],
                 Expanded(
-                  child: Text(
-                    value == null || value!.isEmpty ? hint : value!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: value == null || value!.isEmpty
-                        ? theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.hintColor,
-                          )
-                        : theme.textTheme.bodyLarge,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        value == null || value!.isEmpty ? hint : value!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: value == null || value!.isEmpty
+                            ? theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.hintColor,
+                              )
+                            : theme.textTheme.bodyLarge,
+                      ),
+                      if (subtitle != null) ...<Widget>[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 trailing ??
@@ -420,6 +450,7 @@ class AttachmentCompactField extends StatelessWidget {
     required this.value,
     required this.onTap,
     this.thumbnails = const <Widget>[],
+    this.subtitle,
     super.key,
   });
 
@@ -427,6 +458,7 @@ class AttachmentCompactField extends StatelessWidget {
   final String value;
   final VoidCallback onTap;
   final List<Widget> thumbnails;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -456,6 +488,15 @@ class AttachmentCompactField extends StatelessWidget {
                   Text(label, style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 2),
                   Text(value, style: Theme.of(context).textTheme.bodySmall),
+                  if (subtitle != null) ...<Widget>[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -486,6 +527,7 @@ class CurrencyChip<T> extends StatelessWidget {
     required this.label,
     required this.options,
     required this.onSelected,
+    this.icon,
     super.key,
   });
 
@@ -493,6 +535,7 @@ class CurrencyChip<T> extends StatelessWidget {
   final String label;
   final List<SelectionChipOption<T>> options;
   final ValueChanged<T> onSelected;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -531,6 +574,10 @@ class CurrencyChip<T> extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
+            if (icon != null) ...<Widget>[
+              Icon(icon, size: 16, color: theme.colorScheme.primary),
+              const SizedBox(width: AppSpacing.xs),
+            ],
             Text(label, style: theme.textTheme.titleSmall),
             const SizedBox(width: AppSpacing.xs),
             const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
@@ -574,7 +621,7 @@ class _StickyActionBar extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.sm),
         child: Row(
           children: <Widget>[
             if (secondaryLabel != null) ...<Widget>[

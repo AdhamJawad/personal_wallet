@@ -323,6 +323,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get iOwe => 'علي للآخرين';
 
   @override
+  String get openStatus => 'مفتوح';
+
+  @override
+  String get settledStatus => 'مسدد';
+
+  @override
+  String get remainingAmountLabel => 'المتبقي';
+
+  @override
+  String get openRecords => 'السجلات المفتوحة';
+
+  @override
+  String get searchDebts => 'ابحث في الديون';
+
+  @override
+  String get searchDebtsHint => 'جهة الاتصال أو الملاحظة أو المرجع';
+
+  @override
+  String get noDebtRecordsYetTitle => 'لا توجد سجلات ديون بعد';
+
+  @override
+  String get noDebtRecordsYetMessage =>
+      'أنشئ أول سجل دين لتتبع ما لك وما عليك.';
+
+  @override
+  String get noDebtSearchResultsTitle => 'لا توجد ديون مطابقة';
+
+  @override
+  String get noDebtSearchResultsMessage =>
+      'جرّب جهة اتصال أو ملاحظة أو مرجعًا آخر.';
+
+  @override
+  String get noDebtFilterResultsTitle => 'لا توجد ديون في هذا العرض';
+
+  @override
+  String get noDebtFilterResultsMessage =>
+      'اختر فلترًا آخر لعرض المزيد من سجلات الديون.';
+
+  @override
   String get outstandingDebts => 'الديون القائمة';
 
   @override
@@ -899,6 +938,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transferRecipientTitle => 'المستلم';
 
   @override
+  String get transferRecipientDescription =>
+      'اختر طريقة تحديد المستلم ثم أكد بياناته قبل المتابعة.';
+
+  @override
   String get transferRecipientRequired => 'المستلم مطلوب.';
 
   @override
@@ -917,6 +960,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get enterRecipientNameHint => 'أدخل اسم المستلم';
 
   @override
+  String get recipientMethodHint => 'اختر أسرع طريقة للوصول إلى الشخص الصحيح.';
+
+  @override
   String get qrScan => 'مسح QR';
 
   @override
@@ -930,6 +976,38 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get manualEntry => 'إدخال يدوي';
+
+  @override
+  String get transferRouteTitle => 'مسار التحويل';
+
+  @override
+  String get transferRouteDescription =>
+      'راجع من أين ستخرج الأموال ومن سيستلمها.';
+
+  @override
+  String get transferRouteSourceHint => 'اختر المحفظة التي سترسل منها';
+
+  @override
+  String get transferRouteDestinationHint => 'ستظهر بيانات المستلم هنا';
+
+  @override
+  String get transferRouteSwap => 'عكس العرض';
+
+  @override
+  String get transferRouteSourceLabel => 'محفظة المصدر';
+
+  @override
+  String get transferRouteDestinationLabel => 'المستلم';
+
+  @override
+  String get transferDetailsTitle => 'تفاصيل التحويل';
+
+  @override
+  String get transferDetailsDescription =>
+      'أدخل مبلغ التحويل والعملة والملاحظة وأي مرفق داعم.';
+
+  @override
+  String get transferRecipientPreviewHint => 'اختر مستلمًا للمتابعة';
 
   @override
   String get selectContact => 'اختر جهة اتصال';
@@ -949,6 +1027,183 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get noTransferContactsMessage =>
       'أضف جهة اتصال مسجلة أولاً أو استخدم الإدخال اليدوي.';
+
+  @override
+  String get debtFormDescription =>
+      'أنشئ سجل دين واضح الاتجاه مع جهة الاتصال والمبلغ وأي إثبات اختياري.';
+
+  @override
+  String get debtDirectionTitle => 'اتجاه الدين';
+
+  @override
+  String get debtDirectionDescription =>
+      'حدد ما إذا كانت الأموال لك على الآخرين أم عليك لهم.';
+
+  @override
+  String get debtContactTitle => 'جهة الاتصال';
+
+  @override
+  String get debtContactDescription => 'اختر الشخص المرتبط بسجل الدين هذا.';
+
+  @override
+  String get debtContactRequired => 'جهة الاتصال مطلوبة.';
+
+  @override
+  String get debtContactHint => 'اختر جهة اتصال';
+
+  @override
+  String get debtDetailsTitle => 'تفاصيل الدين';
+
+  @override
+  String get debtDetailsDescription =>
+      'سجّل المبلغ والعملة والملاحظة وأي مرفق داعم.';
+
+  @override
+  String get debtRepaymentTitle => 'تسجيل دفعة سداد';
+
+  @override
+  String get debtRepaymentDescription =>
+      'سجّل مبلغ السداد واحتفظ بملاحظة أو مرفق داعم عند الحاجة.';
+
+  @override
+  String get saveDebtRecord => 'حفظ الدين';
+
+  @override
+  String get saveRepayment => 'حفظ السداد';
+
+  @override
+  String get failedCreateDebt => 'تعذر إنشاء الدين.';
+
+  @override
+  String get failedCreateRepayment => 'تعذر تسجيل السداد.';
+
+  @override
+  String get debtNotFound => 'تعذر العثور على الدين.';
+
+  @override
+  String get debtFinancialSummaryTitle => 'الملخص المالي';
+
+  @override
+  String get ofAmountPrefix => 'من أصل';
+
+  @override
+  String get originalAmountLabel => 'المبلغ الأصلي';
+
+  @override
+  String get paidAmountLabel => 'المدفوع';
+
+  @override
+  String get debtProgressTitle => 'التقدم';
+
+  @override
+  String remainingPercentLabel(int percent) {
+    return '$percent% متبقٍ';
+  }
+
+  @override
+  String get recordPayment => 'تسجيل دفعة';
+
+  @override
+  String get openAction => 'فتح';
+
+  @override
+  String get editDebt => 'تعديل الدين';
+
+  @override
+  String get editDebtHelper => 'حدّث بيانات الدين والملاحظة وأي مرفق داعم.';
+
+  @override
+  String get closeDebt => 'إغلاق الدين';
+
+  @override
+  String get closeDebtConfirmation => 'هل أنت متأكد من وضع هذا الدين كمسدد؟';
+
+  @override
+  String get markAsSettled => 'تحديده كمسدد';
+
+  @override
+  String get reopenDebt => 'إعادة فتح الدين';
+
+  @override
+  String get reopenDebtConfirmation =>
+      'هل أنت متأكد من إعادة فتح سجل هذا الدين؟';
+
+  @override
+  String get viewHistory => 'عرض السجل';
+
+  @override
+  String get currentRemainingAmount => 'المبلغ المتبقي الحالي';
+
+  @override
+  String get debtEditUnavailable => 'تعديل سجلات الديون غير متاح بعد.';
+
+  @override
+  String get debtCloseUnavailable => 'إغلاق سجلات الديون غير متاح بعد.';
+
+  @override
+  String get debtReopenUnavailable => 'إعادة فتح سجلات الديون غير متاحة بعد.';
+
+  @override
+  String get previewAttachment => 'معاينة';
+
+  @override
+  String get downloadAttachment => 'تنزيل';
+
+  @override
+  String get openAttachmentViewer => 'فتح المرفقات';
+
+  @override
+  String get attachmentPreviewUnavailable => 'المعاينة غير متاحة لهذا الملف.';
+
+  @override
+  String attachmentDownloaded(Object fileName) {
+    return 'تم تنزيل $fileName.';
+  }
+
+  @override
+  String get attachmentDownloadFailed => 'تعذر تنزيل المرفق.';
+
+  @override
+  String get attachmentDownloadUnsupported =>
+      'تنزيل المرفقات غير مدعوم على هذا الجهاز بعد.';
+
+  @override
+  String get timeline => 'الخط الزمني';
+
+  @override
+  String get debtCreatedEvent => 'تم إنشاء الدين';
+
+  @override
+  String get partialPaymentEvent => 'دفعة جزئية';
+
+  @override
+  String get fullSettlementEvent => 'تسوية كاملة';
+
+  @override
+  String get attachmentAddedEvent => 'تمت إضافة مرفق';
+
+  @override
+  String get debtAttachmentSaveFailed =>
+      'تم حفظ الدين، لكن تعذر تخزين مرفق واحد أو أكثر.';
+
+  @override
+  String get repaymentAttachmentSaveFailed =>
+      'تم حفظ السداد، لكن تعذر تخزين مرفق واحد أو أكثر.';
+
+  @override
+  String get debtAttachmentHint => 'أضف إيصالات أو اتفاقات أو إثبات سداد.';
+
+  @override
+  String get debtDirectionOwedToMeShort => 'لي على الغير';
+
+  @override
+  String get debtDirectionIOweShort => 'علي للغير';
+
+  @override
+  String get completed => 'مكتمل';
+
+  @override
+  String get noDebtRecordsFound => 'لا توجد سجلات ديون.';
 
   @override
   String get transactionDetailsTitle => 'تفاصيل العملية';

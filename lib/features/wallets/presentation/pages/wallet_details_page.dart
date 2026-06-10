@@ -14,6 +14,7 @@ import '../../../dashboard/presentation/widgets/dashboard_empty_state.dart';
 import '../../../dashboard/presentation/widgets/dashboard_skeleton_block.dart';
 import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
 import '../../../transactions/domain/models/ledger_transaction.dart';
+import '../../../transactions/presentation/pages/create_transfer_page.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../domain/models/wallet_overview.dart';
 import '../providers/wallet_providers.dart';
@@ -148,8 +149,7 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
                           walletId: walletOverview.wallet.id,
                           walletName: walletOverview.wallet.name,
                         ),
-                        onTransfer: () =>
-                            context.push(AppRoutes.transferCreatePath),
+                        onTransfer: () => showCreateTransferSheet(context),
                         onExchange: () => showWalletExchangeSheet(
                           context,
                           walletId: walletOverview.wallet.id,

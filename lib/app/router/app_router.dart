@@ -13,6 +13,7 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/contacts/presentation/pages/contacts_page.dart';
+import '../../features/contacts/presentation/pages/contact_details_page.dart';
 import '../../features/contacts/presentation/pages/create_external_contact_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_placeholder_page.dart';
 import '../../features/debts/presentation/pages/create_debt_page.dart';
@@ -140,13 +141,14 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
         },
       ),
       StatefulShellRoute.indexedStack(
-        builder: (
-          BuildContext context,
-          GoRouterState state,
-          StatefulNavigationShell navigationShell,
-        ) {
-          return AppShellPage(navigationShell: navigationShell);
-        },
+        builder:
+            (
+              BuildContext context,
+              GoRouterState state,
+              StatefulNavigationShell navigationShell,
+            ) {
+              return AppShellPage(navigationShell: navigationShell);
+            },
         branches: <StatefulShellBranch>[
           StatefulShellBranch(
             navigatorKey: _homeBranchNavigatorKey,
@@ -219,7 +221,10 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
                     name: AppRoutes.debtCreate,
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (BuildContext context, GoRouterState state) {
-                      return const CreateDebtPage();
+                      return CreateDebtPage(
+                        initialContactId:
+                            state.uri.queryParameters['contactId'],
+                      );
                     },
                   ),
                   GoRoute(
@@ -321,6 +326,16 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
               return const CreateExternalContactPage();
             },
           ),
+          GoRoute(
+            path: ':contactId',
+            name: AppRoutes.contactDetails,
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (BuildContext context, GoRouterState state) {
+              return ContactDetailsPage(
+                contactId: state.pathParameters['contactId']!,
+              );
+            },
+          ),
         ],
       ),
       GoRoute(
@@ -353,7 +368,8 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
           return TransferPage(
             preselectedRecipientUserId:
                 state.uri.queryParameters['recipientUserId'],
-            preselectedRecipientName: state.uri.queryParameters['recipientName'],
+            preselectedRecipientName:
+                state.uri.queryParameters['recipientName'],
           );
         },
       ),
@@ -361,9 +377,7 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
         path: AppRoutes.userTransferConfirmationPath,
         name: AppRoutes.userTransferConfirmation,
         builder: (BuildContext context, GoRouterState state) {
-          return TransferConfirmationPage(
-            draft: state.extra as TransferDraft?,
-          );
+          return TransferConfirmationPage(draft: state.extra as TransferDraft?);
         },
       ),
       GoRoute(
@@ -399,7 +413,8 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
         name: AppRoutes.attachmentViewer,
         builder: (BuildContext context, GoRouterState state) {
           return AttachmentViewerPage(
-            entityType: state.uri.queryParameters['entityType'] ?? 'transaction',
+            entityType:
+                state.uri.queryParameters['entityType'] ?? 'transaction',
             entityId: state.uri.queryParameters['entityId'] ?? '',
             label: state.uri.queryParameters['label'],
           );
@@ -410,7 +425,8 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
         name: AppRoutes.attachmentPicker,
         builder: (BuildContext context, GoRouterState state) {
           return AttachmentPickerPage(
-            entityType: state.uri.queryParameters['entityType'] ?? 'transaction',
+            entityType:
+                state.uri.queryParameters['entityType'] ?? 'transaction',
             entityId: state.uri.queryParameters['entityId'] ?? '',
             label: state.uri.queryParameters['label'],
           );

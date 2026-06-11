@@ -2449,6 +2449,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'None'**
   String get none;
+
+  /// No description provided for @contactDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Details'**
+  String get contactDetailsTitle;
+
+  /// No description provided for @contactNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact not found.'**
+  String get contactNotFound;
+
+  /// No description provided for @searchContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search contacts'**
+  String get searchContacts;
+
+  /// No description provided for @searchContactsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ahmad Kareem'**
+  String get searchContactsHint;
+
+  /// No description provided for @addExternalContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Add External Contact'**
+  String get addExternalContact;
+
+  /// No description provided for @registeredContactsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered Users'**
+  String get registeredContactsSection;
+
+  /// No description provided for @externalContactsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'External Contacts'**
+  String get externalContactsSection;
+
+  /// No description provided for @noContactsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts available.'**
+  String get noContactsAvailable;
+
+  /// No description provided for @contactLinkReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Link-ready'**
+  String get contactLinkReady;
+
+  /// No description provided for @createExternalContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Create External Contact'**
+  String get createExternalContact;
+
+  /// No description provided for @saveContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Contact'**
+  String get saveContact;
+
+  /// No description provided for @contactCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create contact.'**
+  String get contactCreateFailed;
+
+  /// No description provided for @editContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Contact'**
+  String get editContact;
+
+  /// No description provided for @editContactHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Update the contact name, phone number, or note.'**
+  String get editContactHelper;
+
+  /// No description provided for @contactSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save contact.'**
+  String get contactSaveFailed;
+
+  /// No description provided for @openContactProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Contact Profile'**
+  String get openContactProfile;
+
+  /// No description provided for @contactTypePerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Person'**
+  String get contactTypePerson;
+
+  /// No description provided for @contactTypeBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Business'**
+  String get contactTypeBusiness;
+
+  /// No description provided for @callContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Contact'**
+  String get callContact;
+
+  /// No description provided for @whatsAppContact.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp Contact'**
+  String get whatsAppContact;
+
+  /// No description provided for @contactFinancialSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Summary'**
+  String get contactFinancialSummaryTitle;
+
+  /// No description provided for @contactNetBalanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Balance'**
+  String get contactNetBalanceLabel;
+
+  /// No description provided for @contactOpenDebtsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Debts'**
+  String get contactOpenDebtsTitle;
+
+  /// No description provided for @contactOpenDebtsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No active debts'**
+  String get contactOpenDebtsEmptyTitle;
+
+  /// No description provided for @contactOpenDebtsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No debts associated with this contact.'**
+  String get contactOpenDebtsEmptyMessage;
+
+  /// No description provided for @contactActivityEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent activity'**
+  String get contactActivityEmptyTitle;
+
+  /// No description provided for @contactActivityEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt activity for this contact will appear here.'**
+  String get contactActivityEmptyMessage;
+
+  /// No description provided for @contactCallUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Calling is not available on this device.'**
+  String get contactCallUnavailable;
+
+  /// No description provided for @contactWhatsAppUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp could not be opened on this device.'**
+  String get contactWhatsAppUnavailable;
 }
 
 class _AppLocalizationsDelegate

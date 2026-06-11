@@ -21,6 +21,7 @@ sealed class AppRoutes {
   static const debtSettlementSuccess = 'debtSettlementSuccess';
   static const contacts = 'contacts';
   static const contactCreate = 'contactCreate';
+  static const contactDetails = 'contactDetails';
   static const qr = 'qr';
   static const qrScanner = 'qrScanner';
   static const qrPreview = 'qrPreview';
@@ -74,4 +75,6 @@ sealed class AppRoutes {
       '/debts/$debtId/settlement';
   static String debtSettlementSuccessLocation(String debtId) =>
       '/debts/$debtId/settlement-success';
+  static String contactDetailsLocation(String contactId) =>
+      '/contacts/$contactId';
 }

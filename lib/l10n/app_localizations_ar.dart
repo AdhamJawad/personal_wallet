@@ -1243,4 +1243,92 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get none => 'لا يوجد';
+
+  @override
+  String get contactDetailsTitle => 'تفاصيل جهة الاتصال';
+
+  @override
+  String get contactNotFound => 'تعذر العثور على جهة الاتصال.';
+
+  @override
+  String get searchContacts => 'ابحث في جهات الاتصال';
+
+  @override
+  String get searchContactsHint => 'أحمد كريم';
+
+  @override
+  String get addExternalContact => 'إضافة جهة اتصال خارجية';
+
+  @override
+  String get registeredContactsSection => 'المستخدمون المسجلون';
+
+  @override
+  String get externalContactsSection => 'جهات الاتصال الخارجية';
+
+  @override
+  String get noContactsAvailable => 'لا توجد جهات اتصال متاحة.';
+
+  @override
+  String get contactLinkReady => 'جاهزة للربط';
+
+  @override
+  String get createExternalContact => 'إنشاء جهة اتصال خارجية';
+
+  @override
+  String get saveContact => 'حفظ جهة الاتصال';
+
+  @override
+  String get contactCreateFailed => 'تعذر إنشاء جهة الاتصال.';
+
+  @override
+  String get editContact => 'تعديل جهة الاتصال';
+
+  @override
+  String get editContactHelper => 'حدّث الاسم أو رقم الهاتف أو الملاحظة.';
+
+  @override
+  String get contactSaveFailed => 'تعذر حفظ جهة الاتصال.';
+
+  @override
+  String get openContactProfile => 'فتح ملف جهة الاتصال';
+
+  @override
+  String get contactTypePerson => 'شخص';
+
+  @override
+  String get contactTypeBusiness => 'نشاط تجاري';
+
+  @override
+  String get callContact => 'اتصال';
+
+  @override
+  String get whatsAppContact => 'واتساب';
+
+  @override
+  String get contactFinancialSummaryTitle => 'الملخص المالي';
+
+  @override
+  String get contactNetBalanceLabel => 'الرصيد الصافي';
+
+  @override
+  String get contactOpenDebtsTitle => 'الديون المفتوحة';
+
+  @override
+  String get contactOpenDebtsEmptyTitle => 'لا توجد ديون نشطة';
+
+  @override
+  String get contactOpenDebtsEmptyMessage => 'لا توجد ديون مرتبطة بهذه الجهة.';
+
+  @override
+  String get contactActivityEmptyTitle => 'لا توجد نشاطات حديثة';
+
+  @override
+  String get contactActivityEmptyMessage =>
+      'ستظهر أنشطة الديون لهذه الجهة هنا.';
+
+  @override
+  String get contactCallUnavailable => 'الاتصال غير متاح على هذا الجهاز.';
+
+  @override
+  String get contactWhatsAppUnavailable => 'تعذر فتح واتساب على هذا الجهاز.';
 }

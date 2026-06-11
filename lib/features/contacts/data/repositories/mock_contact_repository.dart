@@ -195,7 +195,8 @@ class MockContactRepository implements LocalContactRepository {
     );
     await _saveRecords(
       ownerUserId,
-      List<MockContactRecord>.from(records)..add(MockContactRecord(contact: contact)),
+      List<MockContactRecord>.from(records)
+        ..add(MockContactRecord(contact: contact)),
     );
     await _syncQueueRepository.addOperation(
       ownerUserId: ownerUserId,
@@ -247,5 +248,36 @@ class MockContactRepository implements LocalContactRepository {
       (Contact? item) => item?.linkedUserId == linkedUserId,
       orElse: () => null,
     );
+  }
+
+  @override
+  Future<Contact> updateContact({
+    required String ownerUserId,
+    required String contactId,
+    required String name,
+    String? phoneNumber,
+    String? note,
+  }) async {
+    final List<MockContactRecord> records = await _loadRecords(ownerUserId);
+    final int index = records.indexWhere(
+      (MockContactRecord item) => item.contact.id == contactId,
+    );
+    if (index == -1) {
+      throw StateError('Contact not found.');
+    }
+
+    final Contact updatedContact = records[index].contact.copyWith(
+      name: name,
+      phoneNumber: phoneNumber,
+      note: note,
+      updatedAt: DateTime.now().toUtc(),
+    );
+
+    final List<MockContactRecord> updatedRecords = List<MockContactRecord>.from(
+      records,
+    );
+    updatedRecords[index] = MockContactRecord(contact: updatedContact);
+    await _saveRecords(ownerUserId, updatedRecords);
+    return updatedContact;
   }
 }

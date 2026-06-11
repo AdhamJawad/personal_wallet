@@ -5,6 +5,7 @@ import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_scaffold.dart';
 import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../providers/contact_providers.dart';
 
@@ -57,7 +58,7 @@ class _CreateExternalContactPageState
       SnackBar(
         content: Text(
           ref.read(contactControllerProvider).errorMessage ??
-              'Failed to create contact.',
+              context.tr.contactCreateFailed,
         ),
       ),
     );
@@ -68,7 +69,7 @@ class _CreateExternalContactPageState
     final contactState = ref.watch(contactControllerProvider);
 
     return PwScaffold(
-      title: 'Create External Contact',
+      title: context.tr.createExternalContact,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 680),
@@ -83,10 +84,10 @@ class _CreateExternalContactPageState
                   children: <Widget>[
                     PwTextField(
                       controller: _nameController,
-                      label: 'Name',
+                      label: context.tr.fullName,
                       validator: (String? value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Name is required.';
+                          return context.tr.fullNameRequired;
                         }
                         return null;
                       },
@@ -94,17 +95,17 @@ class _CreateExternalContactPageState
                     const SizedBox(height: AppSpacing.md),
                     PwTextField(
                       controller: _phoneController,
-                      label: 'Phone number',
+                      label: context.tr.phoneNumber,
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    TextFormField(
+                    PwTextField(
                       controller: _noteController,
+                      label: context.tr.note,
                       maxLines: 3,
-                      decoration: const InputDecoration(labelText: 'Note'),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     PwButton.primary(
-                      label: 'Save contact',
+                      label: context.tr.saveContact,
                       isLoading: contactState.isLoading,
                       onPressed: _submit,
                     ),

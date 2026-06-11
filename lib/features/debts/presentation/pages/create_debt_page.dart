@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
 import '../../../../core/design_system/widgets/pw_scaffold.dart';
 import '../../../../core/design_system/widgets/pw_section_card.dart';
@@ -19,12 +18,19 @@ import '../../../transactions/presentation/widgets/transaction_flow_support.dart
 import '../../../transactions/presentation/widgets/transaction_form_validators.dart';
 import '../providers/debt_providers.dart';
 
-Future<void> showCreateDebtSheet(BuildContext context) {
+Future<void> showCreateDebtSheet(
+  BuildContext context, {
+  String? initialContactId,
+  bool lockContact = false,
+}) {
   return showAppModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     builder: (BuildContext context) {
-      return const _CreateDebtSheet();
+      return _CreateDebtSheet(
+        initialContactId: initialContactId,
+        lockContact: lockContact,
+      );
     },
   );
 }
@@ -33,12 +39,16 @@ class CreateDebtPage extends ConsumerStatefulWidget {
   const CreateDebtPage({
     this.embeddedInSheet = false,
     this.keyboardInset = 0,
+    this.initialContactId,
+    this.lockContact = false,
     this.onCloseRequested,
     super.key,
   });
 
   final bool embeddedInSheet;
   final double keyboardInset;
+  final String? initialContactId;
+  final bool lockContact;
   final VoidCallback? onCloseRequested;
 
   @override
@@ -63,6 +73,7 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
   @override
   void initState() {
     super.initState();
+    _contactId = widget.initialContactId;
     _amountFocusNode.addListener(
       () => _handleFocusChange(_amountFocusNode, _amountFieldKey),
     );
@@ -207,6 +218,10 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
   Widget build(BuildContext context) {
     final debtState = ref.watch(debtControllerProvider);
     final contacts = ref.watch(contactControllerProvider).contacts;
+    final Contact? selectedContact = contacts.cast<Contact?>().firstWhere(
+      (Contact? item) => item?.id == _contactId,
+      orElse: () => null,
+    );
     final double gap = widget.embeddedInSheet ? AppSpacing.sm : AppSpacing.md;
     final List<SelectionChipOption<Currency>> currencyOptions = Currency.values
         .map(
@@ -264,6 +279,8 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
                         title: context.tr.noTransferContactsTitle,
                         message: context.tr.noTransferContactsMessage,
                       )
+                    else if (widget.lockContact && selectedContact != null)
+                      _LockedContactField(contact: selectedContact)
                     else
                       DropdownButtonFormField<String>(
                         initialValue: _contactId,
@@ -334,7 +351,7 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
                         label: context.tr.note,
                         hint: context.tr.transactionNoteHint,
                         prefixIcon: const Icon(Icons.edit_note_rounded),
-                        maxLines: 2,
+                        maxLines: 3,
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) {
                           FocusScope.of(context).unfocus();
@@ -355,7 +372,11 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
                       thumbnails: _attachmentThumbnails(),
                     ),
                     if (_attachments.isNotEmpty) ...<Widget>[
-                      SizedBox(height: widget.embeddedInSheet ? AppSpacing.xs : AppSpacing.sm),
+                      SizedBox(
+                        height: widget.embeddedInSheet
+                            ? AppSpacing.xs
+                            : AppSpacing.sm,
+                      ),
                       TransactionAttachmentList(
                         attachments: _attachments,
                         onRemove: (TransactionAttachmentDraft item) {
@@ -363,6 +384,16 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
                         },
                       ),
                     ],
+                    SizedBox(height: gap),
+                    _DebtCreateSummaryCard(
+                      directionLabel: _isOwedToMe
+                          ? context.tr.debtDirectionOwedToMeShort
+                          : context.tr.debtDirectionIOweShort,
+                      contactName: selectedContact?.name ?? context.tr.none,
+                      amountLabel: _amountController.text.trim().isEmpty
+                          ? context.tr.none
+                          : '${_amountController.text.trim()} ${_currency.name.toUpperCase()}',
+                    ),
                   ],
                 ),
               ),
@@ -386,10 +417,7 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
       return formContent;
     }
 
-    return PwScaffold(
-      title: context.tr.createDebt,
-      body: formContent,
-    );
+    return PwScaffold(title: context.tr.createDebt, body: formContent);
   }
 
   List<Widget> _attachmentThumbnails() {
@@ -487,16 +515,16 @@ class _FormLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.titleSmall,
-      ),
+      child: Text(text, style: Theme.of(context).textTheme.titleSmall),
     );
   }
 }
 
 class _CreateDebtSheet extends StatelessWidget {
-  const _CreateDebtSheet();
+  const _CreateDebtSheet({this.initialContactId, this.lockContact = false});
+
+  final String? initialContactId;
+  final bool lockContact;
 
   @override
   Widget build(BuildContext context) {
@@ -518,9 +546,104 @@ class _CreateDebtSheet extends StatelessWidget {
           child: CreateDebtPage(
             embeddedInSheet: true,
             keyboardInset: keyboardInset,
+            initialContactId: initialContactId,
+            lockContact: lockContact,
             onCloseRequested: () => Navigator.of(context).pop(),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _LockedContactField extends StatelessWidget {
+  const _LockedContactField({required this.contact});
+
+  final Contact contact;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        children: <Widget>[
+          Icon(
+            Icons.person_outline_rounded,
+            size: 18,
+            color: colorScheme.primary,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              contact.name,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Icon(
+            Icons.lock_outline_rounded,
+            size: 16,
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebtCreateSummaryCard extends StatelessWidget {
+  const _DebtCreateSummaryCard({
+    required this.directionLabel,
+    required this.contactName,
+    required this.amountLabel,
+  });
+
+  final String directionLabel;
+  final String contactName;
+  final String amountLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.14),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            context.tr.review,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          TransactionSummaryRow(
+            label: context.tr.debtDirectionTitle,
+            value: directionLabel,
+          ),
+          TransactionSummaryRow(
+            label: context.tr.debtContactTitle,
+            value: contactName,
+          ),
+          TransactionSummaryRow(label: context.tr.amount, value: amountLabel),
+        ],
       ),
     );
   }

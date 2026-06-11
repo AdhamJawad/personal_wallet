@@ -7,6 +7,7 @@ import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_scaffold.dart';
 import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/domain/enums/contact_kind.dart';
 import '../../domain/models/contact.dart';
@@ -54,7 +55,7 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
         .toList(growable: false);
 
     return PwScaffold(
-      title: 'Contacts',
+      title: context.tr.contacts,
       body: ListView(
         children: <Widget>[
           Row(
@@ -62,21 +63,27 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
               Expanded(
                 child: PwTextField(
                   controller: _searchController,
-                  label: 'Search contacts',
-                  hint: 'Ali',
+                  label: context.tr.searchContacts,
+                  hint: context.tr.searchContactsHint,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
               PwButton.primary(
-                label: 'Add external contact',
+                label: context.tr.addExternalContact,
                 onPressed: () => context.push(AppRoutes.contactCreatePath),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
-          _ContactSection(title: 'Registered Users', contacts: registered),
+          _ContactSection(
+            title: context.tr.registeredContactsSection,
+            contacts: registered,
+          ),
           const SizedBox(height: AppSpacing.xl),
-          _ContactSection(title: 'External Contacts', contacts: external),
+          _ContactSection(
+            title: context.tr.externalContactsSection,
+            contacts: external,
+          ),
         ],
       ),
     );
@@ -97,10 +104,10 @@ class _ContactSection extends StatelessWidget {
         Text(title, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: AppSpacing.md),
         if (contacts.isEmpty)
-          const PwSectionCard(
+          PwSectionCard(
             child: Padding(
-              padding: EdgeInsets.all(AppSpacing.lg),
-              child: Text('No contacts available.'),
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Text(context.tr.noContactsAvailable),
             ),
           )
         else
@@ -114,6 +121,9 @@ class _ContactSection extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: AppSpacing.md),
               child: PwSectionCard(
                 child: ListTile(
+                  onTap: () => context.push(
+                    AppRoutes.contactDetailsLocation(contact.id),
+                  ),
                   title: Text(contact.name),
                   subtitle: Text(subtitleParts.join(' | ')),
                   trailing: Wrap(
@@ -125,17 +135,17 @@ class _ContactSection extends StatelessWidget {
                           onPressed: () => context.push(
                             '${AppRoutes.userTransferCreatePath}?recipientUserId=${Uri.encodeComponent(contact.linkedUserId!)}&recipientName=${Uri.encodeComponent(contact.name)}',
                           ),
-                          child: const Text('Transfer'),
+                          child: Text(context.tr.transfer),
                         ),
                       TextButton(
                         onPressed: () => context.push(
                           '${AppRoutes.attachmentViewerPath}?entityType=contact&entityId=${Uri.encodeComponent(contact.id)}&label=${Uri.encodeComponent(contact.name)}',
                         ),
-                        child: const Text('Files'),
+                        child: Text(context.tr.attachmentsButton),
                       ),
                       if (contact.kind == ContactKind.external &&
                           contact.futureLinkCandidate != null)
-                        const Chip(label: Text('Link-ready')),
+                        Chip(label: Text(context.tr.contactLinkReady)),
                     ],
                   ),
                 ),

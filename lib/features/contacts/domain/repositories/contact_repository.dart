@@ -23,4 +23,11 @@ abstract interface class ContactRepository {
     required String ownerUserId,
     required String linkedUserId,
   });
+  Future<Contact> updateContact({
+    required String ownerUserId,
+    required String contactId,
+    required String name,
+    String? phoneNumber,
+    String? note,
+  });
 }

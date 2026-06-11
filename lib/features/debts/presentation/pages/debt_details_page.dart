@@ -435,11 +435,23 @@ class _DebtHeaderCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            summary.contact.name,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              height: 1.04,
+          TextButton(
+            onPressed: () => context.push(
+              AppRoutes.contactDetailsLocation(summary.contact.id),
+            ),
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              alignment: AlignmentDirectional.centerStart,
+            ),
+            child: Text(
+              summary.contact.name,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                height: 1.04,
+                color: colorScheme.onSurface,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -917,15 +929,17 @@ class _DebtInfoChip extends StatelessWidget {
     required this.label,
     required this.backgroundColor,
     required this.foregroundColor,
+    this.onTap,
   });
 
   final String label;
   final Color backgroundColor;
   final Color foregroundColor;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final Widget content = Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
@@ -941,6 +955,16 @@ class _DebtInfoChip extends StatelessWidget {
           fontWeight: FontWeight.w700,
         ),
       ),
+    );
+
+    if (onTap == null) {
+      return content;
+    }
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      child: content,
     );
   }
 }
@@ -1313,6 +1337,11 @@ class _EditDebtSheetState extends ConsumerState<_EditDebtSheet> {
                         context,
                       ).colorScheme.surfaceContainerHighest,
                       foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      onTap: () => context.push(
+                        AppRoutes.contactDetailsLocation(
+                          widget.summary.contact.id,
+                        ),
+                      ),
                     ),
                     _DebtInfoChip(
                       label: widget.summary.debt.isOwedToMe

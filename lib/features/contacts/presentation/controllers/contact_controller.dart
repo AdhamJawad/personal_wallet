@@ -77,6 +77,32 @@ class ContactController extends StateNotifier<ContactState> {
     }
   }
 
+  Future<bool> updateContact({
+    required String contactId,
+    required String name,
+    String? phoneNumber,
+    String? note,
+  }) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      await _contactRepository.updateContact(
+        ownerUserId: _resolvedOwnerUserId,
+        contactId: contactId,
+        name: name.trim(),
+        phoneNumber: phoneNumber?.trim().isEmpty == true
+            ? null
+            : phoneNumber?.trim(),
+        note: note?.trim().isEmpty == true ? null : note?.trim(),
+      );
+      await initialize();
+      return true;
+    } catch (error) {
+      state = state.copyWith(isLoading: false, errorMessage: error.toString());
+      return false;
+    }
+  }
+
   Future<void> initialize() async {
     state = state.copyWith(isLoading: true);
 

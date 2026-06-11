@@ -1260,4 +1260,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get none => 'None';
+
+  @override
+  String get contactDetailsTitle => 'Contact Details';
+
+  @override
+  String get contactNotFound => 'Contact not found.';
+
+  @override
+  String get searchContacts => 'Search contacts';
+
+  @override
+  String get searchContactsHint => 'Ahmad Kareem';
+
+  @override
+  String get addExternalContact => 'Add External Contact';
+
+  @override
+  String get registeredContactsSection => 'Registered Users';
+
+  @override
+  String get externalContactsSection => 'External Contacts';
+
+  @override
+  String get noContactsAvailable => 'No contacts available.';
+
+  @override
+  String get contactLinkReady => 'Link-ready';
+
+  @override
+  String get createExternalContact => 'Create External Contact';
+
+  @override
+  String get saveContact => 'Save Contact';
+
+  @override
+  String get contactCreateFailed => 'Failed to create contact.';
+
+  @override
+  String get editContact => 'Edit Contact';
+
+  @override
+  String get editContactHelper =>
+      'Update the contact name, phone number, or note.';
+
+  @override
+  String get contactSaveFailed => 'Failed to save contact.';
+
+  @override
+  String get openContactProfile => 'Open Contact Profile';
+
+  @override
+  String get contactTypePerson => 'Person';
+
+  @override
+  String get contactTypeBusiness => 'Business';
+
+  @override
+  String get callContact => 'Call Contact';
+
+  @override
+  String get whatsAppContact => 'WhatsApp Contact';
+
+  @override
+  String get contactFinancialSummaryTitle => 'Financial Summary';
+
+  @override
+  String get contactNetBalanceLabel => 'Net Balance';
+
+  @override
+  String get contactOpenDebtsTitle => 'Open Debts';
+
+  @override
+  String get contactOpenDebtsEmptyTitle => 'No active debts';
+
+  @override
+  String get contactOpenDebtsEmptyMessage =>
+      'No debts associated with this contact.';
+
+  @override
+  String get contactActivityEmptyTitle => 'No recent activity';
+
+  @override
+  String get contactActivityEmptyMessage =>
+      'Debt activity for this contact will appear here.';
+
+  @override
+  String get contactCallUnavailable =>
+      'Calling is not available on this device.';
+
+  @override
+  String get contactWhatsAppUnavailable =>
+      'WhatsApp could not be opened on this device.';
 }

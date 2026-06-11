@@ -5,6 +5,7 @@ import '../../../../core/storage/local_store.dart';
 import '../../../../core/sync/enums/sync_operation_type.dart';
 import '../../../../core/sync/repositories/sync_queue_repository.dart';
 import '../../../../core/utils/id_generator.dart';
+import '../../../../shared/domain/enums/contact_entity_type.dart';
 import '../../../../shared/domain/enums/contact_kind.dart';
 import '../../../audit/domain/enums/audit_event_type.dart';
 import '../../../audit/domain/services/audit_logger.dart';
@@ -37,12 +38,18 @@ class MockContactRepository implements LocalContactRepository {
     }
 
     final List<dynamic> decoded = jsonDecode(rawValue) as List<dynamic>;
-    return decoded
+    final _ContactRecordMigrationResult migrationResult =
+        _migrateStoredContactRecords(decoded);
+    final List<MockContactRecord> records = migrationResult.records
         .map(
           (dynamic item) =>
               MockContactRecord.fromJson(item as Map<String, dynamic>),
         )
         .toList(growable: false);
+    if (migrationResult.didChange) {
+      await _saveRecords(ownerUserId, records);
+    }
+    return records;
   }
 
   Future<void> _saveRecords(
@@ -58,6 +65,48 @@ class MockContactRepository implements LocalContactRepository {
     );
   }
 
+  _ContactRecordMigrationResult _migrateStoredContactRecords(
+    List<dynamic> decoded,
+  ) {
+    bool didChange = false;
+    final List<Map<String, dynamic>> migratedRecords = decoded.map((
+      dynamic item,
+    ) {
+      final Map<String, dynamic> record = Map<String, dynamic>.from(
+        item as Map<String, dynamic>,
+      );
+      final Map<String, dynamic> contact = Map<String, dynamic>.from(
+        record['contact'] as Map<String, dynamic>,
+      );
+      final String? migratedEntityType = _migratedEntityType(contact);
+      if (migratedEntityType != null &&
+          contact['entityType'] != migratedEntityType) {
+        contact['entityType'] = migratedEntityType;
+        didChange = true;
+      }
+      record['contact'] = contact;
+      return record;
+    }).toList(growable: false);
+
+    return _ContactRecordMigrationResult(
+      records: migratedRecords,
+      didChange: didChange,
+    );
+  }
+
+  String? _migratedEntityType(Map<String, dynamic> contact) {
+    final String? id = contact['id'] as String?;
+    final String? currentEntityType = contact['entityType'] as String?;
+
+    if (id == 'contact_external_store') {
+      return 'business';
+    }
+    if (currentEntityType == null) {
+      return 'person';
+    }
+    return null;
+  }
+
   List<MockContactRecord> _seedRecords(String ownerUserId) {
     final DateTime now = DateTime.now().toUtc();
 
@@ -67,8 +116,10 @@ class MockContactRepository implements LocalContactRepository {
           id: 'contact_registered_ahmad',
           ownerUserId: ownerUserId,
           kind: ContactKind.registered,
+          entityType: ContactEntityType.person,
           name: 'Ahmad Kareem',
           phoneNumber: '+963900000002',
+          emailAddress: 'ahmad@example.com',
           note: 'Trusted registered user',
           linkedUserId: 'user_demo_2',
           createdAt: now.subtract(const Duration(days: 50)),
@@ -80,8 +131,10 @@ class MockContactRepository implements LocalContactRepository {
           id: 'contact_external_ali',
           ownerUserId: ownerUserId,
           kind: ContactKind.external,
+          entityType: ContactEntityType.person,
           name: 'Ali',
           phoneNumber: '+963944555111',
+          emailAddress: 'ali@example.com',
           note: 'Long-term personal debt contact',
           futureLinkCandidate: FutureLinkCandidate(
             externalContactId: 'contact_external_ali',
@@ -98,8 +151,10 @@ class MockContactRepository implements LocalContactRepository {
           id: 'contact_external_store',
           ownerUserId: ownerUserId,
           kind: ContactKind.external,
+          entityType: ContactEntityType.business,
           name: 'Local Store',
           phoneNumber: '+963933123456',
+          emailAddress: 'store@example.com',
           note: 'Supplier and repayment counterparty',
           createdAt: now.subtract(const Duration(days: 14)),
           updatedAt: now.subtract(const Duration(days: 1)),
@@ -111,9 +166,12 @@ class MockContactRepository implements LocalContactRepository {
   @override
   Future<Contact> createExternalContact({
     required String ownerUserId,
+    required ContactEntityType entityType,
     required String name,
     String? phoneNumber,
+    String? emailAddress,
     String? note,
+    String? imageUri,
   }) async {
     final DateTime now = DateTime.now().toUtc();
     final List<MockContactRecord> records = await _loadRecords(ownerUserId);
@@ -121,9 +179,12 @@ class MockContactRepository implements LocalContactRepository {
       id: IdGenerator.next(),
       ownerUserId: ownerUserId,
       kind: ContactKind.external,
+      entityType: entityType,
       name: name,
       phoneNumber: phoneNumber,
+      emailAddress: emailAddress,
       note: note,
+      imageUri: imageUri,
       futureLinkCandidate: phoneNumber == null || phoneNumber.isEmpty
           ? null
           : FutureLinkCandidate(
@@ -168,9 +229,12 @@ class MockContactRepository implements LocalContactRepository {
   Future<Contact> createRegisteredContact({
     required String ownerUserId,
     required String linkedUserId,
+    required ContactEntityType entityType,
     required String name,
     String? phoneNumber,
+    String? emailAddress,
     String? note,
+    String? imageUri,
   }) async {
     final Contact? existing = await getContactByLinkedUserId(
       ownerUserId: ownerUserId,
@@ -186,9 +250,12 @@ class MockContactRepository implements LocalContactRepository {
       id: IdGenerator.next(),
       ownerUserId: ownerUserId,
       kind: ContactKind.registered,
+      entityType: entityType,
       name: name,
       phoneNumber: phoneNumber,
+      emailAddress: emailAddress,
       note: note,
+      imageUri: imageUri,
       linkedUserId: linkedUserId,
       createdAt: now,
       updatedAt: now,
@@ -254,9 +321,12 @@ class MockContactRepository implements LocalContactRepository {
   Future<Contact> updateContact({
     required String ownerUserId,
     required String contactId,
+    required ContactEntityType entityType,
     required String name,
     String? phoneNumber,
+    String? emailAddress,
     String? note,
+    String? imageUri,
   }) async {
     final List<MockContactRecord> records = await _loadRecords(ownerUserId);
     final int index = records.indexWhere(
@@ -267,9 +337,12 @@ class MockContactRepository implements LocalContactRepository {
     }
 
     final Contact updatedContact = records[index].contact.copyWith(
+      entityType: entityType,
       name: name,
       phoneNumber: phoneNumber,
+      emailAddress: emailAddress,
       note: note,
+      imageUri: imageUri,
       updatedAt: DateTime.now().toUtc(),
     );
 
@@ -280,4 +353,26 @@ class MockContactRepository implements LocalContactRepository {
     await _saveRecords(ownerUserId, updatedRecords);
     return updatedContact;
   }
+
+  @override
+  Future<void> deleteContact({
+    required String ownerUserId,
+    required String contactId,
+  }) async {
+    final List<MockContactRecord> records = await _loadRecords(ownerUserId);
+    final List<MockContactRecord> updatedRecords = records
+        .where((MockContactRecord item) => item.contact.id != contactId)
+        .toList(growable: false);
+    await _saveRecords(ownerUserId, updatedRecords);
+  }
+}
+
+class _ContactRecordMigrationResult {
+  const _ContactRecordMigrationResult({
+    required this.records,
+    required this.didChange,
+  });
+
+  final List<Map<String, dynamic>> records;
+  final bool didChange;
 }

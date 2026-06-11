@@ -242,7 +242,9 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
             child: TransactionFlowLayout(
               compact: widget.embeddedInSheet,
               extraScrollBottomSpacing: widget.embeddedInSheet
-                  ? widget.keyboardInset + 84
+                  ? (widget.keyboardInset > 0
+                        ? widget.keyboardInset + AppSpacing.sm
+                        : 0)
                   : 0,
               primaryLabel: context.tr.saveDebtRecord,
               onPrimaryPressed: debtState.isLoading ? null : _submit,
@@ -401,7 +403,8 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
           ),
         );
 
-        return Center(
+        return Align(
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: constraints.maxWidth > 920 ? 820 : 760,
@@ -540,8 +543,8 @@ class _CreateDebtSheet extends StatelessWidget {
           padding: const EdgeInsets.only(
             left: AppSpacing.md,
             right: AppSpacing.md,
-            top: AppSpacing.md,
-            bottom: AppSpacing.md,
+            top: AppSpacing.sm,
+            bottom: AppSpacing.sm,
           ),
           child: CreateDebtPage(
             embeddedInSheet: true,

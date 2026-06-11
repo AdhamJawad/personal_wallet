@@ -418,7 +418,9 @@ class _TransactionOperationFlowState
     return TransactionFlowLayout(
       compact: widget.embeddedInSheet,
       extraScrollBottomSpacing: widget.embeddedInSheet
-          ? widget.keyboardInset + 84
+          ? (widget.keyboardInset > 0
+                ? widget.keyboardInset + AppSpacing.sm
+                : 0)
           : 0,
       primaryLabel: _continueLabel,
       onPrimaryPressed: isSubmitting

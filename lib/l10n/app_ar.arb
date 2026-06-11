@@ -512,5 +512,20 @@
   "contactActivityEmptyTitle": "لا توجد نشاطات حديثة",
   "contactActivityEmptyMessage": "ستظهر أنشطة الديون لهذه الجهة هنا.",
   "contactCallUnavailable": "الاتصال غير متاح على هذا الجهاز.",
-  "contactWhatsAppUnavailable": "تعذر فتح واتساب على هذا الجهاز."
+  "contactWhatsAppUnavailable": "تعذر فتح واتساب على هذا الجهاز.",
+  "addContact": "إضافة جهة اتصال",
+  "totalContacts": "إجمالي جهات الاتصال",
+  "peopleLabel": "أشخاص",
+  "businessesLabel": "أنشطة تجارية",
+  "emailAddress": "البريد الإلكتروني",
+  "profileImageLabel": "الصورة الشخصية",
+  "deleteAction": "حذف",
+  "deleteContactTitle": "حذف جهة الاتصال؟",
+  "deleteContactMessage": "لا يمكن التراجع عن هذا الإجراء.",
+  "contactDeleteFailed": "تعذر حذف جهة الاتصال.",
+  "contactsEmptyTitle": "لا توجد جهات اتصال بعد",
+  "contactsEmptyMessage": "أنشئ أول جهة اتصال لبدء تتبع الديون والعلاقات المالية.",
+  "noContactsSearchResultsTitle": "لا توجد جهات مطابقة",
+  "noContactsSearchResultsMessage": "جرّب اسمًا أو رقم هاتف أو بريدًا إلكترونيًا آخر.",
+  "contactNeutralBalance": "لا يوجد رصيد"
 }

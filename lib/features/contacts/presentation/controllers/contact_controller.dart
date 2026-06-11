@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/domain/enums/contact_entity_type.dart';
 import '../../domain/models/contact.dart';
 import '../../domain/repositories/contact_repository.dart';
 import 'contact_state.dart';
@@ -28,20 +29,28 @@ class ContactController extends StateNotifier<ContactState> {
   }
 
   Future<bool> createExternalContact({
+    required ContactEntityType entityType,
     required String name,
     String? phoneNumber,
+    String? emailAddress,
     String? note,
+    String? imageUri,
   }) async {
     state = state.copyWith(isLoading: true);
 
     try {
       await _contactRepository.createExternalContact(
         ownerUserId: _resolvedOwnerUserId,
+        entityType: entityType,
         name: name.trim(),
         phoneNumber: phoneNumber?.trim().isEmpty == true
             ? null
             : phoneNumber?.trim(),
+        emailAddress: emailAddress?.trim().isEmpty == true
+            ? null
+            : emailAddress?.trim(),
         note: note?.trim().isEmpty == true ? null : note?.trim(),
+        imageUri: imageUri?.trim().isEmpty == true ? null : imageUri?.trim(),
       );
       await initialize();
       return true;
@@ -53,9 +62,12 @@ class ContactController extends StateNotifier<ContactState> {
 
   Future<bool> createRegisteredContact({
     required String linkedUserId,
+    required ContactEntityType entityType,
     required String name,
     String? phoneNumber,
+    String? emailAddress,
     String? note,
+    String? imageUri,
   }) async {
     state = state.copyWith(isLoading: true);
 
@@ -63,11 +75,16 @@ class ContactController extends StateNotifier<ContactState> {
       await _contactRepository.createRegisteredContact(
         ownerUserId: _resolvedOwnerUserId,
         linkedUserId: linkedUserId,
+        entityType: entityType,
         name: name.trim(),
         phoneNumber: phoneNumber?.trim().isEmpty == true
             ? null
             : phoneNumber?.trim(),
+        emailAddress: emailAddress?.trim().isEmpty == true
+            ? null
+            : emailAddress?.trim(),
         note: note?.trim().isEmpty == true ? null : note?.trim(),
+        imageUri: imageUri?.trim().isEmpty == true ? null : imageUri?.trim(),
       );
       await initialize();
       return true;
@@ -79,9 +96,12 @@ class ContactController extends StateNotifier<ContactState> {
 
   Future<bool> updateContact({
     required String contactId,
+    required ContactEntityType entityType,
     required String name,
     String? phoneNumber,
+    String? emailAddress,
     String? note,
+    String? imageUri,
   }) async {
     state = state.copyWith(isLoading: true);
 
@@ -89,11 +109,32 @@ class ContactController extends StateNotifier<ContactState> {
       await _contactRepository.updateContact(
         ownerUserId: _resolvedOwnerUserId,
         contactId: contactId,
+        entityType: entityType,
         name: name.trim(),
         phoneNumber: phoneNumber?.trim().isEmpty == true
             ? null
             : phoneNumber?.trim(),
+        emailAddress: emailAddress?.trim().isEmpty == true
+            ? null
+            : emailAddress?.trim(),
         note: note?.trim().isEmpty == true ? null : note?.trim(),
+        imageUri: imageUri?.trim().isEmpty == true ? null : imageUri?.trim(),
+      );
+      await initialize();
+      return true;
+    } catch (error) {
+      state = state.copyWith(isLoading: false, errorMessage: error.toString());
+      return false;
+    }
+  }
+
+  Future<bool> deleteContact({required String contactId}) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      await _contactRepository.deleteContact(
+        ownerUserId: _resolvedOwnerUserId,
+        contactId: contactId,
       );
       await initialize();
       return true;

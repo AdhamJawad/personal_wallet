@@ -327,7 +327,8 @@ class _CreateDebtRepaymentPageState
 
     final Widget formContent = LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        return Center(
+        return Align(
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: constraints.maxWidth > 920 ? 820 : 760,
@@ -379,8 +380,8 @@ class _CreateDebtRepaymentSheet extends StatelessWidget {
         padding: const EdgeInsets.only(
           left: AppSpacing.md,
           right: AppSpacing.md,
-          top: AppSpacing.md,
-          bottom: AppSpacing.md,
+          top: AppSpacing.sm,
+          bottom: AppSpacing.sm,
         ),
         child: CreateDebtRepaymentPage(
           debtId: debtId,

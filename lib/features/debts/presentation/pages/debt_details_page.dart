@@ -1202,7 +1202,7 @@ class _DebtStateChangeSheet extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: DashboardSurfaceCard(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1258,8 +1258,12 @@ class _EditDebtSheet extends ConsumerStatefulWidget {
 
 class _EditDebtSheetState extends ConsumerState<_EditDebtSheet> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey _amountFieldKey = GlobalKey();
+  final GlobalKey _noteFieldKey = GlobalKey();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
+  final FocusNode _amountFocusNode = FocusNode();
+  final FocusNode _noteFocusNode = FocusNode();
   final List<TransactionAttachmentDraft> _attachments =
       <TransactionAttachmentDraft>[];
 
@@ -1268,13 +1272,39 @@ class _EditDebtSheetState extends ConsumerState<_EditDebtSheet> {
     super.initState();
     _amountController.text = widget.summary.debt.originalAmount;
     _noteController.text = widget.summary.debt.note ?? '';
+    _amountFocusNode.addListener(
+      () => _handleFieldFocus(_amountFocusNode, _amountFieldKey),
+    );
+    _noteFocusNode.addListener(
+      () => _handleFieldFocus(_noteFocusNode, _noteFieldKey),
+    );
   }
 
   @override
   void dispose() {
     _amountController.dispose();
     _noteController.dispose();
+    _amountFocusNode.dispose();
+    _noteFocusNode.dispose();
     super.dispose();
+  }
+
+  void _handleFieldFocus(FocusNode focusNode, GlobalKey fieldKey) {
+    if (!focusNode.hasFocus) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final BuildContext? fieldContext = fieldKey.currentContext;
+      if (!mounted || fieldContext == null) {
+        return;
+      }
+      Scrollable.ensureVisible(
+        fieldContext,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        alignment: 0.22,
+      );
+    });
   }
 
   Future<void> _addAttachment() async {
@@ -1301,12 +1331,13 @@ class _EditDebtSheetState extends ConsumerState<_EditDebtSheet> {
       padding: EdgeInsets.only(
         left: AppSpacing.md,
         right: AppSpacing.md,
-        top: AppSpacing.md,
-        bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.md,
+        top: AppSpacing.sm,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.sm,
       ),
       child: DashboardSurfaceCard(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Form(
             key: _formKey,
             child: Column(
@@ -1365,26 +1396,39 @@ class _EditDebtSheetState extends ConsumerState<_EditDebtSheet> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.md),
-                PwTextField(
-                  controller: _amountController,
-                  label: context.tr.amount,
-                  hint: context.tr.enterAmountHint,
-                  prefixIcon: const Icon(Icons.payments_outlined),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+                const SizedBox(height: AppSpacing.sm),
+                KeyedSubtree(
+                  key: _amountFieldKey,
+                  child: PwTextField(
+                    controller: _amountController,
+                    focusNode: _amountFocusNode,
+                    label: context.tr.amount,
+                    hint: context.tr.enterAmountHint,
+                    prefixIcon: const Icon(Icons.payments_outlined),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textInputAction: TextInputAction.next,
+                    validator: (String? value) =>
+                        amountValidator(context, value),
+                    onFieldSubmitted: (_) => _noteFocusNode.requestFocus(),
                   ),
-                  validator: (String? value) => amountValidator(context, value),
                 ),
-                const SizedBox(height: AppSpacing.md),
-                PwTextField(
-                  controller: _noteController,
-                  label: context.tr.note,
-                  hint: context.tr.transactionNoteHint,
-                  prefixIcon: const Icon(Icons.edit_note_rounded),
-                  maxLines: 3,
+                const SizedBox(height: AppSpacing.sm),
+                KeyedSubtree(
+                  key: _noteFieldKey,
+                  child: PwTextField(
+                    controller: _noteController,
+                    focusNode: _noteFocusNode,
+                    label: context.tr.note,
+                    hint: context.tr.transactionNoteHint,
+                    prefixIcon: const Icon(Icons.edit_note_rounded),
+                    maxLines: 3,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 AttachmentCompactField(
                   label: context.tr.addAttachment,
                   value: transactionAttachmentSummary(
@@ -1422,7 +1466,7 @@ class _EditDebtSheetState extends ConsumerState<_EditDebtSheet> {
                     },
                   ),
                 ],
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: <Widget>[
                     Expanded(

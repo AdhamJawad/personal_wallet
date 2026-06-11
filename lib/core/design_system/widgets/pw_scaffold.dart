@@ -5,17 +5,26 @@ import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 
 class PwScaffold extends StatelessWidget {
-  const PwScaffold({required this.title, required this.body, super.key});
+  const PwScaffold({
+    required this.title,
+    required this.body,
+    this.actions,
+    super.key,
+  });
 
   final String title;
   final Widget body;
+  final List<Widget>? actions;
 
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: Text(title, style: context.titleMedium)),
+      appBar: AppBar(
+        title: Text(title, style: context.titleMedium),
+        actions: actions,
+      ),
       body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(

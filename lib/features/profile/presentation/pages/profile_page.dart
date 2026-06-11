@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_routes.dart';
 import '../../../../app/presentation/providers/app_preferences_provider.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -41,6 +43,14 @@ class ProfilePage extends ConsumerWidget {
                     label: context.tr.userIdentifier,
                     value: user?.id ?? '--',
                     icon: Icons.tag_rounded,
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.people_alt_outlined),
+                    title: Text(context.tr.contacts),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => context.push(AppRoutes.contactsPath),
                   ),
                 ],
               ),

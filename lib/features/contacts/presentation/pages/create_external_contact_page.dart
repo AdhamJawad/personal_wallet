@@ -7,6 +7,7 @@ import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/domain/enums/contact_entity_type.dart';
 import '../providers/contact_providers.dart';
 
 class CreateExternalContactPage extends ConsumerStatefulWidget {
@@ -22,12 +23,14 @@ class _CreateExternalContactPageState
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _emailController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -40,8 +43,10 @@ class _CreateExternalContactPageState
     final bool success = await ref
         .read(contactControllerProvider.notifier)
         .createExternalContact(
+          entityType: ContactEntityType.person,
           name: _nameController.text.trim(),
           phoneNumber: _phoneController.text.trim(),
+          emailAddress: _emailController.text.trim(),
           note: _noteController.text.trim(),
         );
 
@@ -96,6 +101,11 @@ class _CreateExternalContactPageState
                     PwTextField(
                       controller: _phoneController,
                       label: context.tr.phoneNumber,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    PwTextField(
+                      controller: _emailController,
+                      label: context.tr.emailAddress,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     PwTextField(

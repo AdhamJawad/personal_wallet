@@ -27,6 +27,7 @@ class _CreateWalletSheet extends ConsumerStatefulWidget {
 
 class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey _nameFieldKey = GlobalKey();
   late final TextEditingController _nameController;
   late final FocusNode _nameFocusNode;
   Color _selectedColor = _walletSheetColors.first.color;
@@ -36,6 +37,7 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
     super.initState();
     _nameController = TextEditingController();
     _nameFocusNode = FocusNode();
+    _nameFocusNode.addListener(_handleNameFocusChange);
     _nameController.addListener(_handleNameChanged);
   }
 
@@ -49,6 +51,24 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
 
   void _handleNameChanged() {
     setState(() {});
+  }
+
+  void _handleNameFocusChange() {
+    if (!_nameFocusNode.hasFocus) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final BuildContext? fieldContext = _nameFieldKey.currentContext;
+      if (!mounted || fieldContext == null) {
+        return;
+      }
+      Scrollable.ensureVisible(
+        fieldContext,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        alignment: 0.22,
+      );
+    });
   }
 
   Future<void> _submit() async {
@@ -96,18 +116,14 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
         padding: EdgeInsets.only(
           left: AppSpacing.md,
           right: AppSpacing.md,
-          bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.md,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.sm,
         ),
         child: DashboardSurfaceCard(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.xl,
-            AppSpacing.md,
-            AppSpacing.xl,
-            AppSpacing.xl,
-          ),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -125,28 +141,31 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  TextFormField(
-                    controller: _nameController,
-                    focusNode: _nameFocusNode,
-                    enabled: !isLoading,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _submit(),
-                    decoration: InputDecoration(
-                      labelText: context.tr.walletNameLabel,
-                      hintText: context.tr.walletNameHint,
+                  const SizedBox(height: AppSpacing.md),
+                  KeyedSubtree(
+                    key: _nameFieldKey,
+                    child: TextFormField(
+                      controller: _nameController,
+                      focusNode: _nameFocusNode,
+                      enabled: !isLoading,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _submit(),
+                      decoration: InputDecoration(
+                        labelText: context.tr.walletNameLabel,
+                        hintText: context.tr.walletNameHint,
+                      ),
+                      validator: (String? value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return context.tr.walletNameRequired;
+                        }
+                        if (value.trim().length < 3) {
+                          return context.tr.walletNameTooShort;
+                        }
+                        return null;
+                      },
                     ),
-                    validator: (String? value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return context.tr.walletNameRequired;
-                      }
-                      if (value.trim().length < 3) {
-                        return context.tr.walletNameTooShort;
-                      }
-                      return null;
-                    },
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
                   Text(
                     context.tr.walletColor,
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -205,7 +224,7 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
                         })
                         .toList(growable: false),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
                   Text(
                     context.tr.walletPreview,
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -218,7 +237,7 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
                     statusLabel: context.tr.active,
                     selectedColor: _selectedColor,
                   ),
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.md),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(

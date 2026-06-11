@@ -71,24 +71,46 @@ class _EditWalletSheet extends ConsumerStatefulWidget {
 
 class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey _nameFieldKey = GlobalKey();
   final TextEditingController _nameController = TextEditingController();
+  final FocusNode _nameFocusNode = FocusNode();
   bool _didSeedName = false;
 
   @override
   void initState() {
     super.initState();
     _nameController.addListener(_handleNameChanged);
+    _nameFocusNode.addListener(_handleNameFocusChange);
   }
 
   @override
   void dispose() {
     _nameController.removeListener(_handleNameChanged);
     _nameController.dispose();
+    _nameFocusNode.dispose();
     super.dispose();
   }
 
   void _handleNameChanged() {
     setState(() {});
+  }
+
+  void _handleNameFocusChange() {
+    if (!_nameFocusNode.hasFocus) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final BuildContext? fieldContext = _nameFieldKey.currentContext;
+      if (!mounted || fieldContext == null) {
+        return;
+      }
+      Scrollable.ensureVisible(
+        fieldContext,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        alignment: 0.22,
+      );
+    });
   }
 
   Future<void> _save() async {
@@ -158,16 +180,12 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
         padding: EdgeInsets.only(
           left: AppSpacing.md,
           right: AppSpacing.md,
-          bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.md,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.sm,
         ),
         child: DashboardSurfaceCard(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.xl,
-            AppSpacing.md,
-            AppSpacing.xl,
-            AppSpacing.xl,
-          ),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: Form(
               key: _formKey,
               child: Column(
@@ -187,26 +205,31 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  TextFormField(
-                    controller: _nameController,
-                    enabled: !isLoading,
-                    decoration: InputDecoration(
-                      labelText: context.tr.walletNameLabel,
+                  const SizedBox(height: AppSpacing.md),
+                  KeyedSubtree(
+                    key: _nameFieldKey,
+                    child: TextFormField(
+                      controller: _nameController,
+                      focusNode: _nameFocusNode,
+                      enabled: !isLoading,
+                      textInputAction: TextInputAction.done,
+                      decoration: InputDecoration(
+                        labelText: context.tr.walletNameLabel,
+                      ),
+                      validator: (String? value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return context.tr.walletNameRequired;
+                        }
+                        if (value.trim().length < 3) {
+                          return context.tr.walletNameTooShort;
+                        }
+                        return null;
+                      },
+                      onFieldSubmitted: (_) => _save(),
                     ),
-                    validator: (String? value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return context.tr.walletNameRequired;
-                      }
-                      if (value.trim().length < 3) {
-                        return context.tr.walletNameTooShort;
-                      }
-                      return null;
-                    },
-                    onFieldSubmitted: (_) => _save(),
                   ),
                   if (walletOverview != null) ...<Widget>[
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.md),
                     Text(
                       context.tr.walletPreview,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -227,7 +250,7 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
                       sypAmount: walletOverview.balance.sypBalance.amount,
                     ),
                   ],
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.md),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(

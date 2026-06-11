@@ -166,7 +166,9 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
             child: TransactionFlowLayout(
               compact: widget.embeddedInSheet,
               extraScrollBottomSpacing: widget.embeddedInSheet
-                  ? widget.keyboardInset + 84
+                  ? (widget.keyboardInset > 0
+                        ? widget.keyboardInset + AppSpacing.sm
+                        : 0)
                   : 0,
               primaryLabel: context.tr.saveTransfer,
               onPrimaryPressed: transactionState.isLoading ? null : _submit,
@@ -273,7 +275,9 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
           ),
         );
 
-        return Center(
+        return Align(
+          alignment: Alignment.topCenter,
+          heightFactor: 1,
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: constraints.maxWidth > 920 ? 820 : 760,
@@ -313,8 +317,8 @@ class _CreateTransferSheet extends StatelessWidget {
           padding: const EdgeInsets.only(
             left: AppSpacing.md,
             right: AppSpacing.md,
-            top: AppSpacing.md,
-            bottom: AppSpacing.md,
+            top: AppSpacing.sm,
+            bottom: AppSpacing.sm,
           ),
           child: CreateTransferPage(
             embeddedInSheet: true,

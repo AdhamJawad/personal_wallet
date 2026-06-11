@@ -45,8 +45,8 @@ class TransactionBottomSheet extends StatelessWidget {
           padding: const EdgeInsets.only(
             left: AppSpacing.md,
             right: AppSpacing.md,
-            top: AppSpacing.md,
-            bottom: AppSpacing.md,
+            top: AppSpacing.sm,
+            bottom: AppSpacing.sm,
           ),
           child: TransactionOperationFlow(
             operationType: type,

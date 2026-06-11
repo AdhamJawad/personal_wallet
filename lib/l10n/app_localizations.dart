@@ -2623,6 +2623,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'WhatsApp could not be opened on this device.'**
   String get contactWhatsAppUnavailable;
+
+  /// No description provided for @addContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Contact'**
+  String get addContact;
+
+  /// No description provided for @totalContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Contacts'**
+  String get totalContacts;
+
+  /// No description provided for @peopleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get peopleLabel;
+
+  /// No description provided for @businessesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Businesses'**
+  String get businessesLabel;
+
+  /// No description provided for @emailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Address'**
+  String get emailAddress;
+
+  /// No description provided for @profileImageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Image'**
+  String get profileImageLabel;
+
+  /// No description provided for @deleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteAction;
+
+  /// No description provided for @deleteContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Contact?'**
+  String get deleteContactTitle;
+
+  /// No description provided for @deleteContactMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get deleteContactMessage;
+
+  /// No description provided for @contactDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete contact.'**
+  String get contactDeleteFailed;
+
+  /// No description provided for @contactsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts yet'**
+  String get contactsEmptyTitle;
+
+  /// No description provided for @contactsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first contact to start tracking debts and financial relationships.'**
+  String get contactsEmptyMessage;
+
+  /// No description provided for @noContactsSearchResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching contacts'**
+  String get noContactsSearchResultsTitle;
+
+  /// No description provided for @noContactsSearchResultsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another name, phone number, or email.'**
+  String get noContactsSearchResultsMessage;
+
+  /// No description provided for @contactNeutralBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'No balance'**
+  String get contactNeutralBalance;
 }
 
 class _AppLocalizationsDelegate

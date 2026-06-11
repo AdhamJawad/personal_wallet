@@ -7,6 +7,7 @@ import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_scaffold.dart';
 import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/domain/enums/contact_entity_type.dart';
 import '../../../contacts/presentation/providers/contact_providers.dart';
 import '../../domain/models/qr_scan_result.dart';
 import '../providers/qr_providers.dart';
@@ -60,6 +61,7 @@ class UserPreviewPage extends ConsumerWidget {
                                       .read(contactControllerProvider.notifier)
                                       .createRegisteredContact(
                                         linkedUserId: result.identity.userId,
+                                        entityType: ContactEntityType.person,
                                         name: result.identity.displayName,
                                         note: 'Added from QR identity',
                                       );
@@ -73,7 +75,9 @@ class UserPreviewPage extends ConsumerWidget {
                                       SnackBar(
                                         content: Text(
                                           ref
-                                                  .read(contactControllerProvider)
+                                                  .read(
+                                                    contactControllerProvider,
+                                                  )
                                                   .errorMessage ??
                                               'Unable to add contact.',
                                         ),
@@ -92,7 +96,9 @@ class UserPreviewPage extends ConsumerWidget {
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Registered contact added.'),
+                                      content: Text(
+                                        'Registered contact added.',
+                                      ),
                                     ),
                                   );
                                 },

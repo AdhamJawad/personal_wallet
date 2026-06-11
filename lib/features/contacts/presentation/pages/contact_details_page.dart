@@ -16,6 +16,7 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/amount_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../shared/domain/enums/contact_entity_type.dart';
 import '../../../../shared/domain/enums/currency.dart';
 import '../../../attachments/domain/enums/attachment_reference_type.dart';
 import '../../../attachments/domain/models/attachment.dart';
@@ -27,6 +28,7 @@ import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
 import '../../../debts/domain/models/debt_summary.dart';
 import '../../../debts/presentation/pages/create_debt_page.dart';
 import '../../../debts/presentation/providers/debt_providers.dart';
+import '../../../transactions/presentation/widgets/transaction_attachment_picker.dart';
 import '../../domain/models/contact.dart';
 import '../../presentation/providers/contact_providers.dart';
 
@@ -312,24 +314,17 @@ class _ContactHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
     final String? phoneNumber = _normalizedText(contact.phoneNumber);
+    final String? emailAddress = _normalizedText(contact.emailAddress);
 
     return DashboardSurfaceCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
-            child: Text(
-              _initialsFor(contact.name),
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+          _ProfileAvatar(
+            imageUri: contact.imageUri,
+            initials: _initialsFor(contact.name),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -346,9 +341,9 @@ class _ContactHeroCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _contactTypeLabel(context, contact),
+                  _contactTypeLabel(context, contact.entityType),
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -356,13 +351,20 @@ class _ContactHeroCard extends StatelessWidget {
                 Text(
                   balanceSummary.netLabel(context),
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: colorScheme.primary,
+                    color: theme.colorScheme.primary,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 if (phoneNumber != null) ...<Widget>[
                   const SizedBox(height: 6),
                   _InfoRow(icon: Icons.call_outlined, value: phoneNumber),
+                ],
+                if (emailAddress != null) ...<Widget>[
+                  const SizedBox(height: 4),
+                  _InfoRow(
+                    icon: Icons.alternate_email_rounded,
+                    value: emailAddress,
+                  ),
                 ],
               ],
             ),
@@ -894,9 +896,20 @@ class _EditContactSheet extends ConsumerStatefulWidget {
 
 class _EditContactSheetState extends ConsumerState<_EditContactSheet> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey _nameFieldKey = GlobalKey();
+  final GlobalKey _phoneFieldKey = GlobalKey();
+  final GlobalKey _emailFieldKey = GlobalKey();
+  final GlobalKey _noteFieldKey = GlobalKey();
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
+  late final TextEditingController _emailController;
   late final TextEditingController _noteController;
+  late final FocusNode _nameFocusNode;
+  late final FocusNode _phoneFocusNode;
+  late final FocusNode _emailFocusNode;
+  late final FocusNode _noteFocusNode;
+  late ContactEntityType _entityType;
+  String? _imageUri;
 
   @override
   void initState() {
@@ -905,15 +918,55 @@ class _EditContactSheetState extends ConsumerState<_EditContactSheet> {
     _phoneController = TextEditingController(
       text: widget.contact.phoneNumber ?? '',
     );
+    _emailController = TextEditingController(
+      text: widget.contact.emailAddress ?? '',
+    );
     _noteController = TextEditingController(text: widget.contact.note ?? '');
+    _nameFocusNode = FocusNode();
+    _phoneFocusNode = FocusNode();
+    _emailFocusNode = FocusNode();
+    _noteFocusNode = FocusNode();
+    _nameFocusNode.addListener(() => _handleFieldFocus(_nameFocusNode, _nameFieldKey));
+    _phoneFocusNode.addListener(
+      () => _handleFieldFocus(_phoneFocusNode, _phoneFieldKey),
+    );
+    _emailFocusNode.addListener(
+      () => _handleFieldFocus(_emailFocusNode, _emailFieldKey),
+    );
+    _noteFocusNode.addListener(() => _handleFieldFocus(_noteFocusNode, _noteFieldKey));
+    _entityType = widget.contact.entityType;
+    _imageUri = widget.contact.imageUri;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _emailController.dispose();
     _noteController.dispose();
+    _nameFocusNode.dispose();
+    _phoneFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _noteFocusNode.dispose();
     super.dispose();
+  }
+
+  void _handleFieldFocus(FocusNode focusNode, GlobalKey fieldKey) {
+    if (!focusNode.hasFocus) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final BuildContext? fieldContext = fieldKey.currentContext;
+      if (!mounted || fieldContext == null) {
+        return;
+      }
+      Scrollable.ensureVisible(
+        fieldContext,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        alignment: 0.22,
+      );
+    });
   }
 
   Future<void> _submit() async {
@@ -925,9 +978,12 @@ class _EditContactSheetState extends ConsumerState<_EditContactSheet> {
         .read(contactControllerProvider.notifier)
         .updateContact(
           contactId: widget.contact.id,
+          entityType: _entityType,
           name: _nameController.text,
           phoneNumber: _phoneController.text,
+          emailAddress: _emailController.text,
           note: _noteController.text,
+          imageUri: _imageUri,
         );
 
     if (!mounted) {
@@ -951,20 +1007,24 @@ class _EditContactSheetState extends ConsumerState<_EditContactSheet> {
   Widget build(BuildContext context) {
     final bool isLoading = ref.watch(contactControllerProvider).isLoading;
     final double keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final double maxHeight = MediaQuery.sizeOf(context).height * 0.88;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md + keyboardInset,
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.sm + keyboardInset,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
             Text(
               context.tr.editContact,
               style: Theme.of(
@@ -976,29 +1036,73 @@ class _EditContactSheetState extends ConsumerState<_EditContactSheet> {
               context.tr.editContactHelper,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: AppSpacing.md),
-            PwTextField(
-              controller: _nameController,
-              label: context.tr.fullName,
-              validator: (String? value) {
-                if (value == null || value.trim().isEmpty) {
-                  return context.tr.fullNameRequired;
-                }
-                return null;
+            const SizedBox(height: AppSpacing.sm),
+            _ContactSheetAvatarPicker(
+              imageUri: _imageUri,
+              entityType: _entityType,
+              onTap: _pickProfileImage,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _ContactSheetTypeSelector(
+              value: _entityType,
+              onChanged: (ContactEntityType value) {
+                setState(() => _entityType = value);
               },
             ),
             const SizedBox(height: AppSpacing.sm),
-            PwTextField(
-              controller: _phoneController,
-              label: context.tr.phoneNumber,
+            KeyedSubtree(
+              key: _nameFieldKey,
+              child: PwTextField(
+                controller: _nameController,
+                focusNode: _nameFocusNode,
+                label: context.tr.fullName,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) => _phoneFocusNode.requestFocus(),
+                validator: (String? value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return context.tr.fullNameRequired;
+                  }
+                  return null;
+                },
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            PwTextField(
-              controller: _noteController,
-              label: context.tr.note,
-              maxLines: 2,
+            KeyedSubtree(
+              key: _phoneFieldKey,
+              child: PwTextField(
+                controller: _phoneController,
+                focusNode: _phoneFocusNode,
+                label: context.tr.phoneNumber,
+                keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) => _emailFocusNode.requestFocus(),
+              ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
+            KeyedSubtree(
+              key: _emailFieldKey,
+              child: PwTextField(
+                controller: _emailController,
+                focusNode: _emailFocusNode,
+                label: context.tr.emailAddress,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) => _noteFocusNode.requestFocus(),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            KeyedSubtree(
+              key: _noteFieldKey,
+              child: PwTextField(
+                controller: _noteController,
+                focusNode: _noteFocusNode,
+                label: context.tr.note,
+                maxLines: 2,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: <Widget>[
                 Expanded(
@@ -1017,10 +1121,20 @@ class _EditContactSheetState extends ConsumerState<_EditContactSheet> {
                 ),
               ],
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _pickProfileImage() async {
+    final TransactionAttachmentDraft? image =
+        await showTransactionAttachmentSourceSheet(context: context);
+    if (image == null) {
+      return;
+    }
+    setState(() => _imageUri = image.localUri);
   }
 }
 
@@ -1085,6 +1199,161 @@ class _InfoRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.imageUri, required this.initials});
+
+  final String? imageUri;
+  final String initials;
+
+  @override
+  Widget build(BuildContext context) {
+    final File? imageFile = imageUri == null || imageUri!.isEmpty
+        ? null
+        : File(imageUri!);
+
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: Theme.of(
+        context,
+      ).colorScheme.primary.withValues(alpha: 0.12),
+      backgroundImage: imageFile != null && imageFile.existsSync()
+          ? FileImage(imageFile)
+          : null,
+      child: imageFile != null && imageFile.existsSync()
+          ? null
+          : Text(
+              initials,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+    );
+  }
+}
+
+class _ContactSheetAvatarPicker extends StatelessWidget {
+  const _ContactSheetAvatarPicker({
+    required this.imageUri,
+    required this.entityType,
+    required this.onTap,
+  });
+
+  final String? imageUri;
+  final ContactEntityType entityType;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Ink(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.outlineSoft),
+        ),
+        child: Row(
+          children: <Widget>[
+            _ProfileAvatar(
+              imageUri: imageUri,
+              initials: entityType == ContactEntityType.business ? 'B' : 'P',
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                context.tr.profileImageLabel,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            const Icon(Icons.photo_camera_back_outlined, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ContactSheetTypeSelector extends StatelessWidget {
+  const _ContactSheetTypeSelector({
+    required this.value,
+    required this.onChanged,
+  });
+
+  final ContactEntityType value;
+  final ValueChanged<ContactEntityType> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
+      children: <Widget>[
+        _MetaChipChoice(
+          label: context.tr.contactTypePerson,
+          selected: value == ContactEntityType.person,
+          onTap: () => onChanged(ContactEntityType.person),
+        ),
+        _MetaChipChoice(
+          label: context.tr.contactTypeBusiness,
+          selected: value == ContactEntityType.business,
+          onTap: () => onChanged(ContactEntityType.business),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetaChipChoice extends StatelessWidget {
+  const _MetaChipChoice({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? colorScheme.primary.withValues(alpha: 0.10)
+              : colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(
+            color: selected
+                ? colorScheme.primary.withValues(alpha: 0.24)
+                : colorScheme.outline.withValues(alpha: 0.16),
+          ),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: selected
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1397,12 +1666,13 @@ String _formatMoney(BuildContext context, String amount, Currency currency) {
   return '\u2066${AmountFormatter.format(amount)} $currencyLabel\u2069';
 }
 
-String _contactTypeLabel(BuildContext context, Contact contact) {
-  return _isBusinessContact(contact)
+String _contactTypeLabel(BuildContext context, ContactEntityType entityType) {
+  return entityType == ContactEntityType.business
       ? context.tr.contactTypeBusiness
       : context.tr.contactTypePerson;
 }
 
+// ignore: unused_element
 bool _isBusinessContact(Contact contact) {
   final String source = '${contact.name} ${contact.note ?? ''}'.toLowerCase();
   const List<String> keywords = <String>[

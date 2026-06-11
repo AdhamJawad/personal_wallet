@@ -1331,4 +1331,51 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get contactWhatsAppUnavailable => 'تعذر فتح واتساب على هذا الجهاز.';
+
+  @override
+  String get addContact => 'إضافة جهة اتصال';
+
+  @override
+  String get totalContacts => 'إجمالي جهات الاتصال';
+
+  @override
+  String get peopleLabel => 'أشخاص';
+
+  @override
+  String get businessesLabel => 'أنشطة تجارية';
+
+  @override
+  String get emailAddress => 'البريد الإلكتروني';
+
+  @override
+  String get profileImageLabel => 'الصورة الشخصية';
+
+  @override
+  String get deleteAction => 'حذف';
+
+  @override
+  String get deleteContactTitle => 'حذف جهة الاتصال؟';
+
+  @override
+  String get deleteContactMessage => 'لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get contactDeleteFailed => 'تعذر حذف جهة الاتصال.';
+
+  @override
+  String get contactsEmptyTitle => 'لا توجد جهات اتصال بعد';
+
+  @override
+  String get contactsEmptyMessage =>
+      'أنشئ أول جهة اتصال لبدء تتبع الديون والعلاقات المالية.';
+
+  @override
+  String get noContactsSearchResultsTitle => 'لا توجد جهات مطابقة';
+
+  @override
+  String get noContactsSearchResultsMessage =>
+      'جرّب اسمًا أو رقم هاتف أو بريدًا إلكترونيًا آخر.';
+
+  @override
+  String get contactNeutralBalance => 'لا يوجد رصيد';
 }

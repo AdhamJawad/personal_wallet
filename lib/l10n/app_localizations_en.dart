@@ -1352,4 +1352,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get contactWhatsAppUnavailable =>
       'WhatsApp could not be opened on this device.';
+
+  @override
+  String get addContact => 'Add Contact';
+
+  @override
+  String get totalContacts => 'Total Contacts';
+
+  @override
+  String get peopleLabel => 'People';
+
+  @override
+  String get businessesLabel => 'Businesses';
+
+  @override
+  String get emailAddress => 'Email Address';
+
+  @override
+  String get profileImageLabel => 'Profile Image';
+
+  @override
+  String get deleteAction => 'Delete';
+
+  @override
+  String get deleteContactTitle => 'Delete Contact?';
+
+  @override
+  String get deleteContactMessage => 'This action cannot be undone.';
+
+  @override
+  String get contactDeleteFailed => 'Failed to delete contact.';
+
+  @override
+  String get contactsEmptyTitle => 'No contacts yet';
+
+  @override
+  String get contactsEmptyMessage =>
+      'Create your first contact to start tracking debts and financial relationships.';
+
+  @override
+  String get noContactsSearchResultsTitle => 'No matching contacts';
+
+  @override
+  String get noContactsSearchResultsMessage =>
+      'Try another name, phone number, or email.';
+
+  @override
+  String get contactNeutralBalance => 'No balance';
 }

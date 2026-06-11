@@ -1,0 +1,1 @@
+enum ContactEntityType { person, business }

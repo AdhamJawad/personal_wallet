@@ -48,7 +48,7 @@ class TransactionFlowLayout extends StatelessWidget {
           onSecondaryPressed: onSecondaryPressed,
           isPrimaryLoading: isPrimaryLoading,
         );
-        final bool canUseFlex = constraints.hasBoundedHeight;
+        final bool canUseFlex = constraints.hasBoundedHeight && !compact;
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,

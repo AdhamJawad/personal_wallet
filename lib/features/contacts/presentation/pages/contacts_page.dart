@@ -1,16 +1,27 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_scaffold.dart';
-import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
 import '../../../../core/localization/localization_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../shared/domain/enums/contact_kind.dart';
+import '../../../../core/utils/amount_formatter.dart';
+import '../../../../core/utils/date_formatter.dart';
+import '../../../../shared/domain/enums/contact_entity_type.dart';
 import '../../domain/models/contact.dart';
+import '../../../debts/domain/models/debt_summary.dart';
+import '../../../debts/presentation/providers/debt_providers.dart';
+import '../../../dashboard/presentation/widgets/dashboard_empty_state.dart';
+import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
+import '../../../transactions/presentation/widgets/transaction_attachment_picker.dart';
 import '../providers/contact_providers.dart';
 
 class ContactsPage extends ConsumerStatefulWidget {
@@ -20,9 +31,22 @@ class ContactsPage extends ConsumerStatefulWidget {
   ConsumerState<ContactsPage> createState() => _ContactsPageState();
 }
 
+enum _ContactFilter { all, people, businesses }
+
+extension on _ContactFilter {
+  ContactEntityType? get entityType {
+    return switch (this) {
+      _ContactFilter.all => null,
+      _ContactFilter.people => ContactEntityType.person,
+      _ContactFilter.businesses => ContactEntityType.business,
+    };
+  }
+}
+
 class _ContactsPageState extends ConsumerState<ContactsPage> {
   late final TextEditingController _searchController;
   late final VoidCallback _searchListener;
+  _ContactFilter _selectedFilter = _ContactFilter.all;
 
   @override
   void initState() {
@@ -43,46 +67,166 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
     super.dispose();
   }
 
+  Future<void> _showContactSheet({Contact? contact}) {
+    return showAppModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return _ContactEditorSheet(contact: contact);
+      },
+    );
+  }
+
+  Future<void> _confirmDelete(Contact contact) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(context.tr.deleteContactTitle),
+          content: Text(context.tr.deleteContactMessage),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(context.tr.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(context.tr.deleteAction),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    final bool success = await ref
+        .read(contactControllerProvider.notifier)
+        .deleteContact(contactId: contact.id);
+    if (!mounted || success) {
+      return;
+    }
+
+    final String message =
+        ref.read(contactControllerProvider).errorMessage ??
+        context.tr.contactDeleteFailed;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final contactState = ref.watch(contactControllerProvider);
-    final List<Contact> contacts = contactState.visibleContacts;
-    final List<Contact> registered = contacts
-        .where((Contact item) => item.kind == ContactKind.registered)
-        .toList(growable: false);
-    final List<Contact> external = contacts
-        .where((Contact item) => item.kind == ContactKind.external)
-        .toList(growable: false);
+    final debtState = ref.watch(debtControllerProvider);
+    final List<Contact> contacts = contactState.filteredContacts(
+      entityType: _selectedFilter.entityType,
+    );
+    final _ContactsSummary summary = _ContactsSummary.fromContacts(
+      contactState.contacts,
+    );
 
     return PwScaffold(
       title: context.tr.contacts,
-      body: ListView(
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: PwTextField(
-                  controller: _searchController,
-                  label: context.tr.searchContacts,
-                  hint: context.tr.searchContactsHint,
+      actions: <Widget>[
+        IconButton(
+          onPressed: _showContactSheet,
+          icon: const Icon(Icons.add_rounded),
+          tooltip: context.tr.addContact,
+        ),
+      ],
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
+          children: <Widget>[
+            _ContactsSummaryCard(summary: summary),
+            const SizedBox(height: AppSpacing.md),
+            _ContactsSearchField(controller: _searchController),
+            const SizedBox(height: AppSpacing.md),
+            _ContactsFilterRow(
+              selectedFilter: _selectedFilter,
+              onSelected: (_ContactFilter value) {
+                setState(() => _selectedFilter = value);
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+            if (contactState.contacts.isEmpty)
+              DashboardEmptyState(
+                icon: Icons.people_outline_rounded,
+                title: context.tr.contactsEmptyTitle,
+                message: context.tr.contactsEmptyMessage,
+                actionLabel: context.tr.addContact,
+                onActionPressed: () => _showContactSheet(),
+              )
+            else if (contacts.isEmpty)
+              DashboardEmptyState(
+                icon: Icons.search_off_rounded,
+                title: context.tr.noContactsSearchResultsTitle,
+                message: context.tr.noContactsSearchResultsMessage,
+                actionLabel: context.tr.clearSearch,
+                onActionPressed: () => _searchController.clear(),
+              )
+            else
+              ...contacts.map(
+                (Contact contact) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _ContactListCard(
+                    contact: contact,
+                    position: _ContactBalancePosition.fromData(
+                      contact: contact,
+                      debts: debtState.debts,
+                      context: context,
+                    ),
+                    onTap: () => context.push(
+                      AppRoutes.contactDetailsLocation(contact.id),
+                    ),
+                    onEdit: () => _showContactSheet(contact: contact),
+                    onDelete: () => _confirmDelete(contact),
+                  ),
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
-              PwButton.primary(
-                label: context.tr.addExternalContact,
-                onPressed: () => context.push(AppRoutes.contactCreatePath),
-              ),
-            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ContactsSummaryCard extends StatelessWidget {
+  const _ContactsSummaryCard({required this.summary});
+
+  final _ContactsSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardSurfaceCard(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: _SummaryMetric(
+              label: context.tr.totalContacts,
+              value: '${summary.total}',
+            ),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          _ContactSection(
-            title: context.tr.registeredContactsSection,
-            contacts: registered,
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: _SummaryMetric(
+              label: context.tr.peopleLabel,
+              value: '${summary.people}',
+            ),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          _ContactSection(
-            title: context.tr.externalContactsSection,
-            contacts: external,
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: _SummaryMetric(
+              label: context.tr.businessesLabel,
+              value: '${summary.businesses}',
+            ),
           ),
         ],
       ),
@@ -90,69 +234,852 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
   }
 }
 
-class _ContactSection extends StatelessWidget {
-  const _ContactSection({required this.title, required this.contacts});
+class _SummaryMetric extends StatelessWidget {
+  const _SummaryMetric({required this.label, required this.value});
 
-  final String title;
-  final List<Contact> contacts;
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(title, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: AppSpacing.md),
-        if (contacts.isEmpty)
-          PwSectionCard(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Text(context.tr.noContactsAvailable),
-            ),
-          )
-        else
-          ...contacts.map((Contact contact) {
-            final List<String> subtitleParts = <String>[
-              if ((contact.phoneNumber ?? '').isNotEmpty) contact.phoneNumber!,
-              if ((contact.note ?? '').isNotEmpty) contact.note!,
-            ];
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: PwSectionCard(
-                child: ListTile(
-                  onTap: () => context.push(
-                    AppRoutes.contactDetailsLocation(contact.id),
-                  ),
-                  title: Text(contact.name),
-                  subtitle: Text(subtitleParts.join(' | ')),
-                  trailing: Wrap(
-                    spacing: AppSpacing.sm,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: <Widget>[
-                      if (contact.kind == ContactKind.registered)
-                        TextButton(
-                          onPressed: () => context.push(
-                            '${AppRoutes.userTransferCreatePath}?recipientUserId=${Uri.encodeComponent(contact.linkedUserId!)}&recipientName=${Uri.encodeComponent(contact.name)}',
-                          ),
-                          child: Text(context.tr.transfer),
-                        ),
-                      TextButton(
-                        onPressed: () => context.push(
-                          '${AppRoutes.attachmentViewerPath}?entityType=contact&entityId=${Uri.encodeComponent(contact.id)}&label=${Uri.encodeComponent(contact.name)}',
-                        ),
-                        child: Text(context.tr.attachmentsButton),
-                      ),
-                      if (contact.kind == ContactKind.external &&
-                          contact.futureLinkCandidate != null)
-                        Chip(label: Text(context.tr.contactLinkReady)),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+        ),
       ],
     );
   }
+}
+
+class _ContactsSearchField extends StatelessWidget {
+  const _ContactsSearchField({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardSurfaceCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: Row(
+        children: <Widget>[
+          Icon(
+            Icons.search_rounded,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
+              child: Center(
+                child: TextField(
+                  controller: controller,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    hintText: context.tr.searchContacts,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactsFilterRow extends StatelessWidget {
+  const _ContactsFilterRow({
+    required this.selectedFilter,
+    required this.onSelected,
+  });
+
+  final _ContactFilter selectedFilter;
+  final ValueChanged<_ContactFilter> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
+      children: _ContactFilter.values
+          .map(
+            (_ContactFilter filter) => _FilterChip(
+              label: _filterLabel(context, filter),
+              selected: filter == selectedFilter,
+              onTap: () => onSelected(filter),
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 9,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? colorScheme.primary.withValues(alpha: 0.10)
+              : colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(
+            color: selected
+                ? colorScheme.primary.withValues(alpha: 0.24)
+                : colorScheme.outline.withValues(alpha: 0.16),
+          ),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: selected
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContactListCard extends StatelessWidget {
+  const _ContactListCard({
+    required this.contact,
+    required this.position,
+    required this.onTap,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final Contact contact;
+  final _ContactBalancePosition position;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardSurfaceCard(
+      padding: EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Row(
+              children: <Widget>[
+                _ContactAvatar(contact: contact, size: 46),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        contact.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _contactTypeLabel(context, contact.entityType),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (position.lastActivityLabel != null) ...<Widget>[
+                        const SizedBox(height: 2),
+                        Text(
+                          position.lastActivityLabel!,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: <Widget>[
+                    Text(
+                      position.amountLabel,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: position.color,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      position.caption,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                PopupMenuButton<_ContactCardAction>(
+                  onSelected: (_ContactCardAction value) {
+                    if (value == _ContactCardAction.edit) {
+                      onEdit();
+                    } else {
+                      onDelete();
+                    }
+                  },
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<_ContactCardAction>>[
+                        PopupMenuItem<_ContactCardAction>(
+                          value: _ContactCardAction.edit,
+                          child: Text(context.tr.editContact),
+                        ),
+                        PopupMenuItem<_ContactCardAction>(
+                          value: _ContactCardAction.delete,
+                          child: Text(context.tr.deleteAction),
+                        ),
+                      ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _ContactCardAction { edit, delete }
+
+class _ContactEditorSheet extends ConsumerStatefulWidget {
+  const _ContactEditorSheet({this.contact});
+
+  final Contact? contact;
+
+  @override
+  ConsumerState<_ContactEditorSheet> createState() =>
+      _ContactEditorSheetState();
+}
+
+class _ContactEditorSheetState extends ConsumerState<_ContactEditorSheet> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey _nameFieldKey = GlobalKey();
+  final GlobalKey _phoneFieldKey = GlobalKey();
+  final GlobalKey _emailFieldKey = GlobalKey();
+  final GlobalKey _noteFieldKey = GlobalKey();
+  late final TextEditingController _nameController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _noteController;
+  late final FocusNode _nameFocusNode;
+  late final FocusNode _phoneFocusNode;
+  late final FocusNode _emailFocusNode;
+  late final FocusNode _noteFocusNode;
+  late ContactEntityType _entityType;
+  String? _imageUri;
+
+  bool get _isEditing => widget.contact != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final Contact? contact = widget.contact;
+    _nameController = TextEditingController(text: contact?.name ?? '');
+    _phoneController = TextEditingController(text: contact?.phoneNumber ?? '');
+    _emailController = TextEditingController(text: contact?.emailAddress ?? '');
+    _noteController = TextEditingController(text: contact?.note ?? '');
+    _nameFocusNode = FocusNode();
+    _phoneFocusNode = FocusNode();
+    _emailFocusNode = FocusNode();
+    _noteFocusNode = FocusNode();
+    _nameFocusNode.addListener(() => _handleFieldFocus(_nameFocusNode, _nameFieldKey));
+    _phoneFocusNode.addListener(
+      () => _handleFieldFocus(_phoneFocusNode, _phoneFieldKey),
+    );
+    _emailFocusNode.addListener(
+      () => _handleFieldFocus(_emailFocusNode, _emailFieldKey),
+    );
+    _noteFocusNode.addListener(() => _handleFieldFocus(_noteFocusNode, _noteFieldKey));
+    _entityType = contact?.entityType ?? ContactEntityType.person;
+    _imageUri = contact?.imageUri;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _noteController.dispose();
+    _nameFocusNode.dispose();
+    _phoneFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _noteFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleFieldFocus(FocusNode focusNode, GlobalKey fieldKey) {
+    if (!focusNode.hasFocus) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final BuildContext? fieldContext = fieldKey.currentContext;
+      if (fieldContext == null || !mounted) {
+        return;
+      }
+      Scrollable.ensureVisible(
+        fieldContext,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        alignment: 0.22,
+      );
+    });
+  }
+
+  Future<void> _pickProfileImage() async {
+    final TransactionAttachmentDraft? image =
+        await showTransactionAttachmentSourceSheet(context: context);
+    if (image == null) {
+      return;
+    }
+    setState(() => _imageUri = image.localUri);
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final controller = ref.read(contactControllerProvider.notifier);
+
+    final bool success = _isEditing
+        ? await controller.updateContact(
+            contactId: widget.contact!.id,
+            entityType: _entityType,
+            name: _nameController.text,
+            phoneNumber: _phoneController.text,
+            emailAddress: _emailController.text,
+            note: _noteController.text,
+            imageUri: _imageUri,
+          )
+        : await controller.createExternalContact(
+            entityType: _entityType,
+            name: _nameController.text,
+            phoneNumber: _phoneController.text,
+            emailAddress: _emailController.text,
+            note: _noteController.text,
+            imageUri: _imageUri,
+          );
+
+    if (!mounted) {
+      return;
+    }
+    if (success) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    final String message =
+        ref.read(contactControllerProvider).errorMessage ??
+        (_isEditing
+            ? context.tr.contactSaveFailed
+            : context.tr.contactCreateFailed);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isLoading = ref.watch(contactControllerProvider).isLoading;
+    final double keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final ThemeData theme = Theme.of(context);
+    final double maxHeight = MediaQuery.sizeOf(context).height * 0.88;
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.md + keyboardInset,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(
+                _isEditing ? context.tr.editContact : context.tr.addContact,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _ImagePickerField(
+                imageUri: _imageUri,
+                entityType: _entityType,
+                onTap: _pickProfileImage,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _EntityTypeToggle(
+                value: _entityType,
+                onChanged: (ContactEntityType value) {
+                  setState(() => _entityType = value);
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              KeyedSubtree(
+                key: _nameFieldKey,
+                child: PwTextField(
+                  controller: _nameController,
+                  label: context.tr.fullName,
+                  focusNode: _nameFocusNode,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => _phoneFocusNode.requestFocus(),
+                  validator: (String? value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return context.tr.fullNameRequired;
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              KeyedSubtree(
+                key: _phoneFieldKey,
+                child: PwTextField(
+                  controller: _phoneController,
+                  label: context.tr.phoneNumber,
+                  focusNode: _phoneFocusNode,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => _emailFocusNode.requestFocus(),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              KeyedSubtree(
+                key: _emailFieldKey,
+                child: PwTextField(
+                  controller: _emailController,
+                  label: context.tr.emailAddress,
+                  focusNode: _emailFocusNode,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => _noteFocusNode.requestFocus(),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              KeyedSubtree(
+                key: _noteFieldKey,
+                child: PwTextField(
+                  controller: _noteController,
+                  label: context.tr.note,
+                  focusNode: _noteFocusNode,
+                  maxLines: 3,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: PwButton.secondary(
+                      label: context.tr.cancel,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: PwButton.primary(
+                      label: _isEditing
+                          ? context.tr.saveChanges
+                          : context.tr.saveContact,
+                      isLoading: isLoading,
+                      onPressed: _submit,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EntityTypeToggle extends StatelessWidget {
+  const _EntityTypeToggle({required this.value, required this.onChanged});
+
+  final ContactEntityType value;
+  final ValueChanged<ContactEntityType> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
+      children: <Widget>[
+        _SelectionPill(
+          label: context.tr.contactTypePerson,
+          selected: value == ContactEntityType.person,
+          onTap: () => onChanged(ContactEntityType.person),
+        ),
+        _SelectionPill(
+          label: context.tr.contactTypeBusiness,
+          selected: value == ContactEntityType.business,
+          onTap: () => onChanged(ContactEntityType.business),
+        ),
+      ],
+    );
+  }
+}
+
+class _SelectionPill extends StatelessWidget {
+  const _SelectionPill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 9,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? colorScheme.primary.withValues(alpha: 0.10)
+              : colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(
+            color: selected
+                ? colorScheme.primary.withValues(alpha: 0.24)
+                : colorScheme.outline.withValues(alpha: 0.16),
+          ),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: selected
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ImagePickerField extends StatelessWidget {
+  const _ImagePickerField({
+    required this.imageUri,
+    required this.entityType,
+    required this.onTap,
+  });
+
+  final String? imageUri;
+  final ContactEntityType entityType;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Ink(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.outlineSoft),
+        ),
+        child: Row(
+          children: <Widget>[
+            _ContactAvatar(
+              imageUri: imageUri,
+              initials: entityType == ContactEntityType.business ? 'B' : 'P',
+              size: 44,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                context.tr.profileImageLabel,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            const Icon(Icons.photo_camera_back_outlined, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ContactAvatar extends StatelessWidget {
+  const _ContactAvatar({
+    Contact? contact,
+    this.imageUri,
+    this.initials,
+    this.size = 44,
+  }) : _contact = contact;
+
+  final Contact? _contact;
+  final String? imageUri;
+  final String? initials;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final String resolvedInitials =
+        initials ?? _contactInitials(_contact?.name ?? '');
+    final String? resolvedImageUri = imageUri ?? _contact?.imageUri;
+    final File? imageFile = resolvedImageUri == null || resolvedImageUri.isEmpty
+        ? null
+        : File(resolvedImageUri);
+
+    return CircleAvatar(
+      radius: size / 2,
+      backgroundColor: Theme.of(
+        context,
+      ).colorScheme.primary.withValues(alpha: 0.12),
+      backgroundImage: imageFile != null && imageFile.existsSync()
+          ? FileImage(imageFile)
+          : null,
+      child: imageFile != null && imageFile.existsSync()
+          ? null
+          : Text(
+              resolvedInitials,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+    );
+  }
+}
+
+class _ContactsSummary {
+  const _ContactsSummary({
+    required this.total,
+    required this.people,
+    required this.businesses,
+  });
+
+  factory _ContactsSummary.fromContacts(List<Contact> contacts) {
+    final int people = contacts
+        .where((Contact item) => item.entityType == ContactEntityType.person)
+        .length;
+    return _ContactsSummary(
+      total: contacts.length,
+      people: people,
+      businesses: contacts.length - people,
+    );
+  }
+
+  final int total;
+  final int people;
+  final int businesses;
+}
+
+class _ContactBalancePosition {
+  const _ContactBalancePosition({
+    required this.amountLabel,
+    required this.caption,
+    required this.color,
+    required this.lastActivityLabel,
+  });
+
+  factory _ContactBalancePosition.fromData({
+    required Contact contact,
+    required List<DebtSummary> debts,
+    required BuildContext context,
+  }) {
+    num usd = 0;
+    num syp = 0;
+    DateTime? lastActivity;
+
+    for (final DebtSummary debt in debts) {
+      if (debt.contact.id != contact.id) {
+        continue;
+      }
+      final num remaining = num.tryParse(debt.remainingAmount) ?? 0;
+      final num signed = debt.debt.isOwedToMe ? remaining : -remaining;
+      if (debt.currency.name == 'usd') {
+        usd += signed;
+      } else {
+        syp += signed;
+      }
+
+      final DateTime candidate = _latestDebtActivity(debt);
+      if (lastActivity == null || candidate.isAfter(lastActivity)) {
+        lastActivity = candidate;
+      }
+    }
+
+    final Color color;
+    final String caption;
+    if (usd > 0 || syp > 0) {
+      color = AppColors.success;
+      caption = context.tr.owedToMe;
+    } else if (usd < 0 || syp < 0) {
+      color = AppColors.warning;
+      caption = context.tr.iOwe;
+    } else {
+      color = Theme.of(context).colorScheme.onSurfaceVariant;
+      caption = context.tr.contactNeutralBalance;
+    }
+
+    return _ContactBalancePosition(
+      amountLabel: _formatNetAmount(context, usd: usd, syp: syp),
+      caption: caption,
+      color: color,
+      lastActivityLabel: lastActivity == null
+          ? null
+          : '${context.tr.lastActivity}: ${DateFormatter.short(lastActivity)}',
+    );
+  }
+
+  final String amountLabel;
+  final String caption;
+  final Color color;
+  final String? lastActivityLabel;
+}
+
+String _filterLabel(BuildContext context, _ContactFilter filter) {
+  return switch (filter) {
+    _ContactFilter.all => context.tr.all,
+    _ContactFilter.people => context.tr.peopleLabel,
+    _ContactFilter.businesses => context.tr.businessesLabel,
+  };
+}
+
+String _contactTypeLabel(BuildContext context, ContactEntityType entityType) {
+  return entityType == ContactEntityType.business
+      ? context.tr.contactTypeBusiness
+      : context.tr.contactTypePerson;
+}
+
+String _contactInitials(String name) {
+  final List<String> parts = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((String item) => item.isNotEmpty)
+      .toList(growable: false);
+  if (parts.isEmpty) {
+    return '?';
+  }
+  if (parts.length == 1) {
+    return String.fromCharCode(parts.first.runes.first).toUpperCase();
+  }
+  return '${String.fromCharCode(parts.first.runes.first)}${String.fromCharCode(parts.last.runes.first)}'
+      .toUpperCase();
+}
+
+DateTime _latestDebtActivity(DebtSummary debt) {
+  DateTime latest = debt.debt.updatedAt;
+  for (final repayment in debt.repayments) {
+    if (repayment.createdAt.isAfter(latest)) {
+      latest = repayment.createdAt;
+    }
+  }
+  for (final settlement in debt.settlements) {
+    if (settlement.settlement.createdAt.isAfter(latest)) {
+      latest = settlement.settlement.createdAt;
+    }
+  }
+  return latest;
+}
+
+String _formatNetAmount(
+  BuildContext context, {
+  required num usd,
+  required num syp,
+}) {
+  final List<String> segments = <String>[];
+  if (usd != 0 || syp == 0) {
+    segments.add(
+      '${usd > 0
+          ? '+'
+          : usd < 0
+          ? '-'
+          : ''}${AmountFormatter.format(usd.abs().toString())} ${context.tr.usdShort}',
+    );
+  }
+  if (syp != 0) {
+    segments.add(
+      '${syp > 0
+          ? '+'
+          : syp < 0
+          ? '-'
+          : ''}${AmountFormatter.format(syp.abs().toString())} ${context.tr.sypShort}',
+    );
+  }
+  return segments.join(' • ');
 }

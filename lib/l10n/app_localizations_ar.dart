@@ -599,6 +599,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchTransactions => 'ابحث في العمليات';
 
   @override
+  String get transactionsSearchHint => 'المرجع أو المحفظة أو الجهة أو الملاحظة';
+
+  @override
   String get transactionReferenceHint => 'TX-2026-000001';
 
   @override
@@ -619,6 +622,96 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get noTransactionsForFilters =>
       'لا توجد عمليات تطابق عوامل التصفية الحالية.';
+
+  @override
+  String get transactionsNoResultsMessage =>
+      'جرّب عبارة بحث أخرى أو غيّر عوامل التصفية الحالية.';
+
+  @override
+  String get transactionsEmptyStateTitle => 'لا توجد عمليات بعد';
+
+  @override
+  String get transactionsEmptyStateMessage =>
+      'سيظهر سجل النشاط المالي هنا عند إنشاء أول عملية.';
+
+  @override
+  String get transactionsCreateFirst => 'إنشاء أول عملية';
+
+  @override
+  String get transactionsTodaySummary => 'اليوم';
+
+  @override
+  String get transactionsMonthSummary => 'هذا الشهر';
+
+  @override
+  String get transactionsTotalSummary => 'إجمالي العمليات';
+
+  @override
+  String get transactionsFilterSheetTitle => 'تصفية السجل';
+
+  @override
+  String get transactionsDateRange => 'الفترة الزمنية';
+
+  @override
+  String get transactionsDateRangeAll => 'كل الفترات';
+
+  @override
+  String get transactionsDateRangeToday => 'اليوم';
+
+  @override
+  String get transactionsDateRangeThisWeek => 'هذا الأسبوع';
+
+  @override
+  String get transactionsDateRangeThisMonth => 'هذا الشهر';
+
+  @override
+  String get transactionsDateRangeLast30Days => 'آخر 30 يوم';
+
+  @override
+  String get transactionsTodayGroup => 'اليوم';
+
+  @override
+  String get transactionsYesterdayGroup => 'أمس';
+
+  @override
+  String get transactionsThisWeekGroup => 'هذا الأسبوع';
+
+  @override
+  String get transactionsThisMonthGroup => 'هذا الشهر';
+
+  @override
+  String get transactionsDebtRepaymentChip => 'سداد دين';
+
+  @override
+  String get transactionsCurrencyExchangeChip => 'تحويل عملة';
+
+  @override
+  String get transactionsReferenceLabel => 'المرجع';
+
+  @override
+  String get transactionsStatusLabel => 'الحالة';
+
+  @override
+  String get transactionsDetailContact => 'جهة الاتصال';
+
+  @override
+  String get transactionsFromLabel => 'من';
+
+  @override
+  String get transactionsToLabel => 'إلى';
+
+  @override
+  String transactionsFromLabelValue(Object value) {
+    return 'من: $value';
+  }
+
+  @override
+  String transactionsToLabelValue(Object value) {
+    return 'إلى: $value';
+  }
+
+  @override
+  String get transactionsSelectAction => 'اختر نوع العملية';
 
   @override
   String get internalTransfer => 'تحويل داخلي';
@@ -1378,4 +1471,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get contactNeutralBalance => 'لا يوجد رصيد';
+
+  @override
+  String get transactionsStatusCompleted => 'مكتملة';
+
+  @override
+  String get transactionsStatusPending => 'قيد المتابعة';
+
+  @override
+  String get transactionsStatusFailed => 'فشلت';
+
+  @override
+  String get transactionsStatusCancelled => 'ملغاة';
 }

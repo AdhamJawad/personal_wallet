@@ -1238,6 +1238,12 @@ abstract class AppLocalizations {
   /// **'Search transactions'**
   String get searchTransactions;
 
+  /// No description provided for @transactionsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference, wallet, contact, or note'**
+  String get transactionsSearchHint;
+
   /// No description provided for @transactionReferenceHint.
   ///
   /// In en, this message translates to:
@@ -1279,6 +1285,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No transactions match the current filters.'**
   String get noTransactionsForFilters;
+
+  /// No description provided for @transactionsNoResultsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another search term or change the active filters.'**
+  String get transactionsNoResultsMessage;
+
+  /// No description provided for @transactionsEmptyStateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get transactionsEmptyStateTitle;
+
+  /// No description provided for @transactionsEmptyStateMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your financial activity feed will appear here once you create the first operation.'**
+  String get transactionsEmptyStateMessage;
+
+  /// No description provided for @transactionsCreateFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Create first transaction'**
+  String get transactionsCreateFirst;
+
+  /// No description provided for @transactionsTodaySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get transactionsTodaySummary;
+
+  /// No description provided for @transactionsMonthSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get transactionsMonthSummary;
+
+  /// No description provided for @transactionsTotalSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Transactions'**
+  String get transactionsTotalSummary;
+
+  /// No description provided for @transactionsFilterSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed Filters'**
+  String get transactionsFilterSheetTitle;
+
+  /// No description provided for @transactionsDateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Range'**
+  String get transactionsDateRange;
+
+  /// No description provided for @transactionsDateRangeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All Dates'**
+  String get transactionsDateRangeAll;
+
+  /// No description provided for @transactionsDateRangeToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get transactionsDateRangeToday;
+
+  /// No description provided for @transactionsDateRangeThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get transactionsDateRangeThisWeek;
+
+  /// No description provided for @transactionsDateRangeThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get transactionsDateRangeThisMonth;
+
+  /// No description provided for @transactionsDateRangeLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 Days'**
+  String get transactionsDateRangeLast30Days;
+
+  /// No description provided for @transactionsTodayGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get transactionsTodayGroup;
+
+  /// No description provided for @transactionsYesterdayGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get transactionsYesterdayGroup;
+
+  /// No description provided for @transactionsThisWeekGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get transactionsThisWeekGroup;
+
+  /// No description provided for @transactionsThisMonthGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get transactionsThisMonthGroup;
+
+  /// No description provided for @transactionsDebtRepaymentChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Repayment'**
+  String get transactionsDebtRepaymentChip;
+
+  /// No description provided for @transactionsCurrencyExchangeChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency Exchange'**
+  String get transactionsCurrencyExchangeChip;
+
+  /// No description provided for @transactionsReferenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference'**
+  String get transactionsReferenceLabel;
+
+  /// No description provided for @transactionsStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get transactionsStatusLabel;
+
+  /// No description provided for @transactionsDetailContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get transactionsDetailContact;
+
+  /// No description provided for @transactionsFromLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get transactionsFromLabel;
+
+  /// No description provided for @transactionsToLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get transactionsToLabel;
+
+  /// No description provided for @transactionsFromLabelValue.
+  ///
+  /// In en, this message translates to:
+  /// **'From: {value}'**
+  String transactionsFromLabelValue(Object value);
+
+  /// No description provided for @transactionsToLabelValue.
+  ///
+  /// In en, this message translates to:
+  /// **'To: {value}'**
+  String transactionsToLabelValue(Object value);
+
+  /// No description provided for @transactionsSelectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an action'**
+  String get transactionsSelectAction;
 
   /// No description provided for @internalTransfer.
   ///
@@ -2713,6 +2887,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No balance'**
   String get contactNeutralBalance;
+
+  /// No description provided for @transactionsStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get transactionsStatusCompleted;
+
+  /// No description provided for @transactionsStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get transactionsStatusPending;
+
+  /// No description provided for @transactionsStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get transactionsStatusFailed;
+
+  /// No description provided for @transactionsStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get transactionsStatusCancelled;
 }
 
 class _AppLocalizationsDelegate

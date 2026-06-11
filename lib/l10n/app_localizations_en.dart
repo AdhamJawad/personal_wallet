@@ -601,6 +601,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchTransactions => 'Search transactions';
 
   @override
+  String get transactionsSearchHint => 'Reference, wallet, contact, or note';
+
+  @override
   String get transactionReferenceHint => 'TX-2026-000001';
 
   @override
@@ -621,6 +624,96 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noTransactionsForFilters =>
       'No transactions match the current filters.';
+
+  @override
+  String get transactionsNoResultsMessage =>
+      'Try another search term or change the active filters.';
+
+  @override
+  String get transactionsEmptyStateTitle => 'No transactions yet';
+
+  @override
+  String get transactionsEmptyStateMessage =>
+      'Your financial activity feed will appear here once you create the first operation.';
+
+  @override
+  String get transactionsCreateFirst => 'Create first transaction';
+
+  @override
+  String get transactionsTodaySummary => 'Today';
+
+  @override
+  String get transactionsMonthSummary => 'This Month';
+
+  @override
+  String get transactionsTotalSummary => 'Total Transactions';
+
+  @override
+  String get transactionsFilterSheetTitle => 'Feed Filters';
+
+  @override
+  String get transactionsDateRange => 'Date Range';
+
+  @override
+  String get transactionsDateRangeAll => 'All Dates';
+
+  @override
+  String get transactionsDateRangeToday => 'Today';
+
+  @override
+  String get transactionsDateRangeThisWeek => 'This Week';
+
+  @override
+  String get transactionsDateRangeThisMonth => 'This Month';
+
+  @override
+  String get transactionsDateRangeLast30Days => 'Last 30 Days';
+
+  @override
+  String get transactionsTodayGroup => 'Today';
+
+  @override
+  String get transactionsYesterdayGroup => 'Yesterday';
+
+  @override
+  String get transactionsThisWeekGroup => 'This Week';
+
+  @override
+  String get transactionsThisMonthGroup => 'This Month';
+
+  @override
+  String get transactionsDebtRepaymentChip => 'Debt Repayment';
+
+  @override
+  String get transactionsCurrencyExchangeChip => 'Currency Exchange';
+
+  @override
+  String get transactionsReferenceLabel => 'Reference';
+
+  @override
+  String get transactionsStatusLabel => 'Status';
+
+  @override
+  String get transactionsDetailContact => 'Contact';
+
+  @override
+  String get transactionsFromLabel => 'From';
+
+  @override
+  String get transactionsToLabel => 'To';
+
+  @override
+  String transactionsFromLabelValue(Object value) {
+    return 'From: $value';
+  }
+
+  @override
+  String transactionsToLabelValue(Object value) {
+    return 'To: $value';
+  }
+
+  @override
+  String get transactionsSelectAction => 'Choose an action';
 
   @override
   String get internalTransfer => 'Internal Transfer';
@@ -1399,4 +1492,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactNeutralBalance => 'No balance';
+
+  @override
+  String get transactionsStatusCompleted => 'Completed';
+
+  @override
+  String get transactionsStatusPending => 'Pending';
+
+  @override
+  String get transactionsStatusFailed => 'Failed';
+
+  @override
+  String get transactionsStatusCancelled => 'Cancelled';
 }

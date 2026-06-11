@@ -138,7 +138,7 @@ class _DashboardPlaceholderPageState
                         title: context.tr.recentActivity,
                         actionLabel: context.tr.seeAll,
                         onActionPressed: () =>
-                            context.go(AppRoutes.transactionsPath),
+                            context.push(AppRoutes.transactionsPath),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       DashboardActivityList(

@@ -216,6 +216,7 @@
   "transactions": "Transactions",
   "unknownWallet": "Unknown wallet",
   "searchTransactions": "Search transactions",
+  "transactionsSearchHint": "Reference, wallet, contact, or note",
   "transactionReferenceHint": "TX-2026-000001",
   "filter": "Filter",
   "sort": "Sort",
@@ -223,6 +224,44 @@
   "highestAmount": "Highest amount",
   "lowestAmount": "Lowest amount",
   "noTransactionsForFilters": "No transactions match the current filters.",
+  "transactionsNoResultsMessage": "Try another search term or change the active filters.",
+  "transactionsEmptyStateTitle": "No transactions yet",
+  "transactionsEmptyStateMessage": "Your financial activity feed will appear here once you create the first operation.",
+  "transactionsCreateFirst": "Create first transaction",
+  "transactionsTodaySummary": "Today",
+  "transactionsMonthSummary": "This Month",
+  "transactionsTotalSummary": "Total Transactions",
+  "transactionsFilterSheetTitle": "Feed Filters",
+  "transactionsDateRange": "Date Range",
+  "transactionsDateRangeAll": "All Dates",
+  "transactionsDateRangeToday": "Today",
+  "transactionsDateRangeThisWeek": "This Week",
+  "transactionsDateRangeThisMonth": "This Month",
+  "transactionsDateRangeLast30Days": "Last 30 Days",
+  "transactionsTodayGroup": "Today",
+  "transactionsYesterdayGroup": "Yesterday",
+  "transactionsThisWeekGroup": "This Week",
+  "transactionsThisMonthGroup": "This Month",
+  "transactionsDebtRepaymentChip": "Debt Repayment",
+  "transactionsCurrencyExchangeChip": "Currency Exchange",
+  "transactionsReferenceLabel": "Reference",
+  "transactionsStatusLabel": "Status",
+  "transactionsDetailContact": "Contact",
+  "transactionsFromLabel": "From",
+  "transactionsToLabel": "To",
+  "transactionsFromLabelValue": "From: {value}",
+  "@transactionsFromLabelValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "transactionsToLabelValue": "To: {value}",
+  "@transactionsToLabelValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "transactionsSelectAction": "Choose an action",
   "internalTransfer": "Internal Transfer",
   "userTransfer": "User Transfer",
   "debtSettlementTransfer": "Debt Settlement Transfer",
@@ -526,5 +565,9 @@
   "contactsEmptyMessage": "Create your first contact to start tracking debts and financial relationships.",
   "noContactsSearchResultsTitle": "No matching contacts",
   "noContactsSearchResultsMessage": "Try another name, phone number, or email.",
-  "contactNeutralBalance": "No balance"
+  "contactNeutralBalance": "No balance",
+  "transactionsStatusCompleted": "Completed",
+  "transactionsStatusPending": "Pending",
+  "transactionsStatusFailed": "Failed",
+  "transactionsStatusCancelled": "Cancelled"
 }

@@ -216,6 +216,7 @@
   "transactions": "العمليات",
   "unknownWallet": "محفظة غير معروفة",
   "searchTransactions": "ابحث في العمليات",
+  "transactionsSearchHint": "المرجع أو المحفظة أو الجهة أو الملاحظة",
   "transactionReferenceHint": "TX-2026-000001",
   "filter": "تصفية",
   "sort": "ترتيب",
@@ -223,6 +224,44 @@
   "highestAmount": "أعلى مبلغ",
   "lowestAmount": "أقل مبلغ",
   "noTransactionsForFilters": "لا توجد عمليات تطابق عوامل التصفية الحالية.",
+  "transactionsNoResultsMessage": "جرّب عبارة بحث أخرى أو غيّر عوامل التصفية الحالية.",
+  "transactionsEmptyStateTitle": "لا توجد عمليات بعد",
+  "transactionsEmptyStateMessage": "سيظهر سجل النشاط المالي هنا عند إنشاء أول عملية.",
+  "transactionsCreateFirst": "إنشاء أول عملية",
+  "transactionsTodaySummary": "اليوم",
+  "transactionsMonthSummary": "هذا الشهر",
+  "transactionsTotalSummary": "إجمالي العمليات",
+  "transactionsFilterSheetTitle": "تصفية السجل",
+  "transactionsDateRange": "الفترة الزمنية",
+  "transactionsDateRangeAll": "كل الفترات",
+  "transactionsDateRangeToday": "اليوم",
+  "transactionsDateRangeThisWeek": "هذا الأسبوع",
+  "transactionsDateRangeThisMonth": "هذا الشهر",
+  "transactionsDateRangeLast30Days": "آخر 30 يوم",
+  "transactionsTodayGroup": "اليوم",
+  "transactionsYesterdayGroup": "أمس",
+  "transactionsThisWeekGroup": "هذا الأسبوع",
+  "transactionsThisMonthGroup": "هذا الشهر",
+  "transactionsDebtRepaymentChip": "سداد دين",
+  "transactionsCurrencyExchangeChip": "تحويل عملة",
+  "transactionsReferenceLabel": "المرجع",
+  "transactionsStatusLabel": "الحالة",
+  "transactionsDetailContact": "جهة الاتصال",
+  "transactionsFromLabel": "من",
+  "transactionsToLabel": "إلى",
+  "transactionsFromLabelValue": "من: {value}",
+  "@transactionsFromLabelValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "transactionsToLabelValue": "إلى: {value}",
+  "@transactionsToLabelValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "transactionsSelectAction": "اختر نوع العملية",
   "internalTransfer": "تحويل داخلي",
   "userTransfer": "تحويل مستخدم",
   "debtSettlementTransfer": "تحويل تسوية دين",
@@ -527,5 +566,9 @@
   "contactsEmptyMessage": "أنشئ أول جهة اتصال لبدء تتبع الديون والعلاقات المالية.",
   "noContactsSearchResultsTitle": "لا توجد جهات مطابقة",
   "noContactsSearchResultsMessage": "جرّب اسمًا أو رقم هاتف أو بريدًا إلكترونيًا آخر.",
-  "contactNeutralBalance": "لا يوجد رصيد"
+  "contactNeutralBalance": "لا يوجد رصيد",
+  "transactionsStatusCompleted": "مكتملة",
+  "transactionsStatusPending": "قيد المتابعة",
+  "transactionsStatusFailed": "فشلت",
+  "transactionsStatusCancelled": "ملغاة"
 }

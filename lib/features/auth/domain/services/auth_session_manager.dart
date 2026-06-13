@@ -9,21 +9,26 @@ class AuthSessionManager {
   AuthSessionManager(this._secureStorageService);
 
   static const String _sessionKey = 'auth.session';
-  static const String _biometricEnabledKey = 'auth.biometric.enabled';
-  static const String _pinHashKey = 'auth.pin.hash';
-  static const String _pinSaltKey = 'auth.pin.salt';
-  static const String _lockTimeoutKey = 'auth.lock.timeout';
   static const String _backgroundedAtKey = 'auth.backgrounded_at';
 
   final SecureStorageService _secureStorageService;
 
+  String _biometricEnabledKey(String accountKey) =>
+      'auth.biometric.enabled.$accountKey';
+
+  String _lockTimeoutKey(String accountKey) => 'auth.lock.timeout.$accountKey';
+
+  String _normalizeAccountKey(String identifier) {
+    return identifier.trim().replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+  }
+
+  String _pinHashKey(String accountKey) => 'auth.pin.hash.$accountKey';
+
+  String _pinSaltKey(String accountKey) => 'auth.pin.salt.$accountKey';
+
   Future<void> clearAllAuthState() async {
     await Future.wait(<Future<void>>[
       _secureStorageService.delete(key: _sessionKey),
-      _secureStorageService.delete(key: _biometricEnabledKey),
-      _secureStorageService.delete(key: _pinHashKey),
-      _secureStorageService.delete(key: _pinSaltKey),
-      _secureStorageService.delete(key: _lockTimeoutKey),
       _secureStorageService.delete(key: _backgroundedAtKey),
     ]);
   }
@@ -32,10 +37,21 @@ class AuthSessionManager {
     await _secureStorageService.delete(key: _backgroundedAtKey);
   }
 
-  Future<void> clearPin() async {
+  Future<void> clearPin(String identifier) async {
+    final String accountKey = _normalizeAccountKey(identifier);
     await Future.wait(<Future<void>>[
-      _secureStorageService.delete(key: _pinHashKey),
-      _secureStorageService.delete(key: _pinSaltKey),
+      _secureStorageService.delete(key: _pinHashKey(accountKey)),
+      _secureStorageService.delete(key: _pinSaltKey(accountKey)),
+    ]);
+  }
+
+  Future<void> clearSecurityPreferences(String identifier) async {
+    final String accountKey = _normalizeAccountKey(identifier);
+    await Future.wait(<Future<void>>[
+      _secureStorageService.delete(key: _biometricEnabledKey(accountKey)),
+      _secureStorageService.delete(key: _pinHashKey(accountKey)),
+      _secureStorageService.delete(key: _pinSaltKey(accountKey)),
+      _secureStorageService.delete(key: _lockTimeoutKey(accountKey)),
     ]);
   }
 
@@ -53,22 +69,29 @@ class AuthSessionManager {
     return DateTime.tryParse(rawValue)?.toUtc();
   }
 
-  Future<LockTimeoutOption> getLockTimeout() async {
+  Future<LockTimeoutOption> getLockTimeout(String identifier) async {
+    final String accountKey = _normalizeAccountKey(identifier);
     final String? rawValue = await _secureStorageService.read(
-      key: _lockTimeoutKey,
+      key: _lockTimeoutKey(accountKey),
     );
     return LockTimeoutOption.fromStorageValue(rawValue);
   }
 
-  Future<bool> hasPin() async {
-    final String? pinHash = await _secureStorageService.read(key: _pinHashKey);
-    final String? pinSalt = await _secureStorageService.read(key: _pinSaltKey);
+  Future<bool> hasPin(String identifier) async {
+    final String accountKey = _normalizeAccountKey(identifier);
+    final String? pinHash = await _secureStorageService.read(
+      key: _pinHashKey(accountKey),
+    );
+    final String? pinSalt = await _secureStorageService.read(
+      key: _pinSaltKey(accountKey),
+    );
     return (pinHash ?? '').isNotEmpty && (pinSalt ?? '').isNotEmpty;
   }
 
-  Future<bool> isBiometricEnabled() async {
+  Future<bool> isBiometricEnabled(String identifier) async {
+    final String accountKey = _normalizeAccountKey(identifier);
     final String? rawValue = await _secureStorageService.read(
-      key: _biometricEnabledKey,
+      key: _biometricEnabledKey(accountKey),
     );
     return rawValue == 'true';
   }
@@ -80,19 +103,24 @@ class AuthSessionManager {
     );
   }
 
-  Future<void> persistLockTimeout(LockTimeoutOption value) async {
+  Future<void> persistLockTimeout(
+    String identifier,
+    LockTimeoutOption value,
+  ) async {
+    final String accountKey = _normalizeAccountKey(identifier);
     await _secureStorageService.write(
-      key: _lockTimeoutKey,
+      key: _lockTimeoutKey(accountKey),
       value: value.storageValue,
     );
   }
 
-  Future<void> persistPin(String pin) async {
+  Future<void> persistPin(String identifier, String pin) async {
+    final String accountKey = _normalizeAccountKey(identifier);
     final String salt = PinSecurity.generateSalt();
     final String pinHash = PinSecurity.hashPin(pin: pin, salt: salt);
     await Future.wait(<Future<void>>[
-      _secureStorageService.write(key: _pinSaltKey, value: salt),
-      _secureStorageService.write(key: _pinHashKey, value: pinHash),
+      _secureStorageService.write(key: _pinSaltKey(accountKey), value: salt),
+      _secureStorageService.write(key: _pinHashKey(accountKey), value: pinHash),
     ]);
   }
 
@@ -122,17 +150,21 @@ class AuthSessionManager {
     return session;
   }
 
-  Future<void> setBiometricEnabled(bool enabled) async {
+  Future<void> setBiometricEnabled(String identifier, bool enabled) async {
+    final String accountKey = _normalizeAccountKey(identifier);
     await _secureStorageService.write(
-      key: _biometricEnabledKey,
+      key: _biometricEnabledKey(accountKey),
       value: enabled.toString(),
     );
   }
 
-  Future<bool> validatePin(String pin) async {
-    final String? salt = await _secureStorageService.read(key: _pinSaltKey);
+  Future<bool> validatePin(String identifier, String pin) async {
+    final String accountKey = _normalizeAccountKey(identifier);
+    final String? salt = await _secureStorageService.read(
+      key: _pinSaltKey(accountKey),
+    );
     final String? storedHash = await _secureStorageService.read(
-      key: _pinHashKey,
+      key: _pinHashKey(accountKey),
     );
     if ((salt ?? '').isEmpty || (storedHash ?? '').isEmpty) {
       return false;

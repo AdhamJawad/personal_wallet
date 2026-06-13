@@ -20,9 +20,7 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _phoneController = TextEditingController(
-    text: '+963999999999',
-  );
+  final TextEditingController _phoneController = TextEditingController();
 
   @override
   void dispose() {
@@ -51,21 +49,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final ThemeData theme = Theme.of(context);
 
     return AuthPageShell(
-      title: context.tr.authPhoneTitle,
-      subtitle: context.tr.authPhoneSubtitle,
-      footer: Center(
-        child: TextButton(
-          onPressed: () => context.go(AppRoutes.registerPath),
-          child: Text(context.tr.createNewAccount),
-        ),
-      ),
+      title: '',
+      subtitle: '',
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
+            Text(
+              context.tr.authPhoneTitle,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            
+            const SizedBox(height: AppSpacing.xl),
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
@@ -88,19 +90,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               },
               onFieldSubmitted: (_) => _submit(),
             ),
-            const SizedBox(height: AppSpacing.md),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => context.go(AppRoutes.forgotPasswordPath),
-                child: Text(context.tr.forgotPin),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.lg),
             PwButton.primary(
               label: context.tr.continueLabel,
               isLoading: authState.isBusy,
               onPressed: _submit,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Center(
+              child: TextButton(
+                onPressed: () => context.go(AppRoutes.registerPath),
+                child: Text(context.tr.createNewAccount),
+              ),
             ),
           ],
         ),

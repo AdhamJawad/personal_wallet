@@ -608,7 +608,7 @@
   "transactionsStatusPending": "قيد المتابعة",
   "transactionsStatusFailed": "فشلت",
   "transactionsStatusCancelled": "ملغاة",
-  "authPhoneTitle": "تسجيل دخول آمن",
+  "authPhoneTitle": "تسجيل دخول ",
   "authPhoneSubtitle": "أدخل رقم هاتفك للحصول على رمز تحقق لمرة واحدة.",
   "mockOtpSignInHint": "رقم تسجيل الدخول التجريبي: +963999999999",
   "continueLabel": "متابعة",

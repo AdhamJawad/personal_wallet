@@ -21,6 +21,9 @@ class AuthPageShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasTitle = title.trim().isNotEmpty;
+    final bool hasSubtitle = subtitle.trim().isNotEmpty;
+
     return Scaffold(
       body: DecoratedBox(
         decoration: const BoxDecoration(
@@ -46,10 +49,15 @@ class AuthPageShell extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: <Widget>[
-                            Text(title, style: context.titleLarge),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(subtitle, style: context.bodyLarge),
-                            const SizedBox(height: AppSpacing.xl),
+                            if (hasTitle) ...<Widget>[
+                              Text(title, style: context.titleLarge),
+                              if (hasSubtitle)
+                                const SizedBox(height: AppSpacing.sm),
+                            ],
+                            if (hasSubtitle) ...<Widget>[
+                              Text(subtitle, style: context.bodyLarge),
+                              const SizedBox(height: AppSpacing.xl),
+                            ],
                             child,
                           ],
                         ),

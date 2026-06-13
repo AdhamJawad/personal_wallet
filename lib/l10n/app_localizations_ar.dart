@@ -1584,7 +1584,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transactionsStatusCancelled => 'ملغاة';
 
   @override
-  String get authPhoneTitle => 'تسجيل دخول آمن';
+  String get authPhoneTitle => 'تسجيل دخول ';
 
   @override
   String get authPhoneSubtitle =>

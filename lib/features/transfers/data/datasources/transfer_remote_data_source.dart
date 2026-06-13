@@ -3,8 +3,7 @@ import '../../../../shared/domain/enums/currency.dart';
 import '../../../debts/domain/models/settlement_summary.dart';
 import '../../domain/models/transfer_summary.dart';
 
-abstract interface class TransferRemoteDataSource
-    implements RemoteDataSource {
+abstract interface class TransferRemoteDataSource implements RemoteDataSource {
   Future<TransferSummary> createTransfer({
     required String ownerUserId,
     required String senderDisplayName,

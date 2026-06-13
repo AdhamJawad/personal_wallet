@@ -1,20 +1,33 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class PendingOtpVerification {
+  const PendingOtpVerification({
+    required this.verificationId,
+    required this.phoneNumber,
+    required this.createdAt,
+    this.fullName,
+    this.emailAddress,
+  });
 
-import '../../../../core/utils/date_time_converter.dart';
+  factory PendingOtpVerification.fromJson(Map<String, dynamic> json) {
+    return PendingOtpVerification(
+      verificationId: json['verificationId'] as String,
+      phoneNumber: json['phoneNumber'] as String,
+      fullName: json['fullName'] as String?,
+      emailAddress: json['emailAddress'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String).toUtc(),
+    );
+  }
 
-part 'pending_otp_verification.freezed.dart';
-part 'pending_otp_verification.g.dart';
+  final String verificationId;
+  final String phoneNumber;
+  final String? fullName;
+  final String? emailAddress;
+  final DateTime createdAt;
 
-@freezed
-abstract class PendingOtpVerification with _$PendingOtpVerification {
-  const factory PendingOtpVerification({
-    required String verificationId,
-    required String fullName,
-    required String phoneNumber,
-    required String password,
-    @DateTimeConverter() required DateTime createdAt,
-  }) = _PendingOtpVerification;
-
-  factory PendingOtpVerification.fromJson(Map<String, dynamic> json) =>
-      _$PendingOtpVerificationFromJson(json);
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'verificationId': verificationId,
+    'phoneNumber': phoneNumber,
+    'fullName': fullName,
+    'emailAddress': emailAddress,
+    'createdAt': createdAt.toIso8601String(),
+  };
 }

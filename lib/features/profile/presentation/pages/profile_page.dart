@@ -12,6 +12,7 @@ import '../../../../core/design_system/widgets/pw_text_field.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../auth/domain/enums/lock_timeout_option.dart';
 import '../../../auth/domain/models/biometric_capability.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 
@@ -30,8 +31,9 @@ class ProfilePage extends ConsumerWidget {
       authState.biometricCapability,
     );
     final bool canToggleBiometric =
-        authState.biometricCapability.canAuthenticate ||
-        authState.isBiometricLoginEnabled;
+        authState.isPinConfigured &&
+        (authState.biometricCapability.canAuthenticate ||
+            authState.isBiometricEnabled);
     final String fullName = _resolvedValue(
       user?.displayName,
       context.tr.notAdded,
@@ -166,9 +168,27 @@ class ProfilePage extends ConsumerWidget {
               children: <Widget>[
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(context.tr.biometricLogin),
+                  title: Text(context.tr.enablePin),
+                  subtitle: Text(
+                    authState.isPinConfigured
+                        ? context.tr.pinEnabledDescription
+                        : context.tr.pinDisabledDescription,
+                  ),
+                  value: authState.isPinConfigured,
+                  onChanged: (bool value) {
+                    if (value) {
+                      _showPinManagementSheet(context, ref, isCreating: true);
+                      return;
+                    }
+                    _showDisablePinSheet(context, ref);
+                  },
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.tr.enableBiometrics),
                   subtitle: Text(biometricLabel),
-                  value: authState.isBiometricLoginEnabled,
+                  value: authState.isBiometricEnabled,
                   onChanged: canToggleBiometric
                       ? (bool value) async {
                           final result = await ref
@@ -180,16 +200,65 @@ class ProfilePage extends ConsumerWidget {
                           }
 
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(result.message)),
+                            SnackBar(
+                              content: Text(
+                                _resolveAuthMessage(context, result.message),
+                              ),
+                            ),
                           );
                         }
                       : null,
                 ),
                 const Divider(height: 1),
                 _NavigationTile(
-                  icon: Icons.password_rounded,
-                  title: context.tr.changePassword,
-                  onTap: () => _showChangePasswordSheet(context),
+                  icon: Icons.pin_rounded,
+                  title: context.tr.changePin,
+                  value: authState.isPinConfigured ? null : context.tr.notAdded,
+                  onTap: authState.isPinConfigured
+                      ? () => _showPinManagementSheet(
+                          context,
+                          ref,
+                          isCreating: false,
+                        )
+                      : () => _showPinManagementSheet(
+                          context,
+                          ref,
+                          isCreating: true,
+                        ),
+                ),
+                const Divider(height: 1),
+                _NavigationTile(
+                  icon: Icons.timer_outlined,
+                  title: context.tr.lockTimeout,
+                  value: _lockTimeoutLabel(context, authState.lockTimeout),
+                  onTap: () => _showSingleChoiceSheet<LockTimeoutOption>(
+                    context,
+                    title: context.tr.lockTimeout,
+                    options: <_SelectionOption<LockTimeoutOption>>[
+                      _SelectionOption(
+                        value: LockTimeoutOption.immediate,
+                        label: context.tr.lockImmediately,
+                      ),
+                      _SelectionOption(
+                        value: LockTimeoutOption.seconds30,
+                        label: context.tr.lockAfter30Seconds,
+                      ),
+                      _SelectionOption(
+                        value: LockTimeoutOption.minute1,
+                        label: context.tr.lockAfter1Minute,
+                      ),
+                      _SelectionOption(
+                        value: LockTimeoutOption.minutes5,
+                        label: context.tr.lockAfter5Minutes,
+                      ),
+                    ],
+                    selectedValue: authState.lockTimeout,
+                    onSelected: (LockTimeoutOption value) {
+                      ref
+                          .read(authControllerProvider.notifier)
+                          .setLockTimeout(value);
+                    },
+                  ),
                 ),
               ],
             ),
@@ -220,17 +289,31 @@ class ProfilePage extends ConsumerWidget {
                   icon: Icons.logout_rounded,
                   title: context.tr.logout,
                   onTap: () async {
+                    final ScaffoldMessengerState? messenger =
+                        ScaffoldMessenger.maybeOf(context);
+                    final String successMessage = _resolveAuthMessage(
+                      context,
+                      'logged_out_successfully',
+                    );
+                    final String fallbackErrorMessage =
+                        context.tr.somethingWentWrong;
                     final result = await ref
                         .read(authControllerProvider.notifier)
                         .logout();
 
-                    if (!context.mounted) {
+                    if (messenger == null || !messenger.mounted) {
                       return;
                     }
 
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(result.message)));
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          result.isSuccess
+                              ? successMessage
+                              : fallbackErrorMessage,
+                        ),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -306,43 +389,52 @@ class _SelectionOption<T> {
   final String label;
 }
 
-Future<void> _showChangePasswordSheet(BuildContext context) {
+Future<void> _showDisablePinSheet(BuildContext context, WidgetRef ref) {
   return showAppModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     builder: (BuildContext context) {
-      return const _ChangePasswordSheet();
+      return _DisablePinSheet(ref: ref);
     },
   );
 }
 
-class _ChangePasswordSheet extends ConsumerStatefulWidget {
-  const _ChangePasswordSheet();
-
-  @override
-  ConsumerState<_ChangePasswordSheet> createState() =>
-      _ChangePasswordSheetState();
+Future<void> _showPinManagementSheet(
+  BuildContext context,
+  WidgetRef ref, {
+  required bool isCreating,
+}) {
+  return showAppModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return _PinManagementSheet(ref: ref, isCreating: isCreating);
+    },
+  );
 }
 
-class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
+class _DisablePinSheet extends ConsumerStatefulWidget {
+  const _DisablePinSheet({required this.ref});
+
+  final WidgetRef ref;
+
+  @override
+  ConsumerState<_DisablePinSheet> createState() => _DisablePinSheetState();
+}
+
+class _DisablePinSheetState extends ConsumerState<_DisablePinSheet> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  late final TextEditingController _currentPasswordController;
-  late final TextEditingController _newPasswordController;
-  late final TextEditingController _confirmPasswordController;
+  late final TextEditingController _currentPinController;
 
   @override
   void initState() {
     super.initState();
-    _currentPasswordController = TextEditingController();
-    _newPasswordController = TextEditingController();
-    _confirmPasswordController = TextEditingController();
+    _currentPinController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _currentPasswordController.dispose();
-    _newPasswordController.dispose();
-    _confirmPasswordController.dispose();
+    _currentPinController.dispose();
     super.dispose();
   }
 
@@ -354,51 +446,24 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
 
     final result = await ref
         .read(authControllerProvider.notifier)
-        .changePassword(
-          currentPassword: _currentPasswordController.text,
-          newPassword: _newPasswordController.text,
-        );
+        .disablePin(currentPin: _currentPinController.text);
 
     if (!mounted) {
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(result.message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_resolveAuthMessage(context, result.message))),
+    );
 
     if (result.isSuccess) {
       Navigator.of(context).pop();
     }
   }
 
-  String? _validateCurrentPassword(String? value) {
+  String? _validateCurrentPin(String? value) {
     if ((value ?? '').isEmpty) {
-      return context.tr.passwordRequired;
-    }
-    return null;
-  }
-
-  String? _validateNewPassword(String? value) {
-    final String normalized = value ?? '';
-    if (normalized.isEmpty) {
-      return context.tr.passwordRequired;
-    }
-    if (normalized.length < 6) {
-      return context.tr.passwordTooShort;
-    }
-    if (normalized == _currentPasswordController.text) {
-      return context.tr.newPasswordMustDiffer;
-    }
-    return null;
-  }
-
-  String? _validateConfirmation(String? value) {
-    if ((value ?? '').isEmpty) {
-      return context.tr.confirmPasswordRequired;
-    }
-    if (value != _newPasswordController.text) {
-      return context.tr.passwordsDoNotMatch;
+      return context.tr.pinRequired;
     }
     return null;
   }
@@ -424,41 +489,204 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Text(
-                context.tr.changePassword,
+                context.tr.disablePin,
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                context.tr.changePasswordDescription,
+                context.tr.disablePinDescription,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
               PwTextField(
-                controller: _currentPasswordController,
-                label: context.tr.currentPassword,
+                controller: _currentPinController,
+                label: context.tr.currentPin,
                 obscureText: true,
-                textInputAction: TextInputAction.next,
-                validator: _validateCurrentPassword,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              PwTextField(
-                controller: _newPasswordController,
-                label: context.tr.newPassword,
-                obscureText: true,
-                textInputAction: TextInputAction.next,
-                validator: _validateNewPassword,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              PwTextField(
-                controller: _confirmPasswordController,
-                label: context.tr.confirmNewPassword,
-                obscureText: true,
+                keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.done,
-                validator: _validateConfirmation,
+                validator: _validateCurrentPin,
+                onFieldSubmitted: (_) => _submit(),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: PwButton.primary(
+                  label: context.tr.disablePin,
+                  isLoading: isLoading,
+                  onPressed: _submit,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PinManagementSheet extends ConsumerStatefulWidget {
+  const _PinManagementSheet({required this.ref, required this.isCreating});
+
+  final WidgetRef ref;
+  final bool isCreating;
+
+  @override
+  ConsumerState<_PinManagementSheet> createState() =>
+      _PinManagementSheetState();
+}
+
+class _PinManagementSheetState extends ConsumerState<_PinManagementSheet> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  late final TextEditingController _currentPinController;
+  late final TextEditingController _newPinController;
+  late final TextEditingController _confirmPinController;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPinController = TextEditingController();
+    _newPinController = TextEditingController();
+    _confirmPinController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _currentPinController.dispose();
+    _newPinController.dispose();
+    _confirmPinController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final FormState? form = _formKey.currentState;
+    if (form == null || !form.validate()) {
+      return;
+    }
+
+    final result = widget.isCreating
+        ? await ref
+              .read(authControllerProvider.notifier)
+              .setPin(_newPinController.text, promptForBiometricSetup: true)
+        : await ref
+              .read(authControllerProvider.notifier)
+              .changePin(
+                currentPin: _currentPinController.text,
+                newPin: _newPinController.text,
+              );
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_resolveAuthMessage(context, result.message))),
+    );
+
+    if (result.isSuccess) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  String? _validateCurrentPin(String? value) {
+    if (!widget.isCreating && (value ?? '').isEmpty) {
+      return context.tr.pinRequired;
+    }
+    return null;
+  }
+
+  String? _validateNewPin(String? value) {
+    final String normalized = value ?? '';
+    if (normalized.isEmpty) {
+      return context.tr.pinRequired;
+    }
+    if (normalized.length != 6) {
+      return context.tr.pinMustBeSixDigits;
+    }
+    if (!widget.isCreating && normalized == _currentPinController.text) {
+      return context.tr.newPinMustDiffer;
+    }
+    return null;
+  }
+
+  String? _validateConfirmationPin(String? value) {
+    if ((value ?? '').isEmpty) {
+      return context.tr.confirmPinRequired;
+    }
+    if (value != _newPinController.text) {
+      return context.tr.pinsDoNotMatch;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isLoading = ref.watch(authControllerProvider).isBusy;
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.md,
+          right: AppSpacing.md,
+          top: AppSpacing.sm,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.md,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(
+                widget.isCreating
+                    ? context.tr.createPinTitle
+                    : context.tr.changePin,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                widget.isCreating
+                    ? context.tr.createPinSubtitle
+                    : context.tr.changePinDescription,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              if (!widget.isCreating) ...<Widget>[
+                PwTextField(
+                  controller: _currentPinController,
+                  label: context.tr.currentPin,
+                  obscureText: true,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                  validator: _validateCurrentPin,
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              PwTextField(
+                controller: _newPinController,
+                label: context.tr.newPin,
+                obscureText: true,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.next,
+                validator: _validateNewPin,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              PwTextField(
+                controller: _confirmPinController,
+                label: context.tr.confirmPin,
+                obscureText: true,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                validator: _validateConfirmationPin,
                 onFieldSubmitted: (_) => _submit(),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -781,6 +1009,34 @@ ThemeMode _nextThemeMode(ThemeMode current, Brightness activeBrightness) {
     return ThemeMode.light;
   }
   return activeBrightness == Brightness.dark ? ThemeMode.light : ThemeMode.dark;
+}
+
+String _lockTimeoutLabel(BuildContext context, LockTimeoutOption value) {
+  return switch (value) {
+    LockTimeoutOption.immediate => context.tr.lockImmediately,
+    LockTimeoutOption.seconds30 => context.tr.lockAfter30Seconds,
+    LockTimeoutOption.minute1 => context.tr.lockAfter1Minute,
+    LockTimeoutOption.minutes5 => context.tr.lockAfter5Minutes,
+  };
+}
+
+String _resolveAuthMessage(BuildContext context, String key) {
+  return switch (key) {
+    'biometric_enabled_successfully' => context.tr.biometricEnabledSuccessfully,
+    'biometric_disabled_successfully' =>
+      context.tr.biometricDisabledSuccessfully,
+    'biometric_auth_failed' => context.tr.biometricAuthFailed,
+    'biometric_not_available' => context.tr.biometricNotAvailable,
+    'pin_changed_successfully' => context.tr.pinChangedSuccessfully,
+    'pin_disabled_successfully' => context.tr.pinDisabledSuccessfully,
+    'pin_saved_successfully' => context.tr.pinSavedSuccessfully,
+    'current_pin_invalid' => context.tr.currentPinInvalid,
+    'pin_setup_required' => context.tr.pinSetupRequired,
+    'profile_updated_successfully' => context.tr.profileUpdatedSuccessfully,
+    'logged_out_successfully' => context.tr.loggedOutSuccessfully,
+    'lock_timeout_updated' => context.tr.lockTimeoutUpdated,
+    _ => context.tr.somethingWentWrong,
+  };
 }
 
 String _resolveBiometricLabel(

@@ -193,11 +193,12 @@ class MockWalletRepository implements LocalWalletRepository {
             title: switch (transaction.type) {
               TransactionType.deposit => 'Deposit recorded',
               TransactionType.withdraw => 'Withdrawal recorded',
-              TransactionType.transfer => transaction.recipientUserId == null
-                  ? 'Internal transfer recorded'
-                  : transaction.debtSettlementId == null
-                  ? 'User transfer recorded'
-                  : 'Debt settlement recorded',
+              TransactionType.transfer =>
+                transaction.recipientUserId == null
+                    ? 'Internal transfer recorded'
+                    : transaction.debtSettlementId == null
+                    ? 'User transfer recorded'
+                    : 'Debt settlement recorded',
               TransactionType.exchange => 'Exchange recorded',
               TransactionType.reversal => 'Reversal recorded',
               TransactionType.correction => 'Correction recorded',

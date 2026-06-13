@@ -1,15 +1,13 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class LoginRequest {
+  const LoginRequest({required this.phoneNumber});
 
-part 'login_request.freezed.dart';
-part 'login_request.g.dart';
+  factory LoginRequest.fromJson(Map<String, dynamic> json) {
+    return LoginRequest(phoneNumber: json['phoneNumber'] as String);
+  }
 
-@freezed
-abstract class LoginRequest with _$LoginRequest {
-  const factory LoginRequest({
-    required String phoneNumber,
-    required String password,
-  }) = _LoginRequest;
+  final String phoneNumber;
 
-  factory LoginRequest.fromJson(Map<String, dynamic> json) =>
-      _$LoginRequestFromJson(json);
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'phoneNumber': phoneNumber,
+  };
 }

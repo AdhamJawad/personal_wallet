@@ -89,7 +89,10 @@ class _QrScannerPageState extends ConsumerState<QrScannerPage> {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          Text('Demo identities', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Demo identities',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: AppSpacing.md),
           ...qrState.knownIdentities.map(
             (QrIdentity identity) => Padding(

@@ -69,24 +69,24 @@ class MockContactRepository implements LocalContactRepository {
     List<dynamic> decoded,
   ) {
     bool didChange = false;
-    final List<Map<String, dynamic>> migratedRecords = decoded.map((
-      dynamic item,
-    ) {
-      final Map<String, dynamic> record = Map<String, dynamic>.from(
-        item as Map<String, dynamic>,
-      );
-      final Map<String, dynamic> contact = Map<String, dynamic>.from(
-        record['contact'] as Map<String, dynamic>,
-      );
-      final String? migratedEntityType = _migratedEntityType(contact);
-      if (migratedEntityType != null &&
-          contact['entityType'] != migratedEntityType) {
-        contact['entityType'] = migratedEntityType;
-        didChange = true;
-      }
-      record['contact'] = contact;
-      return record;
-    }).toList(growable: false);
+    final List<Map<String, dynamic>> migratedRecords = decoded
+        .map((dynamic item) {
+          final Map<String, dynamic> record = Map<String, dynamic>.from(
+            item as Map<String, dynamic>,
+          );
+          final Map<String, dynamic> contact = Map<String, dynamic>.from(
+            record['contact'] as Map<String, dynamic>,
+          );
+          final String? migratedEntityType = _migratedEntityType(contact);
+          if (migratedEntityType != null &&
+              contact['entityType'] != migratedEntityType) {
+            contact['entityType'] = migratedEntityType;
+            didChange = true;
+          }
+          record['contact'] = contact;
+          return record;
+        })
+        .toList(growable: false);
 
     return _ContactRecordMigrationResult(
       records: migratedRecords,

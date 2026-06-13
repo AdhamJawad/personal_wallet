@@ -540,14 +540,18 @@ class _ContactEditorSheetState extends ConsumerState<_ContactEditorSheet> {
     _phoneFocusNode = FocusNode();
     _emailFocusNode = FocusNode();
     _noteFocusNode = FocusNode();
-    _nameFocusNode.addListener(() => _handleFieldFocus(_nameFocusNode, _nameFieldKey));
+    _nameFocusNode.addListener(
+      () => _handleFieldFocus(_nameFocusNode, _nameFieldKey),
+    );
     _phoneFocusNode.addListener(
       () => _handleFieldFocus(_phoneFocusNode, _phoneFieldKey),
     );
     _emailFocusNode.addListener(
       () => _handleFieldFocus(_emailFocusNode, _emailFieldKey),
     );
-    _noteFocusNode.addListener(() => _handleFieldFocus(_noteFocusNode, _noteFieldKey));
+    _noteFocusNode.addListener(
+      () => _handleFieldFocus(_noteFocusNode, _noteFieldKey),
+    );
     _entityType = contact?.entityType ?? ContactEntityType.person;
     _imageUri = contact?.imageUri;
   }

@@ -42,7 +42,10 @@ class TransferConfirmationPage extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           _SummaryRow(label: 'From wallet', value: flowDraft.senderWalletName),
-          _SummaryRow(label: 'Recipient', value: flowDraft.recipientDisplayName),
+          _SummaryRow(
+            label: 'Recipient',
+            value: flowDraft.recipientDisplayName,
+          ),
           _SummaryRow(
             label: 'Amount',
             value:
@@ -91,7 +94,9 @@ class TransferConfirmationPage extends ConsumerWidget {
                       return;
                     }
 
-                    await ref.read(walletControllerProvider.notifier).initialize();
+                    await ref
+                        .read(walletControllerProvider.notifier)
+                        .initialize();
                     await ref
                         .read(transactionControllerProvider.notifier)
                         .initialize();

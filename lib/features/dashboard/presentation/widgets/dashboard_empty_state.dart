@@ -55,10 +55,7 @@ class DashboardEmptyState extends StatelessWidget {
           ),
           if (actionLabel != null && onActionPressed != null) ...<Widget>[
             const SizedBox(height: AppSpacing.lg),
-            FilledButton(
-              onPressed: onActionPressed,
-              child: Text(actionLabel!),
-            ),
+            FilledButton(onPressed: onActionPressed, child: Text(actionLabel!)),
           ],
         ],
       ),

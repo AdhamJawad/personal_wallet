@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
-import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../providers/auth_providers.dart';
@@ -23,14 +23,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final TextEditingController _phoneController = TextEditingController(
     text: '+963999999999',
   );
-  final TextEditingController _passwordController = TextEditingController(
-    text: '123456',
-  );
 
   @override
   void dispose() {
     _phoneController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -41,32 +37,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final result = await ref
         .read(authControllerProvider.notifier)
-        .login(
-          phoneNumber: _phoneController.text.trim(),
-          password: _passwordController.text,
-        );
+        .login(phoneNumber: _phoneController.text.trim());
 
     if (!mounted || result.isSuccess) {
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(result.message)));
-  }
-
-  Future<void> _submitBiometricLogin() async {
-    final result = await ref
-        .read(authControllerProvider.notifier)
-        .loginWithBiometrics();
-
-    if (!mounted || result.isSuccess) {
-      return;
-    }
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(result.message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_resolveMessage(context, result.message))),
+    );
   }
 
   @override
@@ -74,8 +53,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final authState = ref.watch(authControllerProvider);
 
     return AuthPageShell(
-      title: context.tr.welcomeBack,
-      subtitle: context.tr.loginSubtitle,
+      title: context.tr.authPhoneTitle,
+      subtitle: context.tr.authPhoneSubtitle,
       footer: Center(
         child: TextButton(
           onPressed: () => context.go(AppRoutes.registerPath),
@@ -93,59 +72,47 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 color: AppColors.canvasTop,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(context.tr.mockLoginCredentials),
+              child: Text(context.tr.mockOtpSignInHint),
             ),
             const SizedBox(height: AppSpacing.lg),
             PwTextField(
               controller: _phoneController,
               label: context.tr.phoneNumber,
               keyboardType: TextInputType.phone,
-              textInputAction: TextInputAction.next,
+              textInputAction: TextInputAction.done,
               validator: (String? value) {
                 if (value == null || value.trim().isEmpty) {
                   return context.tr.phoneNumberRequired;
                 }
                 return null;
               },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            PwTextField(
-              controller: _passwordController,
-              label: context.tr.password,
-              obscureText: true,
-              textInputAction: TextInputAction.done,
-              validator: (String? value) {
-                if (value == null || value.isEmpty) {
-                  return context.tr.passwordRequired;
-                }
-                return null;
-              },
               onFieldSubmitted: (_) => _submit(),
             ),
+            const SizedBox(height: AppSpacing.md),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () => context.go(AppRoutes.forgotPasswordPath),
-                child: Text(context.tr.forgotPassword),
+                child: Text(context.tr.forgotPin),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
             PwButton.primary(
-              label: context.tr.signIn,
+              label: context.tr.continueLabel,
               isLoading: authState.isBusy,
               onPressed: _submit,
             ),
-            if (authState.canUseBiometricLogin) ...<Widget>[
-              const SizedBox(height: AppSpacing.md),
-              PwButton.secondary(
-                label: context.tr.useBiometricLogin,
-                isLoading: authState.isBusy,
-                onPressed: _submitBiometricLogin,
-              ),
-            ],
           ],
         ),
       ),
     );
+  }
+
+  String _resolveMessage(BuildContext context, String key) {
+    return switch (key) {
+      'otp_sent_successfully' => context.tr.otpSentSuccessfully,
+      'phone_not_registered' => context.tr.phoneNotRegistered,
+      _ => context.tr.somethingWentWrong,
+    };
   }
 }

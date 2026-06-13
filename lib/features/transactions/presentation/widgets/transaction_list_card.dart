@@ -116,7 +116,10 @@ class TransactionListCard extends StatelessWidget {
   }
 }
 
-String _transactionTypeLabel(BuildContext context, LedgerTransaction transaction) {
+String _transactionTypeLabel(
+  BuildContext context,
+  LedgerTransaction transaction,
+) {
   switch (transaction.type) {
     case TransactionType.deposit:
       return context.tr.deposit;

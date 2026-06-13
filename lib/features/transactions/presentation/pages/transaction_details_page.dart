@@ -70,109 +70,108 @@ class _TransactionDetailsPageState
       body: transactionState.isLoading && transaction == null
           ? const Center(child: TransactionSkeletonBlock(height: 180))
           : transaction == null
-              ? Center(child: Text(context.tr.transactionNotFound))
-              : Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 760),
-                    child: PwSectionCard(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.xl),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
+          ? Center(child: Text(context.tr.transactionNotFound))
+          : Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 760),
+                child: PwSectionCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Row(
                           children: <Widget>[
-                            Row(
-                              children: <Widget>[
-                                Expanded(
-                                  child: Text(
-                                    transaction.reference.value,
-                                    style: context.titleLarge,
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () => context.push(
-                                    '${AppRoutes.attachmentViewerPath}?entityType=transaction&entityId=${Uri.encodeComponent(transaction.id)}&label=${Uri.encodeComponent(transaction.reference.value)}',
-                                  ),
-                                  child: Text(context.tr.attachmentsButton),
-                                ),
-                              ],
+                            Expanded(
+                              child: Text(
+                                transaction.reference.value,
+                                style: context.titleLarge,
+                              ),
                             ),
-                            const SizedBox(height: AppSpacing.lg),
-                            _DetailRow(
-                              label: context.tr.detailDate,
-                              value: DateFormatter.full(transaction.createdAt),
-                            ),
-                            _DetailRow(
-                              label: context.tr.detailType,
-                              value: _typeLabel(context, transaction),
-                            ),
-                            _DetailRow(
-                              label: context.tr.wallet,
-                              value: walletValue(),
-                            ),
-                            if (transaction.destinationWalletId != null &&
-                                transaction.recipientUserId == null &&
-                                transaction.sourceWalletId != null)
-                              _DetailRow(
-                                label: context.tr.detailDestinationWallet,
-                                value: resolveWalletName(
-                                  transaction.destinationWalletId,
-                                ),
+                            TextButton(
+                              onPressed: () => context.push(
+                                '${AppRoutes.attachmentViewerPath}?entityType=transaction&entityId=${Uri.encodeComponent(transaction.id)}&label=${Uri.encodeComponent(transaction.reference.value)}',
                               ),
-                            if (transaction.recipientDisplayName != null)
-                              _DetailRow(
-                                label: context.tr.recipient,
-                                value: transaction.recipientDisplayName!,
-                              ),
-                            if (transaction.senderDisplayName != null &&
-                                transaction.sourceWalletId == null)
-                              _DetailRow(
-                                label: context.tr.detailSender,
-                                value: transaction.senderDisplayName!,
-                              ),
-                            _DetailRow(
-                              label: context.tr.amount,
-                              value:
-                                  '${AmountFormatter.format(transaction.sourceAmount)} ${transaction.sourceCurrency.name.toUpperCase()}',
-                            ),
-                            if (transaction.destinationCurrency != null &&
-                                transaction.destinationAmount != null)
-                              _DetailRow(
-                                label: context.tr.detailReceived,
-                                value:
-                                    '${AmountFormatter.format(transaction.destinationAmount!)} ${transaction.destinationCurrency!.name.toUpperCase()}',
-                              ),
-                            if ((transaction.exchangeRate ?? '').isNotEmpty)
-                              _DetailRow(
-                                label: context.tr.exchangeRate,
-                                value: transaction.exchangeRate!,
-                              ),
-                            if (transaction.transferRecordId != null)
-                              _DetailRow(
-                                label: context.tr.detailTransferId,
-                                value: transaction.transferRecordId!,
-                              ),
-                            if (transaction.debtSettlementId != null)
-                              _DetailRow(
-                                label: context.tr.detailSettlementId,
-                                value: transaction.debtSettlementId!,
-                              ),
-                            if ((transaction.note ?? '').isNotEmpty)
-                              _DetailRow(
-                                label: context.tr.detailNotes,
-                                value: transaction.note!,
-                              ),
-                            _DetailRow(
-                              label: context.tr.detailAttachment,
-                              value:
-                                  transaction.attachmentLabel ?? context.tr.none,
+                              child: Text(context.tr.attachmentsButton),
                             ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: AppSpacing.lg),
+                        _DetailRow(
+                          label: context.tr.detailDate,
+                          value: DateFormatter.full(transaction.createdAt),
+                        ),
+                        _DetailRow(
+                          label: context.tr.detailType,
+                          value: _typeLabel(context, transaction),
+                        ),
+                        _DetailRow(
+                          label: context.tr.wallet,
+                          value: walletValue(),
+                        ),
+                        if (transaction.destinationWalletId != null &&
+                            transaction.recipientUserId == null &&
+                            transaction.sourceWalletId != null)
+                          _DetailRow(
+                            label: context.tr.detailDestinationWallet,
+                            value: resolveWalletName(
+                              transaction.destinationWalletId,
+                            ),
+                          ),
+                        if (transaction.recipientDisplayName != null)
+                          _DetailRow(
+                            label: context.tr.recipient,
+                            value: transaction.recipientDisplayName!,
+                          ),
+                        if (transaction.senderDisplayName != null &&
+                            transaction.sourceWalletId == null)
+                          _DetailRow(
+                            label: context.tr.detailSender,
+                            value: transaction.senderDisplayName!,
+                          ),
+                        _DetailRow(
+                          label: context.tr.amount,
+                          value:
+                              '${AmountFormatter.format(transaction.sourceAmount)} ${transaction.sourceCurrency.name.toUpperCase()}',
+                        ),
+                        if (transaction.destinationCurrency != null &&
+                            transaction.destinationAmount != null)
+                          _DetailRow(
+                            label: context.tr.detailReceived,
+                            value:
+                                '${AmountFormatter.format(transaction.destinationAmount!)} ${transaction.destinationCurrency!.name.toUpperCase()}',
+                          ),
+                        if ((transaction.exchangeRate ?? '').isNotEmpty)
+                          _DetailRow(
+                            label: context.tr.exchangeRate,
+                            value: transaction.exchangeRate!,
+                          ),
+                        if (transaction.transferRecordId != null)
+                          _DetailRow(
+                            label: context.tr.detailTransferId,
+                            value: transaction.transferRecordId!,
+                          ),
+                        if (transaction.debtSettlementId != null)
+                          _DetailRow(
+                            label: context.tr.detailSettlementId,
+                            value: transaction.debtSettlementId!,
+                          ),
+                        if ((transaction.note ?? '').isNotEmpty)
+                          _DetailRow(
+                            label: context.tr.detailNotes,
+                            value: transaction.note!,
+                          ),
+                        _DetailRow(
+                          label: context.tr.detailAttachment,
+                          value: transaction.attachmentLabel ?? context.tr.none,
+                        ),
+                      ],
                     ),
                   ),
                 ),
+              ),
+            ),
     );
   }
 

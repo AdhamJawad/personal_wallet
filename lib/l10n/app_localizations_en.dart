@@ -1603,4 +1603,210 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionsStatusCancelled => 'Cancelled';
+
+  @override
+  String get authPhoneTitle => 'Secure sign in';
+
+  @override
+  String get authPhoneSubtitle =>
+      'Enter your phone number to receive a one-time verification code.';
+
+  @override
+  String get mockOtpSignInHint => 'Mock sign in phone: +963999999999';
+
+  @override
+  String get continueLabel => 'Continue';
+
+  @override
+  String get forgotPin => 'Forgot PIN?';
+
+  @override
+  String get registerPhoneSubtitle =>
+      'Create your wallet account with your name and phone number. Email stays optional.';
+
+  @override
+  String get backToSignIn => 'Back to sign in';
+
+  @override
+  String get emailAddressOptional => 'Email Address (Optional)';
+
+  @override
+  String get otpSentSuccessfully => 'OTP sent successfully.';
+
+  @override
+  String get phoneNotRegistered => 'This phone number is not registered.';
+
+  @override
+  String get phoneAlreadyRegistered =>
+      'This phone number is already registered.';
+
+  @override
+  String get resetPinTitle => 'Reset PIN';
+
+  @override
+  String get resetPinSubtitle =>
+      'Verify your phone number to securely create a new PIN.';
+
+  @override
+  String get sendOtp => 'Send OTP';
+
+  @override
+  String signInOtpSubtitle(Object phoneNumber) {
+    return 'Enter the 6-digit code sent to $phoneNumber to sign in.';
+  }
+
+  @override
+  String resetPinOtpSubtitle(Object phoneNumber) {
+    return 'Enter the 6-digit code sent to $phoneNumber to reset your PIN.';
+  }
+
+  @override
+  String get otpInvalid => 'The OTP code is invalid.';
+
+  @override
+  String get loginSuccessful => 'Signed in successfully.';
+
+  @override
+  String get registrationCompleted =>
+      'Account verification completed successfully.';
+
+  @override
+  String get pinResetVerified =>
+      'Phone verification completed. Create a new PIN.';
+
+  @override
+  String get otpContextMissing => 'OTP verification session was not found.';
+
+  @override
+  String get unlockWelcomeBack => 'Welcome back';
+
+  @override
+  String get useBiometricUnlock => 'Use biometric unlock';
+
+  @override
+  String get pinInvalid => 'The PIN you entered is incorrect.';
+
+  @override
+  String get pinMustBeSixDigits => 'PIN must be exactly 6 digits.';
+
+  @override
+  String get createPinTitle => 'Create your PIN';
+
+  @override
+  String get createPinSubtitle =>
+      'Use a 6-digit PIN to protect daily access to your wallet.';
+
+  @override
+  String get confirmPin => 'Confirm PIN';
+
+  @override
+  String get pinsDoNotMatch => 'The PIN entries do not match.';
+
+  @override
+  String get somethingWentWrong => 'Something went wrong.';
+
+  @override
+  String get enableBiometricsTitle => 'Enable biometric unlock?';
+
+  @override
+  String get enableBiometricsSubtitle =>
+      'Use Face ID or fingerprint for faster daily access while keeping PIN available at all times.';
+
+  @override
+  String get enableBiometrics => 'Enable Biometrics';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get biometricAuthFailed => 'Biometric authentication failed.';
+
+  @override
+  String get biometricNotAvailable =>
+      'Biometric authentication is not available on this device.';
+
+  @override
+  String get enablePin => 'Enable PIN';
+
+  @override
+  String get pinEnabledDescription =>
+      'Your app is protected with a secure PIN.';
+
+  @override
+  String get pinDisabledDescription =>
+      'Add a PIN to protect daily access to the app.';
+
+  @override
+  String get changePin => 'Change PIN';
+
+  @override
+  String get changePinDescription => 'Update your app PIN securely.';
+
+  @override
+  String get lockTimeout => 'Lock Timeout';
+
+  @override
+  String get lockImmediately => 'Immediately';
+
+  @override
+  String get lockAfter30Seconds => '30 Seconds';
+
+  @override
+  String get lockAfter1Minute => '1 Minute';
+
+  @override
+  String get lockAfter5Minutes => '5 Minutes';
+
+  @override
+  String get disablePin => 'Disable PIN';
+
+  @override
+  String get disablePinDescription =>
+      'Enter your current PIN to remove local app protection on this device.';
+
+  @override
+  String get currentPin => 'Current PIN';
+
+  @override
+  String get pinRequired => 'PIN is required.';
+
+  @override
+  String get newPin => 'New PIN';
+
+  @override
+  String get newPinMustDiffer =>
+      'The new PIN must be different from the current PIN.';
+
+  @override
+  String get confirmPinRequired => 'PIN confirmation is required.';
+
+  @override
+  String get biometricEnabledSuccessfully => 'Biometric unlock is enabled.';
+
+  @override
+  String get biometricDisabledSuccessfully => 'Biometric unlock is disabled.';
+
+  @override
+  String get pinChangedSuccessfully => 'PIN changed successfully.';
+
+  @override
+  String get pinDisabledSuccessfully => 'PIN disabled successfully.';
+
+  @override
+  String get pinSavedSuccessfully => 'PIN saved successfully.';
+
+  @override
+  String get currentPinInvalid => 'The current PIN is incorrect.';
+
+  @override
+  String get pinSetupRequired => 'You need to set up a PIN first.';
+
+  @override
+  String get profileUpdatedSuccessfully => 'Profile updated successfully.';
+
+  @override
+  String get loggedOutSuccessfully => 'You have been logged out.';
+
+  @override
+  String get lockTimeoutUpdated => 'Lock timeout updated.';
 }

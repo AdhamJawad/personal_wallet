@@ -13,7 +13,9 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((
   return MockNotificationRepository(ref.watch(localStoreProvider));
 });
 
-final notificationPublisherProvider = Provider<NotificationPublisher>((Ref ref) {
+final notificationPublisherProvider = Provider<NotificationPublisher>((
+  Ref ref,
+) {
   return NotificationPublisher(ref.watch(notificationRepositoryProvider));
 });
 

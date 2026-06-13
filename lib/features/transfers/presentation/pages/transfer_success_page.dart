@@ -15,7 +15,9 @@ class TransferSuccessPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final transfer = ref.watch(transferControllerProvider).lastCompletedTransfer;
+    final transfer = ref
+        .watch(transferControllerProvider)
+        .lastCompletedTransfer;
 
     if (transfer == null) {
       return TransferPageShell(

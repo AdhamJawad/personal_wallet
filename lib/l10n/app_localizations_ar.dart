@@ -1582,4 +1582,205 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get transactionsStatusCancelled => 'ملغاة';
+
+  @override
+  String get authPhoneTitle => 'تسجيل دخول آمن';
+
+  @override
+  String get authPhoneSubtitle =>
+      'أدخل رقم هاتفك للحصول على رمز تحقق لمرة واحدة.';
+
+  @override
+  String get mockOtpSignInHint => 'رقم تسجيل الدخول التجريبي: +963999999999';
+
+  @override
+  String get continueLabel => 'متابعة';
+
+  @override
+  String get forgotPin => 'نسيت رمز PIN؟';
+
+  @override
+  String get registerPhoneSubtitle =>
+      'أنشئ حسابك باسمك ورقم هاتفك، ويبقى البريد الإلكتروني اختيارياً.';
+
+  @override
+  String get backToSignIn => 'العودة لتسجيل الدخول';
+
+  @override
+  String get emailAddressOptional => 'البريد الإلكتروني (اختياري)';
+
+  @override
+  String get otpSentSuccessfully => 'تم إرسال رمز التحقق بنجاح.';
+
+  @override
+  String get phoneNotRegistered => 'رقم الهاتف هذا غير مسجل.';
+
+  @override
+  String get phoneAlreadyRegistered => 'رقم الهاتف هذا مسجل بالفعل.';
+
+  @override
+  String get resetPinTitle => 'إعادة تعيين PIN';
+
+  @override
+  String get resetPinSubtitle =>
+      'تحقق من رقم هاتفك لإنشاء رمز PIN جديد بشكل آمن.';
+
+  @override
+  String get sendOtp => 'إرسال الرمز';
+
+  @override
+  String signInOtpSubtitle(Object phoneNumber) {
+    return 'أدخل رمز التحقق المكون من 6 أرقام المرسل إلى $phoneNumber لتسجيل الدخول.';
+  }
+
+  @override
+  String resetPinOtpSubtitle(Object phoneNumber) {
+    return 'أدخل رمز التحقق المكون من 6 أرقام المرسل إلى $phoneNumber لإعادة تعيين رمز PIN.';
+  }
+
+  @override
+  String get otpInvalid => 'رمز التحقق غير صحيح.';
+
+  @override
+  String get loginSuccessful => 'تم تسجيل الدخول بنجاح.';
+
+  @override
+  String get registrationCompleted => 'تم إكمال التحقق من الحساب بنجاح.';
+
+  @override
+  String get pinResetVerified => 'تم التحقق من الهاتف. أنشئ رمز PIN جديداً.';
+
+  @override
+  String get otpContextMissing => 'تعذر العثور على جلسة التحقق الحالية.';
+
+  @override
+  String get unlockWelcomeBack => 'أهلاً بعودتك';
+
+  @override
+  String get useBiometricUnlock => 'استخدم الفتح البيومتري';
+
+  @override
+  String get pinInvalid => 'رمز PIN الذي أدخلته غير صحيح.';
+
+  @override
+  String get pinMustBeSixDigits => 'يجب أن يتكون رمز PIN من 6 أرقام تماماً.';
+
+  @override
+  String get createPinTitle => 'أنشئ رمز PIN الخاص بك';
+
+  @override
+  String get createPinSubtitle =>
+      'استخدم رمز PIN مكوناً من 6 أرقام لحماية الوصول اليومي إلى محفظتك.';
+
+  @override
+  String get confirmPin => 'تأكيد PIN';
+
+  @override
+  String get pinsDoNotMatch => 'رمزا PIN غير متطابقين.';
+
+  @override
+  String get somethingWentWrong => 'حدث خطأ ما.';
+
+  @override
+  String get enableBiometricsTitle => 'تفعيل الفتح البيومتري؟';
+
+  @override
+  String get enableBiometricsSubtitle =>
+      'استخدم Face ID أو البصمة للوصول اليومي السريع مع بقاء رمز PIN متاحاً دائماً.';
+
+  @override
+  String get enableBiometrics => 'تفعيل البيومتريك';
+
+  @override
+  String get later => 'لاحقاً';
+
+  @override
+  String get biometricAuthFailed => 'فشل التحقق البيومتري.';
+
+  @override
+  String get biometricNotAvailable =>
+      'التحقق البيومتري غير متاح على هذا الجهاز.';
+
+  @override
+  String get enablePin => 'تفعيل PIN';
+
+  @override
+  String get pinEnabledDescription => 'التطبيق محمي حالياً برمز PIN آمن.';
+
+  @override
+  String get pinDisabledDescription =>
+      'أضف رمز PIN لحماية الوصول اليومي إلى التطبيق.';
+
+  @override
+  String get changePin => 'تغيير PIN';
+
+  @override
+  String get changePinDescription => 'حدّث رمز PIN الخاص بالتطبيق بشكل آمن.';
+
+  @override
+  String get lockTimeout => 'مهلة القفل';
+
+  @override
+  String get lockImmediately => 'فوراً';
+
+  @override
+  String get lockAfter30Seconds => '30 ثانية';
+
+  @override
+  String get lockAfter1Minute => 'دقيقة واحدة';
+
+  @override
+  String get lockAfter5Minutes => '5 دقائق';
+
+  @override
+  String get disablePin => 'تعطيل PIN';
+
+  @override
+  String get disablePinDescription =>
+      'أدخل رمز PIN الحالي لإزالة حماية التطبيق المحلية من هذا الجهاز.';
+
+  @override
+  String get currentPin => 'رمز PIN الحالي';
+
+  @override
+  String get pinRequired => 'رمز PIN مطلوب.';
+
+  @override
+  String get newPin => 'رمز PIN الجديد';
+
+  @override
+  String get newPinMustDiffer => 'يجب أن يختلف رمز PIN الجديد عن الحالي.';
+
+  @override
+  String get confirmPinRequired => 'تأكيد رمز PIN مطلوب.';
+
+  @override
+  String get biometricEnabledSuccessfully => 'تم تفعيل الفتح البيومتري.';
+
+  @override
+  String get biometricDisabledSuccessfully => 'تم تعطيل الفتح البيومتري.';
+
+  @override
+  String get pinChangedSuccessfully => 'تم تغيير رمز PIN بنجاح.';
+
+  @override
+  String get pinDisabledSuccessfully => 'تم تعطيل رمز PIN بنجاح.';
+
+  @override
+  String get pinSavedSuccessfully => 'تم حفظ رمز PIN بنجاح.';
+
+  @override
+  String get currentPinInvalid => 'رمز PIN الحالي غير صحيح.';
+
+  @override
+  String get pinSetupRequired => 'تحتاج أولاً إلى إعداد رمز PIN.';
+
+  @override
+  String get profileUpdatedSuccessfully => 'تم تحديث الملف الشخصي بنجاح.';
+
+  @override
+  String get loggedOutSuccessfully => 'تم تسجيل الخروج.';
+
+  @override
+  String get lockTimeoutUpdated => 'تم تحديث مهلة القفل.';
 }

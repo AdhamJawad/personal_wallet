@@ -164,13 +164,13 @@ class _AttachmentSourceSheetState extends State<_AttachmentSourceSheet> {
                     icon: Icons.photo_library_outlined,
                     title: context.tr.chooseFromGallery,
                     subtitle: context.tr.chooseFromGallerySubtitle,
-                    onTap:
-                        _isPicking ? null : () => _pick(ImageSource.gallery),
+                    onTap: _isPicking ? null : () => _pick(ImageSource.gallery),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   OutlinedButton(
-                    onPressed:
-                        _isPicking ? null : () => Navigator.of(context).pop(),
+                    onPressed: _isPicking
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colorScheme.onSurface,
                     ),
@@ -237,10 +237,7 @@ class _AttachmentActionTile extends StatelessWidget {
                 children: <Widget>[
                   Text(title, style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
             ),
@@ -273,9 +270,7 @@ class _AttachmentPreviewChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.outlineSoft.withValues(alpha: 0.7),
-        ),
+        border: Border.all(color: AppColors.outlineSoft.withValues(alpha: 0.7)),
       ),
       child: Row(
         children: <Widget>[

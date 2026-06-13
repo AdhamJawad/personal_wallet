@@ -55,8 +55,7 @@ class MockTransferRepository implements LocalTransferRepository {
     final List<dynamic> decoded = jsonDecode(rawValue) as List<dynamic>;
     return decoded
         .map(
-          (dynamic item) =>
-              UserTransfer.fromJson(item as Map<String, dynamic>),
+          (dynamic item) => UserTransfer.fromJson(item as Map<String, dynamic>),
         )
         .toList(growable: false);
   }
@@ -112,7 +111,9 @@ class MockTransferRepository implements LocalTransferRepository {
     final DateTime now = DateTime.now().toUtc();
     final String transferId = IdGenerator.next();
     final senderReference = await _ledgerStore.nextReference(ownerUserId);
-    final recipientReference = await _ledgerStore.nextReference(recipientUserId);
+    final recipientReference = await _ledgerStore.nextReference(
+      recipientUserId,
+    );
 
     final LedgerTransaction senderLedger = await _appendLedgerTransaction(
       ownerUserId: ownerUserId,
@@ -177,7 +178,9 @@ class MockTransferRepository implements LocalTransferRepository {
       mirroredLedgerTransactionId: senderLedger.id,
     );
 
-    final List<UserTransfer> senderTransfers = await _loadTransfers(ownerUserId);
+    final List<UserTransfer> senderTransfers = await _loadTransfers(
+      ownerUserId,
+    );
     await _saveTransfers(
       ownerUserId,
       List<UserTransfer>.from(senderTransfers)..add(senderTransfer),
@@ -206,7 +209,8 @@ class MockTransferRepository implements LocalTransferRepository {
       ownerUserId: ownerUserId,
       type: 'transferSent',
       title: 'Transfer sent',
-      message: 'You sent $amount ${currency.name.toUpperCase()} to $recipientDisplayName.',
+      message:
+          'You sent $amount ${currency.name.toUpperCase()} to $recipientDisplayName.',
       relatedEntityId: senderTransfer.id,
       relatedEntityType: 'transfer',
     );
@@ -214,7 +218,8 @@ class MockTransferRepository implements LocalTransferRepository {
       ownerUserId: recipientUserId,
       type: 'transferReceived',
       title: 'Transfer received',
-      message: 'You received $amount ${currency.name.toUpperCase()} from $senderDisplayName.',
+      message:
+          'You received $amount ${currency.name.toUpperCase()} from $senderDisplayName.',
       relatedEntityId: recipientTransfer.id,
       relatedEntityType: 'transfer',
     );
@@ -311,7 +316,10 @@ class MockTransferRepository implements LocalTransferRepository {
           return item.copyWith(debtSettlementId: settlement.settlement.id);
         })
         .toList(growable: false);
-    await _ledgerStore.saveTransactions(recipientUserId, rewrittenRecipientLedger);
+    await _ledgerStore.saveTransactions(
+      recipientUserId,
+      rewrittenRecipientLedger,
+    );
 
     return settlement;
   }
@@ -319,10 +327,11 @@ class MockTransferRepository implements LocalTransferRepository {
   @override
   Future<List<TransferSummary>> fetchTransfers(String ownerUserId) async {
     final List<UserTransfer> transfers = await _loadTransfers(ownerUserId);
-    final List<UserTransfer> orderedTransfers = List<UserTransfer>.from(transfers)
-      ..sort((UserTransfer left, UserTransfer right) {
-        return right.createdAt.compareTo(left.createdAt);
-      });
+    final List<UserTransfer> orderedTransfers =
+        List<UserTransfer>.from(transfers)
+          ..sort((UserTransfer left, UserTransfer right) {
+            return right.createdAt.compareTo(left.createdAt);
+          });
     return orderedTransfers
         .map((UserTransfer item) => _toSummary(ownerUserId, item))
         .toList(growable: false);

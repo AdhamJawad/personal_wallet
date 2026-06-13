@@ -16,7 +16,8 @@ class MockSyncQueueRepository implements SyncQueueRepository {
 
   final LocalStore _localStore;
 
-  static String _operationsKey(String ownerUserId) => 'sync.operations.$ownerUserId';
+  static String _operationsKey(String ownerUserId) =>
+      'sync.operations.$ownerUserId';
 
   Future<List<SyncOperation>> _loadOperations(String ownerUserId) async {
     final String? rawValue = await _localStore.read(
@@ -98,8 +99,7 @@ class MockSyncQueueRepository implements SyncQueueRepository {
           (SyncOperation item) => ConflictSummary(
             operation: item,
             record: item.conflictRecord!,
-            recommendedStrategy:
-                item.conflictRecord!.recommendedStrategy,
+            recommendedStrategy: item.conflictRecord!.recommendedStrategy,
           ),
         )
         .toList(growable: false);

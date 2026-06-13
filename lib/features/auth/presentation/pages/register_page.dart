@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../../../core/localization/localization_extensions.dart';
+import '../../../../app/router/app_routes.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/auth_page_shell.dart';
@@ -19,16 +21,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
   @override
   void dispose() {
     _fullNameController.dispose();
     _phoneController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -42,16 +41,18 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         .register(
           fullName: _fullNameController.text.trim(),
           phoneNumber: _phoneController.text.trim(),
-          password: _passwordController.text,
+          emailAddress: _emailController.text.trim().isEmpty
+              ? null
+              : _emailController.text.trim(),
         );
 
-    if (!mounted) {
+    if (!mounted || result.isSuccess) {
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(result.message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_resolveMessage(context, result.message))),
+    );
   }
 
   @override
@@ -60,7 +61,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
     return AuthPageShell(
       title: context.tr.createAccount,
-      subtitle: context.tr.registerSubtitle,
+      subtitle: context.tr.registerPhoneSubtitle,
+      footer: Center(
+        child: TextButton(
+          onPressed: () => context.go(AppRoutes.loginPath),
+          child: Text(context.tr.backToSignIn),
+        ),
+      ),
       child: Form(
         key: _formKey,
         child: Column(
@@ -92,37 +99,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             ),
             const SizedBox(height: AppSpacing.md),
             PwTextField(
-              controller: _passwordController,
-              label: context.tr.password,
-              obscureText: true,
-              textInputAction: TextInputAction.next,
-              validator: (String? value) {
-                if (value == null || value.isEmpty) {
-                  return context.tr.passwordRequired;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            PwTextField(
-              controller: _confirmPasswordController,
-              label: context.tr.confirmPassword,
-              obscureText: true,
+              controller: _emailController,
+              label: context.tr.emailAddressOptional,
+              keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.done,
-              validator: (String? value) {
-                if (value == null || value.isEmpty) {
-                  return context.tr.confirmPasswordRequired;
-                }
-                if (value != _passwordController.text) {
-                  return context.tr.passwordsDoNotMatch;
-                }
-                return null;
-              },
               onFieldSubmitted: (_) => _submit(),
             ),
             const SizedBox(height: AppSpacing.lg),
             PwButton.primary(
-              label: context.tr.continueToOtp,
+              label: context.tr.continueLabel,
               isLoading: authState.isBusy,
               onPressed: _submit,
             ),
@@ -130,5 +115,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ),
       ),
     );
+  }
+
+  String _resolveMessage(BuildContext context, String key) {
+    return switch (key) {
+      'otp_sent_successfully' => context.tr.otpSentSuccessfully,
+      'phone_already_registered' => context.tr.phoneAlreadyRegistered,
+      _ => context.tr.somethingWentWrong,
+    };
   }
 }

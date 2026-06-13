@@ -40,7 +40,9 @@ class MockAttachmentRepository implements LocalAttachmentRepository {
 
     final List<dynamic> decoded = jsonDecode(rawValue) as List<dynamic>;
     return decoded
-        .map((dynamic item) => Attachment.fromJson(item as Map<String, dynamic>))
+        .map(
+          (dynamic item) => Attachment.fromJson(item as Map<String, dynamic>),
+        )
         .toList(growable: false);
   }
 
@@ -65,20 +67,22 @@ class MockAttachmentRepository implements LocalAttachmentRepository {
   }) async {
     final DateTime now = DateTime.now().toUtc();
     final List<Attachment> existing = await _loadAttachments(ownerUserId);
-    final List<Attachment> created = drafts.map((AttachmentDraft draft) {
-      return Attachment(
-        id: IdGenerator.next(),
-        ownerUserId: ownerUserId,
-        reference: reference,
-        kind: draft.kind,
-        fileName: draft.fileName,
-        localUri: draft.localUri,
-        mimeType: draft.mimeType,
-        byteSize: draft.byteSize,
-        createdAt: now,
-        updatedAt: now,
-      );
-    }).toList(growable: false);
+    final List<Attachment> created = drafts
+        .map((AttachmentDraft draft) {
+          return Attachment(
+            id: IdGenerator.next(),
+            ownerUserId: ownerUserId,
+            reference: reference,
+            kind: draft.kind,
+            fileName: draft.fileName,
+            localUri: draft.localUri,
+            mimeType: draft.mimeType,
+            byteSize: draft.byteSize,
+            createdAt: now,
+            updatedAt: now,
+          );
+        })
+        .toList(growable: false);
 
     await _saveAttachments(
       ownerUserId,

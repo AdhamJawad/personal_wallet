@@ -31,10 +31,7 @@ class PwScaffold extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: isDark
-                ? <Color>[
-                    AppColors.brandDark,
-                    AppColors.surfaceDark,
-                  ]
+                ? <Color>[AppColors.brandDark, AppColors.surfaceDark]
                 : <Color>[AppColors.canvasTop, AppColors.canvasBottom],
           ),
         ),

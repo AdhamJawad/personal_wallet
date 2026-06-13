@@ -3097,6 +3097,384 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancelled'**
   String get transactionsStatusCancelled;
+
+  /// No description provided for @authPhoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure sign in'**
+  String get authPhoneTitle;
+
+  /// No description provided for @authPhoneSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your phone number to receive a one-time verification code.'**
+  String get authPhoneSubtitle;
+
+  /// No description provided for @mockOtpSignInHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Mock sign in phone: +963999999999'**
+  String get mockOtpSignInHint;
+
+  /// No description provided for @continueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueLabel;
+
+  /// No description provided for @forgotPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot PIN?'**
+  String get forgotPin;
+
+  /// No description provided for @registerPhoneSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your wallet account with your name and phone number. Email stays optional.'**
+  String get registerPhoneSubtitle;
+
+  /// No description provided for @backToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get backToSignIn;
+
+  /// No description provided for @emailAddressOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Address (Optional)'**
+  String get emailAddressOptional;
+
+  /// No description provided for @otpSentSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP sent successfully.'**
+  String get otpSentSuccessfully;
+
+  /// No description provided for @phoneNotRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone number is not registered.'**
+  String get phoneNotRegistered;
+
+  /// No description provided for @phoneAlreadyRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone number is already registered.'**
+  String get phoneAlreadyRegistered;
+
+  /// No description provided for @resetPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset PIN'**
+  String get resetPinTitle;
+
+  /// No description provided for @resetPinSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your phone number to securely create a new PIN.'**
+  String get resetPinSubtitle;
+
+  /// No description provided for @sendOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send OTP'**
+  String get sendOtp;
+
+  /// No description provided for @signInOtpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code sent to {phoneNumber} to sign in.'**
+  String signInOtpSubtitle(Object phoneNumber);
+
+  /// No description provided for @resetPinOtpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code sent to {phoneNumber} to reset your PIN.'**
+  String resetPinOtpSubtitle(Object phoneNumber);
+
+  /// No description provided for @otpInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The OTP code is invalid.'**
+  String get otpInvalid;
+
+  /// No description provided for @loginSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in successfully.'**
+  String get loginSuccessful;
+
+  /// No description provided for @registrationCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account verification completed successfully.'**
+  String get registrationCompleted;
+
+  /// No description provided for @pinResetVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone verification completed. Create a new PIN.'**
+  String get pinResetVerified;
+
+  /// No description provided for @otpContextMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP verification session was not found.'**
+  String get otpContextMissing;
+
+  /// No description provided for @unlockWelcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get unlockWelcomeBack;
+
+  /// No description provided for @useBiometricUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Use biometric unlock'**
+  String get useBiometricUnlock;
+
+  /// No description provided for @pinInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The PIN you entered is incorrect.'**
+  String get pinInvalid;
+
+  /// No description provided for @pinMustBeSixDigits.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN must be exactly 6 digits.'**
+  String get pinMustBeSixDigits;
+
+  /// No description provided for @createPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your PIN'**
+  String get createPinTitle;
+
+  /// No description provided for @createPinSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a 6-digit PIN to protect daily access to your wallet.'**
+  String get createPinSubtitle;
+
+  /// No description provided for @confirmPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm PIN'**
+  String get confirmPin;
+
+  /// No description provided for @pinsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The PIN entries do not match.'**
+  String get pinsDoNotMatch;
+
+  /// No description provided for @somethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong.'**
+  String get somethingWentWrong;
+
+  /// No description provided for @enableBiometricsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable biometric unlock?'**
+  String get enableBiometricsTitle;
+
+  /// No description provided for @enableBiometricsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Face ID or fingerprint for faster daily access while keeping PIN available at all times.'**
+  String get enableBiometricsSubtitle;
+
+  /// No description provided for @enableBiometrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Biometrics'**
+  String get enableBiometrics;
+
+  /// No description provided for @later.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get later;
+
+  /// No description provided for @biometricAuthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric authentication failed.'**
+  String get biometricAuthFailed;
+
+  /// No description provided for @biometricNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric authentication is not available on this device.'**
+  String get biometricNotAvailable;
+
+  /// No description provided for @enablePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable PIN'**
+  String get enablePin;
+
+  /// No description provided for @pinEnabledDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your app is protected with a secure PIN.'**
+  String get pinEnabledDescription;
+
+  /// No description provided for @pinDisabledDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a PIN to protect daily access to the app.'**
+  String get pinDisabledDescription;
+
+  /// No description provided for @changePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Change PIN'**
+  String get changePin;
+
+  /// No description provided for @changePinDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your app PIN securely.'**
+  String get changePinDescription;
+
+  /// No description provided for @lockTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Timeout'**
+  String get lockTimeout;
+
+  /// No description provided for @lockImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediately'**
+  String get lockImmediately;
+
+  /// No description provided for @lockAfter30Seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'30 Seconds'**
+  String get lockAfter30Seconds;
+
+  /// No description provided for @lockAfter1Minute.
+  ///
+  /// In en, this message translates to:
+  /// **'1 Minute'**
+  String get lockAfter1Minute;
+
+  /// No description provided for @lockAfter5Minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'5 Minutes'**
+  String get lockAfter5Minutes;
+
+  /// No description provided for @disablePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable PIN'**
+  String get disablePin;
+
+  /// No description provided for @disablePinDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current PIN to remove local app protection on this device.'**
+  String get disablePinDescription;
+
+  /// No description provided for @currentPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Current PIN'**
+  String get currentPin;
+
+  /// No description provided for @pinRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN is required.'**
+  String get pinRequired;
+
+  /// No description provided for @newPin.
+  ///
+  /// In en, this message translates to:
+  /// **'New PIN'**
+  String get newPin;
+
+  /// No description provided for @newPinMustDiffer.
+  ///
+  /// In en, this message translates to:
+  /// **'The new PIN must be different from the current PIN.'**
+  String get newPinMustDiffer;
+
+  /// No description provided for @confirmPinRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN confirmation is required.'**
+  String get confirmPinRequired;
+
+  /// No description provided for @biometricEnabledSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric unlock is enabled.'**
+  String get biometricEnabledSuccessfully;
+
+  /// No description provided for @biometricDisabledSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric unlock is disabled.'**
+  String get biometricDisabledSuccessfully;
+
+  /// No description provided for @pinChangedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN changed successfully.'**
+  String get pinChangedSuccessfully;
+
+  /// No description provided for @pinDisabledSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN disabled successfully.'**
+  String get pinDisabledSuccessfully;
+
+  /// No description provided for @pinSavedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN saved successfully.'**
+  String get pinSavedSuccessfully;
+
+  /// No description provided for @currentPinInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The current PIN is incorrect.'**
+  String get currentPinInvalid;
+
+  /// No description provided for @pinSetupRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You need to set up a PIN first.'**
+  String get pinSetupRequired;
+
+  /// No description provided for @profileUpdatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully.'**
+  String get profileUpdatedSuccessfully;
+
+  /// No description provided for @loggedOutSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'You have been logged out.'**
+  String get loggedOutSuccessfully;
+
+  /// No description provided for @lockTimeoutUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock timeout updated.'**
+  String get lockTimeoutUpdated;
 }
 
 class _AppLocalizationsDelegate

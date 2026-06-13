@@ -58,149 +58,149 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
     );
 
     return Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          titleSpacing: AppSpacing.sm,
-          title: walletOverview == null
-              ? Text(context.tr.walletDetails)
-              : Text(
-                  walletOverview.wallet.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-          actions: walletOverview == null
-              ? null
-              : <Widget>[
-                  IconButton(
-                    tooltip: context.tr.openActions,
-                    onPressed: () => showEditWalletSheet(
-                      context,
-                      walletId: walletOverview.wallet.id,
-                    ),
-                    icon: const Icon(Icons.edit_outlined),
+      appBar: AppBar(
+        centerTitle: true,
+        titleSpacing: AppSpacing.sm,
+        title: walletOverview == null
+            ? Text(context.tr.walletDetails)
+            : Text(
+                walletOverview.wallet.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+        actions: walletOverview == null
+            ? null
+            : <Widget>[
+                IconButton(
+                  tooltip: context.tr.openActions,
+                  onPressed: () => showEditWalletSheet(
+                    context,
+                    walletId: walletOverview.wallet.id,
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                ],
-        ),
-        body: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
-              constraints.maxWidth,
-            );
-            final double horizontalPadding = switch (breakpoint) {
-              DashboardBreakpoint.smallPhone => AppSpacing.lg,
-              DashboardBreakpoint.phone => AppSpacing.xl,
-              DashboardBreakpoint.tablet => AppSpacing.xxl,
-              DashboardBreakpoint.largeTablet => 40,
-            };
-
-            if (walletState.isLoading && walletOverview == null) {
-              return SafeArea(
-                top: false,
-                child: _WalletDetailsSkeleton(
-                  horizontalPadding: horizontalPadding,
+                  icon: const Icon(Icons.edit_outlined),
                 ),
-              );
-            }
+                const SizedBox(width: AppSpacing.xs),
+              ],
+      ),
+      body: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
+            constraints.maxWidth,
+          );
+          final double horizontalPadding = switch (breakpoint) {
+            DashboardBreakpoint.smallPhone => AppSpacing.lg,
+            DashboardBreakpoint.phone => AppSpacing.xl,
+            DashboardBreakpoint.tablet => AppSpacing.xxl,
+            DashboardBreakpoint.largeTablet => 40,
+          };
 
-            if (walletOverview == null) {
-              return SafeArea(
-                top: false,
-                child: Padding(
+          if (walletState.isLoading && walletOverview == null) {
+            return SafeArea(
+              top: false,
+              child: _WalletDetailsSkeleton(
+                horizontalPadding: horizontalPadding,
+              ),
+            );
+          }
+
+          if (walletOverview == null) {
+            return SafeArea(
+              top: false,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  AppSpacing.md,
+                  horizontalPadding,
+                  AppSpacing.xxl,
+                ),
+                child: DashboardEmptyState(
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: context.tr.walletDetails,
+                  message: context.tr.walletNotFound,
+                ),
+              ),
+            );
+          }
+
+          return SafeArea(
+            top: false,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1120),
+                child: ListView(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
                     AppSpacing.md,
                     horizontalPadding,
                     AppSpacing.xxl,
                   ),
-                    child: DashboardEmptyState(
-                      icon: Icons.account_balance_wallet_outlined,
-                      title: context.tr.walletDetails,
-                      message: context.tr.walletNotFound,
-                  ),
-                ),
-              );
-            }
-
-            return SafeArea(
-              top: false,
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1120),
-                  child: ListView(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      AppSpacing.md,
-                      horizontalPadding,
-                      AppSpacing.xxl,
+                  children: <Widget>[
+                    _WalletHeroCard(walletOverview: walletOverview),
+                    const SizedBox(height: AppSpacing.lg),
+                    _WalletQuickActions(
+                      onDeposit: () => showWalletDepositSheet(
+                        context,
+                        walletId: walletOverview.wallet.id,
+                        walletName: walletOverview.wallet.name,
+                      ),
+                      onWithdraw: () => showWalletWithdrawSheet(
+                        context,
+                        walletId: walletOverview.wallet.id,
+                        walletName: walletOverview.wallet.name,
+                      ),
+                      onTransfer: () => showCreateTransferSheet(context),
+                      onExchange: () => showWalletExchangeSheet(
+                        context,
+                        walletId: walletOverview.wallet.id,
+                        walletName: walletOverview.wallet.name,
+                      ),
                     ),
-                    children: <Widget>[
-                      _WalletHeroCard(walletOverview: walletOverview),
-                      const SizedBox(height: AppSpacing.lg),
-                      _WalletQuickActions(
-                        onDeposit: () => showWalletDepositSheet(
-                          context,
-                          walletId: walletOverview.wallet.id,
-                          walletName: walletOverview.wallet.name,
-                        ),
-                        onWithdraw: () => showWalletWithdrawSheet(
-                          context,
-                          walletId: walletOverview.wallet.id,
-                          walletName: walletOverview.wallet.name,
-                        ),
-                        onTransfer: () => showCreateTransferSheet(context),
-                        onExchange: () => showWalletExchangeSheet(
-                          context,
-                          walletId: walletOverview.wallet.id,
-                          walletName: walletOverview.wallet.name,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      _WalletActivityFilters(
-                        selectedFilter: _filter,
-                        onFilterSelected: (_WalletActivityFilter filter) {
-                          setState(() => _filter = filter);
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      if (transactionState.isLoading &&
-                          walletTransactions.isEmpty)
-                        const _WalletActivitySkeletonList()
-                      else if (filteredTransactions.isEmpty)
-                        DashboardEmptyState(
-                          icon: Icons.receipt_long_outlined,
-                          title: context.tr.noWalletActivityTitle,
-                          message: context.tr.noWalletActivityMessage,
-                        )
-                      else
-                        Column(
-                          children: filteredTransactions
-                              .map(
-                                (LedgerTransaction transaction) => Padding(
-                                  padding: const EdgeInsets.only(
-                                    bottom: AppSpacing.md,
-                                  ),
-                                  child: _WalletActivityCard(
-                                    transaction: transaction,
-                                    onTap: () => context.push(
-                                      AppRoutes.transactionDetailsLocation(
-                                        transaction.id,
-                                      ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _WalletActivityFilters(
+                      selectedFilter: _filter,
+                      onFilterSelected: (_WalletActivityFilter filter) {
+                        setState(() => _filter = filter);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    if (transactionState.isLoading &&
+                        walletTransactions.isEmpty)
+                      const _WalletActivitySkeletonList()
+                    else if (filteredTransactions.isEmpty)
+                      DashboardEmptyState(
+                        icon: Icons.receipt_long_outlined,
+                        title: context.tr.noWalletActivityTitle,
+                        message: context.tr.noWalletActivityMessage,
+                      )
+                    else
+                      Column(
+                        children: filteredTransactions
+                            .map(
+                              (LedgerTransaction transaction) => Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.md,
+                                ),
+                                child: _WalletActivityCard(
+                                  transaction: transaction,
+                                  onTap: () => context.push(
+                                    AppRoutes.transactionDetailsLocation(
+                                      transaction.id,
                                     ),
                                   ),
                                 ),
-                              )
-                              .toList(growable: false),
-                        ),
-                    ],
-                  ),
+                              ),
+                            )
+                            .toList(growable: false),
+                      ),
+                  ],
                 ),
               ),
-            );
-          },
-        ),
-      );
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 

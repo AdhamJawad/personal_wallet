@@ -29,10 +29,8 @@ class NotificationCenterPage extends ConsumerWidget {
                   items: <DropdownMenuItem<NotificationType?>>[
                     const DropdownMenuItem(value: null, child: Text('All')),
                     ...NotificationType.values.map(
-                      (NotificationType type) => DropdownMenuItem(
-                        value: type,
-                        child: Text(type.name),
-                      ),
+                      (NotificationType type) =>
+                          DropdownMenuItem(value: type, child: Text(type.name)),
                     ),
                   ],
                   onChanged: (NotificationType? value) {
@@ -45,8 +43,9 @@ class NotificationCenterPage extends ConsumerWidget {
               const SizedBox(width: AppSpacing.md),
               PwButton.secondary(
                 label: 'Clear read',
-                onPressed: () =>
-                    ref.read(notificationControllerProvider.notifier).clearRead(),
+                onPressed: () => ref
+                    .read(notificationControllerProvider.notifier)
+                    .clearRead(),
               ),
             ],
           ),

@@ -68,9 +68,8 @@ class _SyncDashboardPageState extends ConsumerState<SyncDashboardPage> {
               children: <Widget>[
                 PwButton.secondary(
                   label: 'Refresh',
-                  onPressed: () => ref
-                      .read(syncControllerProvider.notifier)
-                      .initialize(),
+                  onPressed: () =>
+                      ref.read(syncControllerProvider.notifier).initialize(),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 PwButton.primary(
@@ -205,29 +204,30 @@ class _SyncSection extends ConsumerWidget {
                           return;
                       }
                     },
-                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                      if (operation.status == SyncOperationStatus.failed ||
-                          operation.status == SyncOperationStatus.conflict)
-                        const PopupMenuItem<String>(
-                          value: 'retry',
-                          child: Text('Retry'),
-                        ),
-                      if (operation.status != SyncOperationStatus.synced)
-                        const PopupMenuItem<String>(
-                          value: 'synced',
-                          child: Text('Mark synced'),
-                        ),
-                      if (operation.status != SyncOperationStatus.failed)
-                        const PopupMenuItem<String>(
-                          value: 'failed',
-                          child: Text('Mark failed'),
-                        ),
-                      if (operation.status != SyncOperationStatus.conflict)
-                        const PopupMenuItem<String>(
-                          value: 'conflict',
-                          child: Text('Mark conflict'),
-                        ),
-                    ],
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<String>>[
+                          if (operation.status == SyncOperationStatus.failed ||
+                              operation.status == SyncOperationStatus.conflict)
+                            const PopupMenuItem<String>(
+                              value: 'retry',
+                              child: Text('Retry'),
+                            ),
+                          if (operation.status != SyncOperationStatus.synced)
+                            const PopupMenuItem<String>(
+                              value: 'synced',
+                              child: Text('Mark synced'),
+                            ),
+                          if (operation.status != SyncOperationStatus.failed)
+                            const PopupMenuItem<String>(
+                              value: 'failed',
+                              child: Text('Mark failed'),
+                            ),
+                          if (operation.status != SyncOperationStatus.conflict)
+                            const PopupMenuItem<String>(
+                              value: 'conflict',
+                              child: Text('Mark conflict'),
+                            ),
+                        ],
                   ),
                 ),
               ),

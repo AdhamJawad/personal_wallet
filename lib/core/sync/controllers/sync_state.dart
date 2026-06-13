@@ -30,6 +30,8 @@ abstract class SyncState with _$SyncState {
       .toList(growable: false);
 
   List<SyncOperation> get conflictOperations => operations
-      .where((SyncOperation item) => item.status == SyncOperationStatus.conflict)
+      .where(
+        (SyncOperation item) => item.status == SyncOperationStatus.conflict,
+      )
       .toList(growable: false);
 }

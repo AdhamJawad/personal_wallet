@@ -58,7 +58,9 @@ class _DebtSettlementPageState extends ConsumerState<DebtSettlementPage> {
       currency: summary.currency,
       amount: _amountController.text.trim(),
       remainingAmountBeforeSettlement: summary.remainingAmount,
-      note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+      note: _noteController.text.trim().isEmpty
+          ? null
+          : _noteController.text.trim(),
     );
 
     final bool success = await ref
@@ -147,7 +149,9 @@ class _DebtSettlementPageState extends ConsumerState<DebtSettlementPage> {
                   const SizedBox(height: AppSpacing.md),
                   DropdownButtonFormField<String>(
                     initialValue: _walletId,
-                    decoration: const InputDecoration(labelText: 'Sender wallet'),
+                    decoration: const InputDecoration(
+                      labelText: 'Sender wallet',
+                    ),
                     items: activeWallets
                         .map(
                           (WalletOverview item) => DropdownMenuItem<String>(
@@ -156,7 +160,8 @@ class _DebtSettlementPageState extends ConsumerState<DebtSettlementPage> {
                           ),
                         )
                         .toList(growable: false),
-                    onChanged: (String? value) => setState(() => _walletId = value),
+                    onChanged: (String? value) =>
+                        setState(() => _walletId = value),
                     validator: (String? value) =>
                         value == null ? 'Sender wallet is required.' : null,
                   ),
@@ -190,7 +195,8 @@ class _DebtSettlementPageState extends ConsumerState<DebtSettlementPage> {
                     label: 'Settle debt',
                     isLoading: transferState.isLoading,
                     onPressed: () {
-                      if (!_formKey.currentState!.validate() || _walletId == null) {
+                      if (!_formKey.currentState!.validate() ||
+                          _walletId == null) {
                         return;
                       }
                       final WalletOverview wallet = activeWallets.firstWhere(

@@ -95,118 +95,117 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
       behavior: HitTestBehavior.translucent,
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-          appBar: AppBar(
-            titleSpacing: AppSpacing.lg,
-            title: Text(context.tr.wallets),
-            actions: <Widget>[
-              Padding(
-                padding: const EdgeInsetsDirectional.only(end: AppSpacing.lg),
-                child: _CreateWalletAction(
-                  tooltip: context.tr.createWallet,
-                  onPressed: () => showCreateWalletSheet(context),
-                ),
+        appBar: AppBar(
+          titleSpacing: AppSpacing.lg,
+          title: Text(context.tr.wallets),
+          actions: <Widget>[
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: AppSpacing.lg),
+              child: _CreateWalletAction(
+                tooltip: context.tr.createWallet,
+                onPressed: () => showCreateWalletSheet(context),
               ),
-            ],
-          ),
-          body: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
-                constraints.maxWidth,
-              );
-              final double horizontalPadding = switch (breakpoint) {
-                DashboardBreakpoint.smallPhone => AppSpacing.lg,
-                DashboardBreakpoint.phone => AppSpacing.xl,
-                DashboardBreakpoint.tablet => AppSpacing.xxl,
-                DashboardBreakpoint.largeTablet => 40,
-              };
-              final int columns = switch (breakpoint) {
-                DashboardBreakpoint.smallPhone => 1,
-                DashboardBreakpoint.phone => 1,
-                DashboardBreakpoint.tablet => 2,
-                DashboardBreakpoint.largeTablet => 3,
-              };
+            ),
+          ],
+        ),
+        body: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
+              constraints.maxWidth,
+            );
+            final double horizontalPadding = switch (breakpoint) {
+              DashboardBreakpoint.smallPhone => AppSpacing.lg,
+              DashboardBreakpoint.phone => AppSpacing.xl,
+              DashboardBreakpoint.tablet => AppSpacing.xxl,
+              DashboardBreakpoint.largeTablet => 40,
+            };
+            final int columns = switch (breakpoint) {
+              DashboardBreakpoint.smallPhone => 1,
+              DashboardBreakpoint.phone => 1,
+              DashboardBreakpoint.tablet => 2,
+              DashboardBreakpoint.largeTablet => 3,
+            };
 
-              return SafeArea(
-                top: false,
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1120),
-                    child: ListView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.fromLTRB(
-                        horizontalPadding,
-                        AppSpacing.md,
-                        horizontalPadding,
-                        AppSpacing.xxl,
+            return SafeArea(
+              top: false,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: ListView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      AppSpacing.md,
+                      horizontalPadding,
+                      AppSpacing.xxl,
+                    ),
+                    children: <Widget>[
+                      if (isInitialLoading)
+                        const _WalletSummarySkeleton()
+                      else
+                        _WalletSummaryCard(summary: summary),
+                      const SizedBox(height: AppSpacing.md),
+                      _WalletSearchBar(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        label: context.tr.searchWallets,
+                        hint: context.tr.searchWalletsHint,
+                        sortLabel: context.tr.sortWallets,
+                        activeSortOption: walletState.sortOption,
+                        onSortSelected: (WalletSortOption option) {
+                          ref
+                              .read(walletControllerProvider.notifier)
+                              .setSortOption(option);
+                        },
                       ),
-                      children: <Widget>[
-                        if (isInitialLoading)
-                          const _WalletSummarySkeleton()
-                        else
-                          _WalletSummaryCard(summary: summary),
-                        const SizedBox(height: AppSpacing.md),
-                        _WalletSearchBar(
-                          controller: _searchController,
-                          focusNode: _searchFocusNode,
-                          label: context.tr.searchWallets,
-                          hint: context.tr.searchWalletsHint,
-                          sortLabel: context.tr.sortWallets,
-                          activeSortOption: walletState.sortOption,
-                          onSortSelected: (WalletSortOption option) {
+                      const SizedBox(height: AppSpacing.md),
+                      if (isInitialLoading)
+                        _WalletListSkeleton(columns: columns)
+                      else if (visibleWallets.isEmpty &&
+                          walletState.wallets.isEmpty)
+                        DashboardEmptyState(
+                          icon: Icons.account_balance_wallet_outlined,
+                          title: context.tr.noWalletsTitle,
+                          message: context.tr.noWalletsMessage,
+                          actionLabel: context.tr.createWallet,
+                          onActionPressed: () => showCreateWalletSheet(context),
+                        )
+                      else if (visibleWallets.isEmpty && hasSearchQuery)
+                        DashboardEmptyState(
+                          icon: Icons.search_off_rounded,
+                          title: context.tr.noWalletSearchResultsTitle,
+                          message: context.tr.noWalletSearchResultsMessage,
+                          actionLabel: context.tr.clearSearch,
+                          onActionPressed: () {
+                            _searchController.clear();
                             ref
                                 .read(walletControllerProvider.notifier)
-                                .setSortOption(option);
+                                .setSearchQuery('');
+                          },
+                        )
+                      else
+                        _WalletGrid(
+                          wallets: visibleWallets,
+                          columns: columns,
+                          onWalletPressed: (WalletOverview walletOverview) {
+                            context.push(
+                              AppRoutes.walletDetailsLocation(
+                                walletOverview.wallet.id,
+                              ),
+                            );
                           },
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        if (isInitialLoading)
-                          _WalletListSkeleton(columns: columns)
-                        else if (visibleWallets.isEmpty &&
-                            walletState.wallets.isEmpty)
-                          DashboardEmptyState(
-                            icon: Icons.account_balance_wallet_outlined,
-                            title: context.tr.noWalletsTitle,
-                            message: context.tr.noWalletsMessage,
-                            actionLabel: context.tr.createWallet,
-                            onActionPressed: () =>
-                                showCreateWalletSheet(context),
-                          )
-                        else if (visibleWallets.isEmpty && hasSearchQuery)
-                          DashboardEmptyState(
-                            icon: Icons.search_off_rounded,
-                            title: context.tr.noWalletSearchResultsTitle,
-                            message: context.tr.noWalletSearchResultsMessage,
-                            actionLabel: context.tr.clearSearch,
-                            onActionPressed: () {
-                              _searchController.clear();
-                              ref
-                                  .read(walletControllerProvider.notifier)
-                                  .setSearchQuery('');
-                            },
-                          )
-                        else
-                          _WalletGrid(
-                            wallets: visibleWallets,
-                            columns: columns,
-                            onWalletPressed: (WalletOverview walletOverview) {
-                              context.push(
-                                AppRoutes.walletDetailsLocation(
-                                  walletOverview.wallet.id,
-                                ),
-                              );
-                            },
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
-      );
+      ),
+    );
   }
 }
 

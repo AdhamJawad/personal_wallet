@@ -40,9 +40,9 @@ class QrIdentityCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              const JsonEncoder.withIndent('  ').convert(
-                jsonDecode(identity.payload),
-              ),
+              const JsonEncoder.withIndent(
+                '  ',
+              ).convert(jsonDecode(identity.payload)),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -61,7 +61,9 @@ class _PseudoQrGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     const int gridSize = 21;
     final List<int> codeUnits = payload.codeUnits;
-    final List<bool> cells = List<bool>.generate(gridSize * gridSize, (int index) {
+    final List<bool> cells = List<bool>.generate(gridSize * gridSize, (
+      int index,
+    ) {
       final int seed = codeUnits[index % codeUnits.length];
       return ((seed + index * 13) % 7) < 3;
     });
@@ -96,18 +98,12 @@ class _PseudoQrGrid extends StatelessWidget {
 
     bool inBox(int top, int left) {
       final bool withinBounds =
-          row >= top &&
-          row < top + 5 &&
-          column >= left &&
-          column < left + 5;
+          row >= top && row < top + 5 && column >= left && column < left + 5;
       if (!withinBounds) {
         return false;
       }
       final bool border =
-          row == top ||
-          row == top + 4 ||
-          column == left ||
-          column == left + 4;
+          row == top || row == top + 4 || column == left || column == left + 4;
       final bool center =
           row >= top + 1 &&
           row <= top + 3 &&

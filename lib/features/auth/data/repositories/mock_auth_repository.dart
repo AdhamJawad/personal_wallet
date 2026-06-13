@@ -3,13 +3,13 @@ import 'dart:convert';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/storage/local_store.dart';
 import '../../../../core/utils/id_generator.dart';
+import '../../domain/models/app_user.dart';
 import '../../domain/models/auth_session.dart';
 import '../../domain/models/login_request.dart';
 import '../../domain/models/pending_otp_verification.dart';
 import '../../domain/models/register_request.dart';
 import '../../domain/services/otp_service.dart';
 import '../models/mock_auth_account.dart';
-import '../../domain/models/app_user.dart';
 import 'local_auth_repository.dart';
 
 class MockAuthRepository implements LocalAuthRepository {
@@ -20,7 +20,6 @@ class MockAuthRepository implements LocalAuthRepository {
        _otpService = otpService;
 
   static const String _demoPhoneNumber = '+963999999999';
-  static const String _demoPassword = '123456';
   static const String _demoDisplayName = 'Demo User';
   static const String _demoEmailAddress = 'demo@wallet.app';
 
@@ -51,7 +50,6 @@ class MockAuthRepository implements LocalAuthRepository {
           createdAt: now,
           updatedAt: now,
         ),
-        password: _demoPassword,
       ),
       MockAuthAccount(
         user: AppUser(
@@ -65,7 +63,6 @@ class MockAuthRepository implements LocalAuthRepository {
           createdAt: now,
           updatedAt: now,
         ),
-        password: _demoPassword,
       ),
       MockAuthAccount(
         user: AppUser(
@@ -79,7 +76,6 @@ class MockAuthRepository implements LocalAuthRepository {
           createdAt: now,
           updatedAt: now,
         ),
-        password: _demoPassword,
       ),
     ];
 
@@ -90,6 +86,21 @@ class MockAuthRepository implements LocalAuthRepository {
         value: jsonEncode(account.toJson()),
       );
     }
+  }
+
+  AuthSession _buildSession({
+    required AppUser user,
+    required bool biometricUnlocked,
+  }) {
+    final DateTime now = DateTime.now().toUtc();
+
+    return AuthSession(
+      id: IdGenerator.next(),
+      user: user.copyWith(updatedAt: now),
+      biometricUnlocked: biometricUnlocked,
+      issuedAt: now,
+      expiresAt: now.add(const Duration(days: 7)),
+    );
   }
 
   Future<MockAuthAccount?> _findAccount(String phoneNumber) async {
@@ -136,50 +147,51 @@ class MockAuthRepository implements LocalAuthRepository {
     );
   }
 
-  AuthSession _buildSession({
-    required AppUser user,
-    required bool biometricUnlocked,
-  }) {
-    final DateTime now = DateTime.now().toUtc();
-
-    return AuthSession(
-      id: IdGenerator.next(),
-      user: user.copyWith(updatedAt: now),
-      biometricUnlocked: biometricUnlocked,
-      issuedAt: now,
-      expiresAt: now.add(const Duration(days: 7)),
-    );
-  }
-
-  @override
-  Future<AuthSession> login(LoginRequest request) async {
-    final MockAuthAccount? account = await _findAccount(request.phoneNumber);
-
-    if (account == null || account.password != request.password) {
-      throw const AuthException('Invalid phone number or password.');
+  Future<void> _verifyOtp(String otpCode) async {
+    final bool isValidOtp = await _otpService.verify(code: otpCode);
+    if (!isValidOtp) {
+      throw const AuthException('otp_invalid');
     }
-
-    return _buildSession(user: account.user, biometricUnlocked: false);
   }
 
   @override
   Future<void> logout(String sessionId) async {}
 
   @override
-  Future<void> changePassword({
-    required String userId,
-    required String currentPassword,
-    required String newPassword,
-  }) async {
-    final MockAuthAccount? account = await _findAccountByUserId(userId);
+  Future<void> requestLoginOtp(LoginRequest request) async {
+    final MockAuthAccount? account = await _findAccount(request.phoneNumber);
     if (account == null) {
-      throw const AuthException('User account was not found.');
-    }
-    if (account.password != currentPassword) {
-      throw const AuthException('The current password is incorrect.');
+      throw const AuthException('phone_not_registered');
     }
 
-    await _saveAccount(account.copyWith(password: newPassword));
+    await _otpService.sendOtp(phoneNumber: request.phoneNumber);
+  }
+
+  @override
+  Future<void> requestPinReset(String phoneNumber) async {
+    await _ensureSeeded();
+    await _otpService.sendOtp(phoneNumber: phoneNumber);
+  }
+
+  @override
+  Future<PendingOtpVerification> register(RegisterRequest request) async {
+    final MockAuthAccount? existingAccount = await _findAccount(
+      request.phoneNumber,
+    );
+
+    if (existingAccount != null) {
+      throw const AuthException('phone_already_registered');
+    }
+
+    await _otpService.sendOtp(phoneNumber: request.phoneNumber);
+
+    return PendingOtpVerification(
+      verificationId: IdGenerator.next(),
+      fullName: request.fullName,
+      emailAddress: request.emailAddress,
+      phoneNumber: request.phoneNumber,
+      createdAt: DateTime.now().toUtc(),
+    );
   }
 
   @override
@@ -206,34 +218,37 @@ class MockAuthRepository implements LocalAuthRepository {
       return updatedUser;
     }
 
-    throw const AuthException('User profile could not be updated.');
+    throw const AuthException('profile_update_failed');
   }
 
   @override
-  Future<PendingOtpVerification> register(RegisterRequest request) async {
-    final MockAuthAccount? existingAccount = await _findAccount(
-      request.phoneNumber,
-    );
+  Future<AuthSession> verifyLoginOtp({
+    required String phoneNumber,
+    required String otpCode,
+  }) async {
+    await _verifyOtp(otpCode);
 
-    if (existingAccount != null) {
-      throw const AuthException('Phone number is already registered.');
+    final MockAuthAccount? account = await _findAccount(phoneNumber);
+    if (account == null) {
+      throw const AuthException('phone_not_registered');
     }
 
-    await _otpService.sendOtp(phoneNumber: request.phoneNumber);
-
-    return PendingOtpVerification(
-      verificationId: IdGenerator.next(),
-      fullName: request.fullName,
-      phoneNumber: request.phoneNumber,
-      password: request.password,
-      createdAt: DateTime.now().toUtc(),
-    );
+    return _buildSession(user: account.user, biometricUnlocked: false);
   }
 
   @override
-  Future<void> requestPasswordReset(String phoneNumber) async {
-    await _ensureSeeded();
-    await _otpService.sendOtp(phoneNumber: phoneNumber);
+  Future<AuthSession> verifyPinResetOtp({
+    required String phoneNumber,
+    required String otpCode,
+  }) async {
+    await _verifyOtp(otpCode);
+
+    final MockAuthAccount? account = await _findAccount(phoneNumber);
+    if (account == null) {
+      throw const AuthException('phone_not_registered');
+    }
+
+    return _buildSession(user: account.user, biometricUnlocked: false);
   }
 
   @override
@@ -241,18 +256,14 @@ class MockAuthRepository implements LocalAuthRepository {
     required PendingOtpVerification pendingVerification,
     required String otpCode,
   }) async {
-    final bool isValidOtp = await _otpService.verify(code: otpCode);
-
-    if (!isValidOtp) {
-      throw const AuthException('The OTP code is invalid.');
-    }
+    await _verifyOtp(otpCode);
 
     final DateTime now = DateTime.now().toUtc();
     final AppUser user = AppUser(
       id: IdGenerator.next(),
       phoneNumber: pendingVerification.phoneNumber,
-      displayName: pendingVerification.fullName,
-      emailAddress: null,
+      displayName: pendingVerification.fullName ?? 'New User',
+      emailAddress: pendingVerification.emailAddress,
       profileImageUri: null,
       isVerified: true,
       biometricEnabled: false,
@@ -261,9 +272,7 @@ class MockAuthRepository implements LocalAuthRepository {
       updatedAt: now,
     );
 
-    await _saveAccount(
-      MockAuthAccount(user: user, password: pendingVerification.password),
-    );
+    await _saveAccount(MockAuthAccount(user: user));
 
     return _buildSession(user: user, biometricUnlocked: false);
   }

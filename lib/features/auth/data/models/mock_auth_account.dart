@@ -1,17 +1,19 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
 import '../../domain/models/app_user.dart';
 
-part 'mock_auth_account.freezed.dart';
-part 'mock_auth_account.g.dart';
+class MockAuthAccount {
+  const MockAuthAccount({required this.user});
 
-@freezed
-abstract class MockAuthAccount with _$MockAuthAccount {
-  const factory MockAuthAccount({
-    required AppUser user,
-    required String password,
-  }) = _MockAuthAccount;
+  factory MockAuthAccount.fromJson(Map<String, dynamic> json) {
+    return MockAuthAccount(
+      user: AppUser.fromJson(json['user'] as Map<String, dynamic>),
+    );
+  }
 
-  factory MockAuthAccount.fromJson(Map<String, dynamic> json) =>
-      _$MockAuthAccountFromJson(json);
+  final AppUser user;
+
+  MockAuthAccount copyWith({AppUser? user}) {
+    return MockAuthAccount(user: user ?? this.user);
+  }
+
+  Map<String, dynamic> toJson() => <String, dynamic>{'user': user.toJson()};
 }

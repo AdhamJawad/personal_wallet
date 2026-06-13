@@ -56,8 +56,7 @@ class TransferController extends StateNotifier<TransferState> {
       transfers: transfers,
       selectedTransfer: selectedTransfer,
       lastCompletedTransfer: lastTransfer ?? state.lastCompletedTransfer,
-      lastCompletedSettlement:
-          lastSettlement ?? state.lastCompletedSettlement,
+      lastCompletedSettlement: lastSettlement ?? state.lastCompletedSettlement,
       isLoading: false,
       errorMessage: null,
     );
@@ -119,10 +118,11 @@ class TransferController extends StateNotifier<TransferState> {
             amount: amount,
             note: note,
           );
-      final TransferSummary? transfer = await _transferRepository.getTransferById(
-        ownerUserId: _resolvedOwnerUserId,
-        transferId: settlement.settlement.transferId,
-      );
+      final TransferSummary? transfer = await _transferRepository
+          .getTransferById(
+            ownerUserId: _resolvedOwnerUserId,
+            transferId: settlement.settlement.transferId,
+          );
       await _reload(
         selectedTransferId: transfer?.transfer.id,
         lastTransfer: transfer,
@@ -147,10 +147,11 @@ class TransferController extends StateNotifier<TransferState> {
   Future<void> loadTransfer(String transferId) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final TransferSummary? transfer = await _transferRepository.getTransferById(
-        ownerUserId: _resolvedOwnerUserId,
-        transferId: transferId,
-      );
+      final TransferSummary? transfer = await _transferRepository
+          .getTransferById(
+            ownerUserId: _resolvedOwnerUserId,
+            transferId: transferId,
+          );
       await _reload(selectedTransferId: transfer?.transfer.id);
     } catch (error) {
       state = state.copyWith(isLoading: false, errorMessage: error.toString());

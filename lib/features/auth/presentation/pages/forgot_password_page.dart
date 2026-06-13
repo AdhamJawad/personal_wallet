@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../app/router/app_routes.dart';
-import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/auth_page_shell.dart';
@@ -34,19 +32,15 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
     final result = await ref
         .read(authControllerProvider.notifier)
-        .requestPasswordReset(phoneNumber: _phoneController.text.trim());
+        .requestPinReset(phoneNumber: _phoneController.text.trim());
 
-    if (!mounted) {
+    if (!mounted || result.isSuccess) {
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(result.message)));
-
-    if (result.isSuccess) {
-      context.go(AppRoutes.loginPath);
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_resolveMessage(context, result.message))),
+    );
   }
 
   @override
@@ -54,8 +48,8 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     final authState = ref.watch(authControllerProvider);
 
     return AuthPageShell(
-      title: context.tr.resetAccess,
-      subtitle: context.tr.resetAccessSubtitle,
+      title: context.tr.resetPinTitle,
+      subtitle: context.tr.resetPinSubtitle,
       child: Form(
         key: _formKey,
         child: Column(
@@ -76,7 +70,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             ),
             const SizedBox(height: AppSpacing.lg),
             PwButton.primary(
-              label: context.tr.sendInstructions,
+              label: context.tr.sendOtp,
               isLoading: authState.isBusy,
               onPressed: _submit,
             ),
@@ -84,5 +78,13 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
         ),
       ),
     );
+  }
+
+  String _resolveMessage(BuildContext context, String key) {
+    return switch (key) {
+      'otp_sent_successfully' => context.tr.otpSentSuccessfully,
+      'phone_not_registered' => context.tr.phoneNotRegistered,
+      _ => context.tr.somethingWentWrong,
+    };
   }
 }

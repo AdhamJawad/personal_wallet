@@ -926,14 +926,18 @@ class _EditContactSheetState extends ConsumerState<_EditContactSheet> {
     _phoneFocusNode = FocusNode();
     _emailFocusNode = FocusNode();
     _noteFocusNode = FocusNode();
-    _nameFocusNode.addListener(() => _handleFieldFocus(_nameFocusNode, _nameFieldKey));
+    _nameFocusNode.addListener(
+      () => _handleFieldFocus(_nameFocusNode, _nameFieldKey),
+    );
     _phoneFocusNode.addListener(
       () => _handleFieldFocus(_phoneFocusNode, _phoneFieldKey),
     );
     _emailFocusNode.addListener(
       () => _handleFieldFocus(_emailFocusNode, _emailFieldKey),
     );
-    _noteFocusNode.addListener(() => _handleFieldFocus(_noteFocusNode, _noteFieldKey));
+    _noteFocusNode.addListener(
+      () => _handleFieldFocus(_noteFocusNode, _noteFieldKey),
+    );
     _entityType = widget.contact.entityType;
     _imageUri = widget.contact.imageUri;
   }
@@ -1025,102 +1029,102 @@ class _EditContactSheetState extends ConsumerState<_EditContactSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-            Text(
-              context.tr.editContact,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              context.tr.editContactHelper,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _ContactSheetAvatarPicker(
-              imageUri: _imageUri,
-              entityType: _entityType,
-              onTap: _pickProfileImage,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _ContactSheetTypeSelector(
-              value: _entityType,
-              onChanged: (ContactEntityType value) {
-                setState(() => _entityType = value);
-              },
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            KeyedSubtree(
-              key: _nameFieldKey,
-              child: PwTextField(
-                controller: _nameController,
-                focusNode: _nameFocusNode,
-                label: context.tr.fullName,
-                textInputAction: TextInputAction.next,
-                onFieldSubmitted: (_) => _phoneFocusNode.requestFocus(),
-                validator: (String? value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return context.tr.fullNameRequired;
-                  }
-                  return null;
+              Text(
+                context.tr.editContact,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                context.tr.editContactHelper,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _ContactSheetAvatarPicker(
+                imageUri: _imageUri,
+                entityType: _entityType,
+                onTap: _pickProfileImage,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _ContactSheetTypeSelector(
+                value: _entityType,
+                onChanged: (ContactEntityType value) {
+                  setState(() => _entityType = value);
                 },
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            KeyedSubtree(
-              key: _phoneFieldKey,
-              child: PwTextField(
-                controller: _phoneController,
-                focusNode: _phoneFocusNode,
-                label: context.tr.phoneNumber,
-                keyboardType: TextInputType.phone,
-                textInputAction: TextInputAction.next,
-                onFieldSubmitted: (_) => _emailFocusNode.requestFocus(),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            KeyedSubtree(
-              key: _emailFieldKey,
-              child: PwTextField(
-                controller: _emailController,
-                focusNode: _emailFocusNode,
-                label: context.tr.emailAddress,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                onFieldSubmitted: (_) => _noteFocusNode.requestFocus(),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            KeyedSubtree(
-              key: _noteFieldKey,
-              child: PwTextField(
-                controller: _noteController,
-                focusNode: _noteFocusNode,
-                label: context.tr.note,
-                maxLines: 2,
-                textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: PwButton.secondary(
-                    label: context.tr.cancel,
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+              const SizedBox(height: AppSpacing.sm),
+              KeyedSubtree(
+                key: _nameFieldKey,
+                child: PwTextField(
+                  controller: _nameController,
+                  focusNode: _nameFocusNode,
+                  label: context.tr.fullName,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => _phoneFocusNode.requestFocus(),
+                  validator: (String? value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return context.tr.fullNameRequired;
+                    }
+                    return null;
+                  },
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: PwButton.primary(
-                    label: context.tr.saveChanges,
-                    isLoading: isLoading,
-                    onPressed: _submit,
-                  ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              KeyedSubtree(
+                key: _phoneFieldKey,
+                child: PwTextField(
+                  controller: _phoneController,
+                  focusNode: _phoneFocusNode,
+                  label: context.tr.phoneNumber,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => _emailFocusNode.requestFocus(),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              KeyedSubtree(
+                key: _emailFieldKey,
+                child: PwTextField(
+                  controller: _emailController,
+                  focusNode: _emailFocusNode,
+                  label: context.tr.emailAddress,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => _noteFocusNode.requestFocus(),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              KeyedSubtree(
+                key: _noteFieldKey,
+                child: PwTextField(
+                  controller: _noteController,
+                  focusNode: _noteFocusNode,
+                  label: context.tr.note,
+                  maxLines: 2,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: PwButton.secondary(
+                      label: context.tr.cancel,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: PwButton.primary(
+                      label: context.tr.saveChanges,
+                      isLoading: isLoading,
+                      onPressed: _submit,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),

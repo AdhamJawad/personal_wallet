@@ -35,7 +35,8 @@ class MyQrPage extends ConsumerWidget {
                     ),
                     PwButton.secondary(
                       label: 'Start transfer',
-                      onPressed: () => context.push(AppRoutes.userTransferCreatePath),
+                      onPressed: () =>
+                          context.push(AppRoutes.userTransferCreatePath),
                     ),
                   ],
                 ),

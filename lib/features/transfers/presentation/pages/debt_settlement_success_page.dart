@@ -32,7 +32,8 @@ class DebtSettlementSuccessPage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.lg),
             PwButton.primary(
               label: 'Back to debt details',
-              onPressed: () => context.go(AppRoutes.debtDetailsLocation(debtId)),
+              onPressed: () =>
+                  context.go(AppRoutes.debtDetailsLocation(debtId)),
             ),
           ],
         ),
@@ -71,7 +72,8 @@ class DebtSettlementSuccessPage extends ConsumerWidget {
               Expanded(
                 child: PwButton.primary(
                   label: 'Debt details',
-                  onPressed: () => context.go(AppRoutes.debtDetailsLocation(debtId)),
+                  onPressed: () =>
+                      context.go(AppRoutes.debtDetailsLocation(debtId)),
                 ),
               ),
             ],

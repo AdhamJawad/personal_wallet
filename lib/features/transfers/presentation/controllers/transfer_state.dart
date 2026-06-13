@@ -25,12 +25,18 @@ abstract class TransferState with _$TransferState {
       return transfers;
     }
 
-    return transfers.where((TransferSummary item) {
-      return item.transfer.reference.value.toLowerCase().contains(
-            normalizedQuery,
-          ) ||
-          item.counterpartyDisplayName.toLowerCase().contains(normalizedQuery) ||
-          (item.transfer.note ?? '').toLowerCase().contains(normalizedQuery);
-    }).toList(growable: false);
+    return transfers
+        .where((TransferSummary item) {
+          return item.transfer.reference.value.toLowerCase().contains(
+                normalizedQuery,
+              ) ||
+              item.counterpartyDisplayName.toLowerCase().contains(
+                normalizedQuery,
+              ) ||
+              (item.transfer.note ?? '').toLowerCase().contains(
+                normalizedQuery,
+              );
+        })
+        .toList(growable: false);
   }
 }

@@ -94,16 +94,17 @@ sealed class AppTheme {
   }
 
   static ThemeData dark() {
-    final TextTheme textTheme = GoogleFonts.cairoTextTheme(
-      ThemeData.dark(useMaterial3: true).textTheme,
-    ).copyWith(
-      headlineSmall: GoogleFonts.cairo(fontWeight: FontWeight.w700),
-      titleLarge: GoogleFonts.cairo(fontWeight: FontWeight.w600),
-      titleMedium: GoogleFonts.cairo(fontWeight: FontWeight.w600),
-      bodyLarge: GoogleFonts.cairo(fontWeight: FontWeight.w500),
-      bodyMedium: GoogleFonts.cairo(fontWeight: FontWeight.w400),
-      labelLarge: GoogleFonts.cairo(fontWeight: FontWeight.w600),
-    );
+    final TextTheme textTheme =
+        GoogleFonts.cairoTextTheme(
+          ThemeData.dark(useMaterial3: true).textTheme,
+        ).copyWith(
+          headlineSmall: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+          titleLarge: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+          titleMedium: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+          bodyLarge: GoogleFonts.cairo(fontWeight: FontWeight.w500),
+          bodyMedium: GoogleFonts.cairo(fontWeight: FontWeight.w400),
+          labelLarge: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+        );
 
     return ThemeData(
       useMaterial3: true,

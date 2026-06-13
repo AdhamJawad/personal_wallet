@@ -23,17 +23,19 @@ abstract class ContactState with _$ContactState {
   List<Contact> filteredContacts({ContactEntityType? entityType}) {
     final String normalizedQuery = _normalizeSearchValue(searchQuery);
 
-    return contacts.where((Contact contact) {
-      if (entityType != null && contact.entityType != entityType) {
-        return false;
-      }
-      if (normalizedQuery.isEmpty) {
-        return true;
-      }
-      return _contactSearchTokens(contact).any(
-        (String token) => token.contains(normalizedQuery),
-      );
-    }).toList(growable: false);
+    return contacts
+        .where((Contact contact) {
+          if (entityType != null && contact.entityType != entityType) {
+            return false;
+          }
+          if (normalizedQuery.isEmpty) {
+            return true;
+          }
+          return _contactSearchTokens(
+            contact,
+          ).any((String token) => token.contains(normalizedQuery));
+        })
+        .toList(growable: false);
   }
 
   Iterable<String> _contactSearchTokens(Contact contact) sync* {

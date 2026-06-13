@@ -5,6 +5,7 @@ import 'package:personal_wallet/l10n/app_localizations.dart';
 
 import '../core/localization/localization_extensions.dart';
 import '../core/utils/date_formatter.dart';
+import '../features/auth/presentation/widgets/app_security_gate.dart';
 import 'presentation/providers/app_preferences_provider.dart';
 import '../core/theme/app_theme.dart';
 import 'router/app_router.dart';
@@ -36,6 +37,12 @@ class PersonalWalletApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      builder: (BuildContext context, Widget? child) {
+        if (child == null) {
+          return const SizedBox.shrink();
+        }
+        return AppSecurityGate(child: child);
+      },
       routerConfig: router,
     );
   }

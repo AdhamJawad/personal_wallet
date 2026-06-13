@@ -24,7 +24,9 @@ class MockAuditRepository implements LocalAuditRepository {
     }
     final List<dynamic> decoded = jsonDecode(rawValue) as List<dynamic>;
     return decoded
-        .map((dynamic item) => AuditEvent.fromJson(item as Map<String, dynamic>))
+        .map(
+          (dynamic item) => AuditEvent.fromJson(item as Map<String, dynamic>),
+        )
         .toList(growable: false);
   }
 
@@ -32,7 +34,9 @@ class MockAuditRepository implements LocalAuditRepository {
     await _localStore.write(
       boxName: AppConstants.auditBox,
       key: _eventsKey(ownerUserId),
-      value: jsonEncode(events.map((AuditEvent item) => item.toJson()).toList()),
+      value: jsonEncode(
+        events.map((AuditEvent item) => item.toJson()).toList(),
+      ),
     );
   }
 

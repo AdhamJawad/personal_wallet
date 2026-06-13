@@ -11,13 +11,14 @@ final syncQueueRepositoryProvider = Provider<SyncQueueRepository>((Ref ref) {
   return MockSyncQueueRepository(ref.watch(localStoreProvider));
 });
 
-final syncControllerProvider =
-    StateNotifierProvider<SyncController, SyncState>((Ref ref) {
-      final authState = ref.watch(authControllerProvider);
+final syncControllerProvider = StateNotifierProvider<SyncController, SyncState>(
+  (Ref ref) {
+    final authState = ref.watch(authControllerProvider);
 
-      return SyncController(
-        syncQueueRepository: ref.watch(syncQueueRepositoryProvider),
-        notificationPublisher: ref.watch(notificationPublisherProvider),
-        ownerUserId: authState.session?.user.id,
-      );
-    });
+    return SyncController(
+      syncQueueRepository: ref.watch(syncQueueRepositoryProvider),
+      notificationPublisher: ref.watch(notificationPublisherProvider),
+      ownerUserId: authState.session?.user.id,
+    );
+  },
+);

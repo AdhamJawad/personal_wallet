@@ -120,10 +120,8 @@ class AppShellPage extends StatelessWidget {
                     _ActionSheetItem(
                       label: context.tr.transfer,
                       icon: Icons.swap_horiz_rounded,
-                      onTap: () => _openCreateTransferAction(
-                        context,
-                        modalContext,
-                      ),
+                      onTap: () =>
+                          _openCreateTransferAction(context, modalContext),
                     ),
                     _ActionSheetItem(
                       label: context.tr.exchange,

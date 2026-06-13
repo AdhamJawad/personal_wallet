@@ -1,16 +1,25 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class RegisterRequest {
+  const RegisterRequest({
+    required this.fullName,
+    required this.phoneNumber,
+    this.emailAddress,
+  });
 
-part 'register_request.freezed.dart';
-part 'register_request.g.dart';
+  factory RegisterRequest.fromJson(Map<String, dynamic> json) {
+    return RegisterRequest(
+      fullName: json['fullName'] as String,
+      phoneNumber: json['phoneNumber'] as String,
+      emailAddress: json['emailAddress'] as String?,
+    );
+  }
 
-@freezed
-abstract class RegisterRequest with _$RegisterRequest {
-  const factory RegisterRequest({
-    required String fullName,
-    required String phoneNumber,
-    required String password,
-  }) = _RegisterRequest;
+  final String fullName;
+  final String phoneNumber;
+  final String? emailAddress;
 
-  factory RegisterRequest.fromJson(Map<String, dynamic> json) =>
-      _$RegisterRequestFromJson(json);
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'fullName': fullName,
+    'phoneNumber': phoneNumber,
+    'emailAddress': emailAddress,
+  };
 }

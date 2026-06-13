@@ -11,8 +11,6 @@ class DashboardTotalAssetsCard extends StatelessWidget {
   const DashboardTotalAssetsCard({
     required this.totalUsd,
     required this.totalSyp,
-    required this.showBalances,
-    required this.onToggleVisibility,
     required this.updatedLabel,
     this.isLoading = false,
     super.key,
@@ -20,8 +18,6 @@ class DashboardTotalAssetsCard extends StatelessWidget {
 
   final String totalUsd;
   final String totalSyp;
-  final bool showBalances;
-  final VoidCallback onToggleVisibility;
   final String updatedLabel;
   final bool isLoading;
 
@@ -29,33 +25,27 @@ class DashboardTotalAssetsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isLoading) {
       return const DashboardSurfaceCard(
-        padding: EdgeInsets.all(AppSpacing.xl),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
             Row(
               children: <Widget>[
-                DashboardSkeletonBlock(
-                  height: 40,
-                  width: 40,
-                  radius: AppRadius.md,
-                ),
-                Spacer(),
                 DashboardSkeletonBlock(height: 18, width: 110),
+                Spacer(),
+                DashboardSkeletonBlock(height: 12, width: 70),
               ],
             ),
-            SizedBox(height: AppSpacing.xl),
+            SizedBox(height: AppSpacing.lg),
             DashboardSkeletonBlock(
-              height: 42,
-              width: 210,
+              height: 34,
+              width: 180,
               radius: AppRadius.lg,
             ),
             SizedBox(height: AppSpacing.sm),
-            DashboardSkeletonBlock(height: 22, width: 148),
-            SizedBox(height: AppSpacing.lg),
-            DashboardSkeletonBlock(height: 14, width: 124),
-            SizedBox(height: AppSpacing.sm),
-            DashboardSkeletonBlock(height: 12, width: 150),
+            DashboardSkeletonBlock(height: 18, width: 132),
+            SizedBox(height: AppSpacing.md),
+            DashboardSkeletonBlock(height: 12, width: 96),
           ],
         ),
       );
@@ -66,69 +56,52 @@ class DashboardTotalAssetsCard extends StatelessWidget {
     final bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return DashboardSurfaceCard(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
                       context.tr.totalAssets,
                       textAlign: TextAlign.right,
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.titleSmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.22),
-                        shape: BoxShape.circle,
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      updatedLabel,
+                      textAlign: TextAlign.right,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
               Container(
-                width: 40,
-                height: 40,
+                width: 10,
+                height: 10,
+                margin: const EdgeInsets.only(top: 4),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: IconButton(
-                  onPressed: onToggleVisibility,
-                  padding: EdgeInsets.zero,
-                  tooltip: showBalances
-                      ? context.tr.hideBalances
-                      : context.tr.showBalances,
-                  icon: Icon(
-                    showBalances
-                        ? Icons.visibility_off_rounded
-                        : Icons.visibility_rounded,
-                    size: 20,
-                  ),
-                  color: colorScheme.primary,
+                  color: colorScheme.primary.withValues(alpha: 0.22),
+                  shape: BoxShape.circle,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.lg),
           _AssetAmountLine(
-            value: showBalances
-                ? AmountFormatter.format(totalUsd)
-                : context.tr.hiddenValue,
+            value: AmountFormatter.format(totalUsd),
             currency: context.tr.usdShort,
-            textStyle: theme.textTheme.displaySmall?.copyWith(
+            textStyle: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w700,
               letterSpacing: isArabic ? 0 : -0.8,
               height: 1,
@@ -136,28 +109,18 @@ class DashboardTotalAssetsCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           _AssetAmountLine(
-            value: showBalances
-                ? AmountFormatter.format(totalSyp)
-                : context.tr.hiddenValue,
+            value: AmountFormatter.format(totalSyp),
             currency: context.tr.sypShort,
-            textStyle: theme.textTheme.titleLarge?.copyWith(
+            textStyle: theme.textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           Text(
             context.tr.activeWalletsHint,
             textAlign: TextAlign.right,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            updatedLabel,
-            textAlign: TextAlign.right,
-            style: theme.textTheme.labelMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
@@ -200,11 +163,7 @@ class _AssetAmountLine extends StatelessWidget {
           child: FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerRight,
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: textStyle,
-            ),
+            child: Text(value, textAlign: TextAlign.right, style: textStyle),
           ),
         ),
       ],

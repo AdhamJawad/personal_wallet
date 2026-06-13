@@ -22,6 +22,7 @@ class MockAuthRepository implements LocalAuthRepository {
   static const String _demoPhoneNumber = '+963999999999';
   static const String _demoPassword = '123456';
   static const String _demoDisplayName = 'Demo User';
+  static const String _demoEmailAddress = 'demo@wallet.app';
 
   final LocalStore _localStore;
   final OtpService _otpService;
@@ -43,6 +44,7 @@ class MockAuthRepository implements LocalAuthRepository {
           id: 'user_demo_1',
           phoneNumber: _demoPhoneNumber,
           displayName: _demoDisplayName,
+          emailAddress: _demoEmailAddress,
           isVerified: true,
           biometricEnabled: false,
           personalQrToken: 'PW-DEMO-001',
@@ -56,6 +58,7 @@ class MockAuthRepository implements LocalAuthRepository {
           id: 'user_demo_2',
           phoneNumber: '+963900000002',
           displayName: 'Ahmad Kareem',
+          emailAddress: 'ahmad@example.com',
           isVerified: true,
           biometricEnabled: false,
           personalQrToken: 'PW-AHMAD-002',
@@ -69,6 +72,7 @@ class MockAuthRepository implements LocalAuthRepository {
           id: 'user_demo_3',
           phoneNumber: '+963900000003',
           displayName: 'Sara Nasser',
+          emailAddress: 'sara@example.com',
           isVerified: true,
           biometricEnabled: false,
           personalQrToken: 'PW-SARA-003',
@@ -103,6 +107,25 @@ class MockAuthRepository implements LocalAuthRepository {
     return MockAuthAccount.fromJson(
       jsonDecode(rawValue) as Map<String, dynamic>,
     );
+  }
+
+  Future<MockAuthAccount?> _findAccountByUserId(String userId) async {
+    await _ensureSeeded();
+
+    final List<String> rawAccounts = await _localStore.readAll(
+      boxName: AppConstants.usersBox,
+    );
+
+    for (final String rawAccount in rawAccounts) {
+      final MockAuthAccount account = MockAuthAccount.fromJson(
+        jsonDecode(rawAccount) as Map<String, dynamic>,
+      );
+      if (account.user.id == userId) {
+        return account;
+      }
+    }
+
+    return null;
   }
 
   Future<void> _saveAccount(MockAuthAccount account) async {
@@ -141,6 +164,50 @@ class MockAuthRepository implements LocalAuthRepository {
 
   @override
   Future<void> logout(String sessionId) async {}
+
+  @override
+  Future<void> changePassword({
+    required String userId,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final MockAuthAccount? account = await _findAccountByUserId(userId);
+    if (account == null) {
+      throw const AuthException('User account was not found.');
+    }
+    if (account.password != currentPassword) {
+      throw const AuthException('The current password is incorrect.');
+    }
+
+    await _saveAccount(account.copyWith(password: newPassword));
+  }
+
+  @override
+  Future<AppUser> updateProfile({
+    required String userId,
+    required String displayName,
+    required String? emailAddress,
+    required String? profileImageUri,
+  }) async {
+    final MockAuthAccount? account = await _findAccountByUserId(userId);
+    if (account != null) {
+      final AppUser updatedUser = account.user.copyWith(
+        displayName: displayName,
+        emailAddress: emailAddress?.trim().isEmpty == true
+            ? null
+            : emailAddress?.trim(),
+        profileImageUri: profileImageUri?.trim().isEmpty == true
+            ? null
+            : profileImageUri?.trim(),
+        updatedAt: DateTime.now().toUtc(),
+      );
+
+      await _saveAccount(account.copyWith(user: updatedUser));
+      return updatedUser;
+    }
+
+    throw const AuthException('User profile could not be updated.');
+  }
 
   @override
   Future<PendingOtpVerification> register(RegisterRequest request) async {
@@ -185,6 +252,8 @@ class MockAuthRepository implements LocalAuthRepository {
       id: IdGenerator.next(),
       phoneNumber: pendingVerification.phoneNumber,
       displayName: pendingVerification.fullName,
+      emailAddress: null,
+      profileImageUri: null,
       isVerified: true,
       biometricEnabled: false,
       personalQrToken: IdGenerator.next(),

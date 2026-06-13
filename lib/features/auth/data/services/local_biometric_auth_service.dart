@@ -34,17 +34,18 @@ class LocalBiometricAuthService implements BiometricAuthService {
       final List<BiometricType> availableBiometrics = isDeviceSupported
           ? await _localAuthentication.getAvailableBiometrics()
           : const <BiometricType>[];
-
+      final bool hasFace = availableBiometrics.contains(BiometricType.face);
+      final bool hasFingerprint = availableBiometrics.contains(
+        BiometricType.fingerprint,
+      );
+      final bool hasWeakBiometric = availableBiometrics.contains(
+        BiometricType.weak,
+      );
       return BiometricCapability(
         isDeviceSupported: isDeviceSupported,
         hasEnrolledBiometrics: availableBiometrics.isNotEmpty,
-        hasFaceId:
-            availableBiometrics.contains(BiometricType.face) ||
-            availableBiometrics.contains(BiometricType.strong),
-        hasFingerprint:
-            availableBiometrics.contains(BiometricType.fingerprint) ||
-            availableBiometrics.contains(BiometricType.strong) ||
-            availableBiometrics.contains(BiometricType.weak),
+        hasFaceId: hasFace,
+        hasFingerprint: hasFingerprint || (hasWeakBiometric && !hasFace),
       );
     } on LocalAuthException {
       return const BiometricCapability();

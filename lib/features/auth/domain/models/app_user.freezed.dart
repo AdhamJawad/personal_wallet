@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AppUser {
 
- String get id; String get phoneNumber; String get displayName; bool get isVerified; bool get biometricEnabled; String get personalQrToken;@DateTimeConverter() DateTime get createdAt;@DateTimeConverter() DateTime get updatedAt;
+ String get id; String get phoneNumber; String get displayName; String? get emailAddress; String? get profileImageUri; bool get isVerified; bool get biometricEnabled; String get personalQrToken;@DateTimeConverter() DateTime get createdAt;@DateTimeConverter() DateTime get updatedAt;
 /// Create a copy of AppUser
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $AppUserCopyWith<AppUser> get copyWith => _$AppUserCopyWithImpl<AppUser>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppUser&&(identical(other.id, id) || other.id == id)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.biometricEnabled, biometricEnabled) || other.biometricEnabled == biometricEnabled)&&(identical(other.personalQrToken, personalQrToken) || other.personalQrToken == personalQrToken)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppUser&&(identical(other.id, id) || other.id == id)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.emailAddress, emailAddress) || other.emailAddress == emailAddress)&&(identical(other.profileImageUri, profileImageUri) || other.profileImageUri == profileImageUri)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.biometricEnabled, biometricEnabled) || other.biometricEnabled == biometricEnabled)&&(identical(other.personalQrToken, personalQrToken) || other.personalQrToken == personalQrToken)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,phoneNumber,displayName,isVerified,biometricEnabled,personalQrToken,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,phoneNumber,displayName,emailAddress,profileImageUri,isVerified,biometricEnabled,personalQrToken,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'AppUser(id: $id, phoneNumber: $phoneNumber, displayName: $displayName, isVerified: $isVerified, biometricEnabled: $biometricEnabled, personalQrToken: $personalQrToken, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'AppUser(id: $id, phoneNumber: $phoneNumber, displayName: $displayName, emailAddress: $emailAddress, profileImageUri: $profileImageUri, isVerified: $isVerified, biometricEnabled: $biometricEnabled, personalQrToken: $personalQrToken, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $AppUserCopyWith<$Res>  {
   factory $AppUserCopyWith(AppUser value, $Res Function(AppUser) _then) = _$AppUserCopyWithImpl;
 @useResult
 $Res call({
- String id, String phoneNumber, String displayName, bool isVerified, bool biometricEnabled, String personalQrToken,@DateTimeConverter() DateTime createdAt,@DateTimeConverter() DateTime updatedAt
+ String id, String phoneNumber, String displayName, String? emailAddress, String? profileImageUri, bool isVerified, bool biometricEnabled, String personalQrToken,@DateTimeConverter() DateTime createdAt,@DateTimeConverter() DateTime updatedAt
 });
 
 
@@ -65,12 +65,14 @@ class _$AppUserCopyWithImpl<$Res>
 
 /// Create a copy of AppUser
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? phoneNumber = null,Object? displayName = null,Object? isVerified = null,Object? biometricEnabled = null,Object? personalQrToken = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? phoneNumber = null,Object? displayName = null,Object? emailAddress = freezed,Object? profileImageUri = freezed,Object? isVerified = null,Object? biometricEnabled = null,Object? personalQrToken = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,phoneNumber: null == phoneNumber ? _self.phoneNumber : phoneNumber // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
-as String,isVerified: null == isVerified ? _self.isVerified : isVerified // ignore: cast_nullable_to_non_nullable
+as String,emailAddress: freezed == emailAddress ? _self.emailAddress : emailAddress // ignore: cast_nullable_to_non_nullable
+as String?,profileImageUri: freezed == profileImageUri ? _self.profileImageUri : profileImageUri // ignore: cast_nullable_to_non_nullable
+as String?,isVerified: null == isVerified ? _self.isVerified : isVerified // ignore: cast_nullable_to_non_nullable
 as bool,biometricEnabled: null == biometricEnabled ? _self.biometricEnabled : biometricEnabled // ignore: cast_nullable_to_non_nullable
 as bool,personalQrToken: null == personalQrToken ? _self.personalQrToken : personalQrToken // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
@@ -160,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String phoneNumber,  String displayName,  bool isVerified,  bool biometricEnabled,  String personalQrToken, @DateTimeConverter()  DateTime createdAt, @DateTimeConverter()  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String phoneNumber,  String displayName,  String? emailAddress,  String? profileImageUri,  bool isVerified,  bool biometricEnabled,  String personalQrToken, @DateTimeConverter()  DateTime createdAt, @DateTimeConverter()  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppUser() when $default != null:
-return $default(_that.id,_that.phoneNumber,_that.displayName,_that.isVerified,_that.biometricEnabled,_that.personalQrToken,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.phoneNumber,_that.displayName,_that.emailAddress,_that.profileImageUri,_that.isVerified,_that.biometricEnabled,_that.personalQrToken,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -181,10 +183,10 @@ return $default(_that.id,_that.phoneNumber,_that.displayName,_that.isVerified,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String phoneNumber,  String displayName,  bool isVerified,  bool biometricEnabled,  String personalQrToken, @DateTimeConverter()  DateTime createdAt, @DateTimeConverter()  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String phoneNumber,  String displayName,  String? emailAddress,  String? profileImageUri,  bool isVerified,  bool biometricEnabled,  String personalQrToken, @DateTimeConverter()  DateTime createdAt, @DateTimeConverter()  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _AppUser():
-return $default(_that.id,_that.phoneNumber,_that.displayName,_that.isVerified,_that.biometricEnabled,_that.personalQrToken,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.phoneNumber,_that.displayName,_that.emailAddress,_that.profileImageUri,_that.isVerified,_that.biometricEnabled,_that.personalQrToken,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +203,10 @@ return $default(_that.id,_that.phoneNumber,_that.displayName,_that.isVerified,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String phoneNumber,  String displayName,  bool isVerified,  bool biometricEnabled,  String personalQrToken, @DateTimeConverter()  DateTime createdAt, @DateTimeConverter()  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String phoneNumber,  String displayName,  String? emailAddress,  String? profileImageUri,  bool isVerified,  bool biometricEnabled,  String personalQrToken, @DateTimeConverter()  DateTime createdAt, @DateTimeConverter()  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _AppUser() when $default != null:
-return $default(_that.id,_that.phoneNumber,_that.displayName,_that.isVerified,_that.biometricEnabled,_that.personalQrToken,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.phoneNumber,_that.displayName,_that.emailAddress,_that.profileImageUri,_that.isVerified,_that.biometricEnabled,_that.personalQrToken,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -216,12 +218,14 @@ return $default(_that.id,_that.phoneNumber,_that.displayName,_that.isVerified,_t
 @JsonSerializable()
 
 class _AppUser implements AppUser {
-  const _AppUser({required this.id, required this.phoneNumber, required this.displayName, required this.isVerified, required this.biometricEnabled, required this.personalQrToken, @DateTimeConverter() required this.createdAt, @DateTimeConverter() required this.updatedAt});
+  const _AppUser({required this.id, required this.phoneNumber, required this.displayName, this.emailAddress, this.profileImageUri, required this.isVerified, required this.biometricEnabled, required this.personalQrToken, @DateTimeConverter() required this.createdAt, @DateTimeConverter() required this.updatedAt});
   factory _AppUser.fromJson(Map<String, dynamic> json) => _$AppUserFromJson(json);
 
 @override final  String id;
 @override final  String phoneNumber;
 @override final  String displayName;
+@override final  String? emailAddress;
+@override final  String? profileImageUri;
 @override final  bool isVerified;
 @override final  bool biometricEnabled;
 @override final  String personalQrToken;
@@ -241,16 +245,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppUser&&(identical(other.id, id) || other.id == id)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.biometricEnabled, biometricEnabled) || other.biometricEnabled == biometricEnabled)&&(identical(other.personalQrToken, personalQrToken) || other.personalQrToken == personalQrToken)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppUser&&(identical(other.id, id) || other.id == id)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.emailAddress, emailAddress) || other.emailAddress == emailAddress)&&(identical(other.profileImageUri, profileImageUri) || other.profileImageUri == profileImageUri)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.biometricEnabled, biometricEnabled) || other.biometricEnabled == biometricEnabled)&&(identical(other.personalQrToken, personalQrToken) || other.personalQrToken == personalQrToken)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,phoneNumber,displayName,isVerified,biometricEnabled,personalQrToken,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,phoneNumber,displayName,emailAddress,profileImageUri,isVerified,biometricEnabled,personalQrToken,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'AppUser(id: $id, phoneNumber: $phoneNumber, displayName: $displayName, isVerified: $isVerified, biometricEnabled: $biometricEnabled, personalQrToken: $personalQrToken, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'AppUser(id: $id, phoneNumber: $phoneNumber, displayName: $displayName, emailAddress: $emailAddress, profileImageUri: $profileImageUri, isVerified: $isVerified, biometricEnabled: $biometricEnabled, personalQrToken: $personalQrToken, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -261,7 +265,7 @@ abstract mixin class _$AppUserCopyWith<$Res> implements $AppUserCopyWith<$Res> {
   factory _$AppUserCopyWith(_AppUser value, $Res Function(_AppUser) _then) = __$AppUserCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String phoneNumber, String displayName, bool isVerified, bool biometricEnabled, String personalQrToken,@DateTimeConverter() DateTime createdAt,@DateTimeConverter() DateTime updatedAt
+ String id, String phoneNumber, String displayName, String? emailAddress, String? profileImageUri, bool isVerified, bool biometricEnabled, String personalQrToken,@DateTimeConverter() DateTime createdAt,@DateTimeConverter() DateTime updatedAt
 });
 
 
@@ -278,12 +282,14 @@ class __$AppUserCopyWithImpl<$Res>
 
 /// Create a copy of AppUser
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? phoneNumber = null,Object? displayName = null,Object? isVerified = null,Object? biometricEnabled = null,Object? personalQrToken = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? phoneNumber = null,Object? displayName = null,Object? emailAddress = freezed,Object? profileImageUri = freezed,Object? isVerified = null,Object? biometricEnabled = null,Object? personalQrToken = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_AppUser(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,phoneNumber: null == phoneNumber ? _self.phoneNumber : phoneNumber // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
-as String,isVerified: null == isVerified ? _self.isVerified : isVerified // ignore: cast_nullable_to_non_nullable
+as String,emailAddress: freezed == emailAddress ? _self.emailAddress : emailAddress // ignore: cast_nullable_to_non_nullable
+as String?,profileImageUri: freezed == profileImageUri ? _self.profileImageUri : profileImageUri // ignore: cast_nullable_to_non_nullable
+as String?,isVerified: null == isVerified ? _self.isVerified : isVerified // ignore: cast_nullable_to_non_nullable
 as bool,biometricEnabled: null == biometricEnabled ? _self.biometricEnabled : biometricEnabled // ignore: cast_nullable_to_non_nullable
 as bool,personalQrToken: null == personalQrToken ? _self.personalQrToken : personalQrToken // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable

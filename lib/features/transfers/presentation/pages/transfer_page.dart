@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/presentation/providers/app_preferences_provider.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -67,6 +68,7 @@ class _TransferPageState extends ConsumerState<TransferPage> {
   @override
   void initState() {
     super.initState();
+    _currency = ref.read(appPreferencesProvider).defaultCurrency;
     _recipientUserId = widget.preselectedRecipientUserId;
     _recipientDisplayName = widget.preselectedRecipientName;
     _manualUserIdController.text = widget.preselectedRecipientUserId ?? '';
@@ -192,7 +194,9 @@ class _TransferPageState extends ConsumerState<TransferPage> {
         setState(() {
           _recipientUserId = userId.isEmpty ? null : userId;
           _recipientDisplayName = name.isEmpty ? null : name;
-          _recipientError = isValid ? null : context.tr.transferRecipientRequired;
+          _recipientError = isValid
+              ? null
+              : context.tr.transferRecipientRequired;
         });
         return isValid;
       case _RecipientMethod.contacts:
@@ -200,7 +204,9 @@ class _TransferPageState extends ConsumerState<TransferPage> {
         final bool isValid =
             _recipientUserId != null && _recipientDisplayName != null;
         setState(() {
-          _recipientError = isValid ? null : context.tr.transferRecipientRequired;
+          _recipientError = isValid
+              ? null
+              : context.tr.transferRecipientRequired;
         });
         return isValid;
     }
@@ -262,8 +268,9 @@ class _TransferPageState extends ConsumerState<TransferPage> {
       return;
     }
 
-    final TransferSummary? transfer =
-        ref.read(transferControllerProvider).lastCompletedTransfer;
+    final TransferSummary? transfer = ref
+        .read(transferControllerProvider)
+        .lastCompletedTransfer;
     if (transfer == null) {
       return;
     }
@@ -300,13 +307,14 @@ class _TransferPageState extends ConsumerState<TransferPage> {
   }
 
   void _resetFlow() {
+    final preferences = ref.read(appPreferencesProvider);
     setState(() {
       _showSuccess = false;
       _showReview = false;
       _senderWalletId = null;
       _recipientError = null;
       _attachmentWarning = null;
-      _currency = Currency.usd;
+      _currency = preferences.defaultCurrency;
       _recipientMethod = _RecipientMethod.contacts;
       _recipientUserId = null;
       _recipientDisplayName = null;
@@ -348,17 +356,17 @@ class _TransferPageState extends ConsumerState<TransferPage> {
         child: _showSuccess
             ? _buildSuccess(selectedWallet)
             : _showReview
-                ? _buildReview(selectedWallet, transferState.isLoading)
-                : _buildForm(
-                    walletState.isLoading,
-                    contactState.isLoading,
-                    qrState.isLoading,
-                    transferState.isLoading,
-                    activeWallets,
-                    registeredContacts,
-                    qrState.knownIdentities.toList(growable: false),
-                    selectedWallet,
-                  ),
+            ? _buildReview(selectedWallet, transferState.isLoading)
+            : _buildForm(
+                walletState.isLoading,
+                contactState.isLoading,
+                qrState.isLoading,
+                transferState.isLoading,
+                activeWallets,
+                registeredContacts,
+                qrState.knownIdentities.toList(growable: false),
+                selectedWallet,
+              ),
       ),
     );
   }
@@ -447,36 +455,36 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                     isQrLoading
                         ? const TransactionSkeletonBlock(height: 56)
                         : identities.isEmpty
-                            ? TransactionEmptyState(
-                                icon: Icons.qr_code_scanner_outlined,
-                                title: context.tr.noQrRecipientsTitle,
-                                message: context.tr.noQrRecipientsMessage,
-                              )
-                            : TransactionPickerField(
-                                label: context.tr.qrScan,
-                                value: _recipientDisplayName,
-                                hint: context.tr.scanRecipientHint,
-                                errorText: _recipientError,
-                                leading: const Icon(Icons.qr_code_scanner_rounded),
-                                onTap: () => _pickQrIdentity(identities),
-                              ),
+                        ? TransactionEmptyState(
+                            icon: Icons.qr_code_scanner_outlined,
+                            title: context.tr.noQrRecipientsTitle,
+                            message: context.tr.noQrRecipientsMessage,
+                          )
+                        : TransactionPickerField(
+                            label: context.tr.qrScan,
+                            value: _recipientDisplayName,
+                            hint: context.tr.scanRecipientHint,
+                            errorText: _recipientError,
+                            leading: const Icon(Icons.qr_code_scanner_rounded),
+                            onTap: () => _pickQrIdentity(identities),
+                          ),
                   if (_recipientMethod == _RecipientMethod.contacts)
                     isContactLoading
                         ? const TransactionSkeletonBlock(height: 56)
                         : contacts.isEmpty
-                            ? TransactionEmptyState(
-                                icon: Icons.contacts_outlined,
-                                title: context.tr.noTransferContactsTitle,
-                                message: context.tr.noTransferContactsMessage,
-                              )
-                            : TransactionPickerField(
-                                label: context.tr.contacts,
-                                value: _recipientDisplayName,
-                                hint: context.tr.selectSavedContactHint,
-                                errorText: _recipientError,
-                                leading: const Icon(Icons.person_outline_rounded),
-                                onTap: () => _pickContact(contacts),
-                              ),
+                        ? TransactionEmptyState(
+                            icon: Icons.contacts_outlined,
+                            title: context.tr.noTransferContactsTitle,
+                            message: context.tr.noTransferContactsMessage,
+                          )
+                        : TransactionPickerField(
+                            label: context.tr.contacts,
+                            value: _recipientDisplayName,
+                            hint: context.tr.selectSavedContactHint,
+                            errorText: _recipientError,
+                            leading: const Icon(Icons.person_outline_rounded),
+                            onTap: () => _pickContact(contacts),
+                          ),
                   if (_recipientMethod == _RecipientMethod.manual) ...<Widget>[
                     PwTextField(
                       controller: _manualUserIdController,
@@ -524,8 +532,8 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                       Text(
                         _recipientError!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ],
                   ],
@@ -570,8 +578,9 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                           label: context.tr.amount,
                           hint: context.tr.enterAmountHint,
                           prefixIcon: const Icon(Icons.payments_outlined),
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           textInputAction: TextInputAction.next,
                           validator: (String? value) =>
                               amountValidator(context, value),
@@ -612,8 +621,9 @@ class _TransferPageState extends ConsumerState<TransferPage> {
                     value: transactionAttachmentSummary(
                       context,
                       _attachments.length,
-                      fileName:
-                          _attachments.isEmpty ? null : _attachments.first.fileName,
+                      fileName: _attachments.isEmpty
+                          ? null
+                          : _attachments.first.fileName,
                     ),
                     subtitle: context.tr.debtAttachmentHint,
                     onTap: _addAttachment,
@@ -646,8 +656,9 @@ class _TransferPageState extends ConsumerState<TransferPage> {
       primaryLabel: context.tr.confirmTransfer,
       onPrimaryPressed: isSubmitting ? null : _confirmTransfer,
       secondaryLabel: context.tr.back,
-      onSecondaryPressed:
-          isSubmitting ? null : () => setState(() => _showReview = false),
+      onSecondaryPressed: isSubmitting
+          ? null
+          : () => setState(() => _showReview = false),
       isPrimaryLoading: isSubmitting,
       content: TransactionFormSection(
         title: context.tr.review,
@@ -846,9 +857,7 @@ class _RouteNode extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.18),
-        ),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.18)),
       ),
       child: Row(
         children: <Widget>[
@@ -888,7 +897,10 @@ class _RouteNode extends StatelessWidget {
             ),
           ),
           if (interactive)
-            Icon(Icons.chevron_right_rounded, color: colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: colorScheme.onSurfaceVariant,
+            ),
         ],
       ),
     );
@@ -906,10 +918,7 @@ class _RouteNode extends StatelessWidget {
 }
 
 class _TransferRouteSwapButton extends StatelessWidget {
-  const _TransferRouteSwapButton({
-    required this.label,
-    required this.onTap,
-  });
+  const _TransferRouteSwapButton({required this.label, required this.onTap});
 
   final String label;
   final VoidCallback onTap;
@@ -1035,7 +1044,8 @@ class _TransferPickerSheet<T> extends StatelessWidget {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
                 itemBuilder: (BuildContext context, int index) {
                   final T item = items[index];
                   return ListTile(

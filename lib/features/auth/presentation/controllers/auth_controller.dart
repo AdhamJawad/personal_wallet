@@ -236,6 +236,74 @@ class AuthController extends StateNotifier<AuthState> {
     );
   }
 
+  Future<AuthOperationResult> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final AuthSession? session = state.session;
+    if (session == null) {
+      return AuthOperationResult.failure(
+        'You must be logged in to change your password.',
+      );
+    }
+
+    state = state.copyWith(isBusy: true);
+
+    try {
+      await _authRepository.changePassword(
+        userId: session.user.id,
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+
+      await _authSessionManager.persistStoredCredential(
+        StoredAuthCredential(
+          phoneNumber: session.user.phoneNumber,
+          password: newPassword,
+        ),
+      );
+
+      state = state.copyWith(isBusy: false);
+      return AuthOperationResult.success('Password changed successfully.');
+    } on AuthException catch (error) {
+      state = state.copyWith(isBusy: false);
+      return AuthOperationResult.failure(error.message);
+    }
+  }
+
+  Future<AuthOperationResult> updateProfile({
+    required String displayName,
+    required String? emailAddress,
+    required String? profileImageUri,
+  }) async {
+    final AuthSession? session = state.session;
+    if (session == null) {
+      return AuthOperationResult.failure(
+        'You must be logged in to update your profile.',
+      );
+    }
+
+    state = state.copyWith(isBusy: true);
+
+    try {
+      final updatedUser = await _authRepository.updateProfile(
+        userId: session.user.id,
+        displayName: displayName.trim(),
+        emailAddress: emailAddress?.trim(),
+        profileImageUri: profileImageUri?.trim(),
+      );
+
+      final AuthSession updatedSession = session.copyWith(user: updatedUser);
+      await _authSessionManager.persistSession(updatedSession);
+
+      state = state.copyWith(session: updatedSession, isBusy: false);
+      return AuthOperationResult.success('Profile updated successfully.');
+    } on AuthException catch (error) {
+      state = state.copyWith(isBusy: false);
+      return AuthOperationResult.failure(error.message);
+    }
+  }
+
   Future<AuthOperationResult> toggleBiometricLogin(bool enabled) async {
     if (state.session == null) {
       return AuthOperationResult.failure(

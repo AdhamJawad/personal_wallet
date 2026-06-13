@@ -407,6 +407,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get preferencesSection => 'التفضيلات';
 
   @override
+  String get financialPreferencesSection => 'التفضيلات المالية';
+
+  @override
   String get applicationSection => 'التطبيق';
 
   @override
@@ -414,6 +417,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get userIdentifier => 'معرف المستخدم';
+
+  @override
+  String get notAdded => 'غير مضاف';
+
+  @override
+  String get defaultCurrency => 'العملة الافتراضية';
+
+  @override
+  String get dateFormatSetting => 'تنسيق التاريخ';
+
+  @override
+  String get aboutApplication => 'حول التطبيق';
+
+  @override
+  String get privacyPolicy => 'سياسة الخصوصية';
+
+  @override
+  String get accountInformation => 'معلومات الحساب';
+
+  @override
+  String get optionalField => 'اختياري';
+
+  @override
+  String get invalidEmailAddress => 'أدخل بريدًا إلكترونيًا صالحًا.';
+
+  @override
+  String get removeProfilePhoto => 'حذف الصورة الشخصية';
 
   @override
   String get biometricLogin => 'تسجيل الدخول البيومتري';
@@ -432,6 +462,29 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get changePassword => 'تغيير كلمة المرور';
+
+  @override
+  String get changePasswordDescription => 'حدّث كلمة مرور حسابك بشكل آمن.';
+
+  @override
+  String get currentPassword => 'كلمة المرور الحالية';
+
+  @override
+  String get newPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get confirmNewPassword => 'تأكيد كلمة المرور الجديدة';
+
+  @override
+  String get confirmPasswordRequired => 'تأكيد كلمة المرور مطلوب.';
+
+  @override
+  String get passwordTooShort =>
+      'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.';
+
+  @override
+  String get newPasswordMustDiffer =>
+      'يجب أن تختلف كلمة المرور الجديدة عن الحالية.';
 
   @override
   String get comingSoon => 'قريبًا';
@@ -576,9 +629,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get confirmPassword => 'تأكيد كلمة المرور';
-
-  @override
-  String get confirmPasswordRequired => 'تأكيد كلمة المرور مطلوب.';
 
   @override
   String get passwordsDoNotMatch => 'كلمتا المرور غير متطابقتين.';
@@ -1066,6 +1116,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get contacts => 'جهات الاتصال';
+
+  @override
+  String get manageContacts => 'إدارة جهات الاتصال';
 
   @override
   String get manualEntry => 'إدخال يدوي';

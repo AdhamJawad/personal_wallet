@@ -409,6 +409,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preferencesSection => 'Preferences';
 
   @override
+  String get financialPreferencesSection => 'Financial Preferences';
+
+  @override
   String get applicationSection => 'Application';
 
   @override
@@ -416,6 +419,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userIdentifier => 'User Identifier';
+
+  @override
+  String get notAdded => 'Not added';
+
+  @override
+  String get defaultCurrency => 'Default currency';
+
+  @override
+  String get dateFormatSetting => 'Date format';
+
+  @override
+  String get aboutApplication => 'About Application';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get accountInformation => 'Account Information';
+
+  @override
+  String get optionalField => 'Optional';
+
+  @override
+  String get invalidEmailAddress => 'Enter a valid email address.';
+
+  @override
+  String get removeProfilePhoto => 'Remove Profile Photo';
 
   @override
   String get biometricLogin => 'Biometric Login';
@@ -434,6 +464,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changePassword => 'Change Password';
+
+  @override
+  String get changePasswordDescription =>
+      'Update your account password securely.';
+
+  @override
+  String get currentPassword => 'Current Password';
+
+  @override
+  String get newPassword => 'New Password';
+
+  @override
+  String get confirmNewPassword => 'Confirm New Password';
+
+  @override
+  String get confirmPasswordRequired => 'Confirm password is required.';
+
+  @override
+  String get passwordTooShort => 'Password must be at least 6 characters.';
+
+  @override
+  String get newPasswordMustDiffer =>
+      'New password must be different from the current password.';
 
   @override
   String get comingSoon => 'Coming soon';
@@ -578,9 +631,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmPassword => 'Confirm password';
-
-  @override
-  String get confirmPasswordRequired => 'Confirm password is required.';
 
   @override
   String get passwordsDoNotMatch => 'Passwords do not match.';
@@ -1074,6 +1124,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contacts => 'Contacts';
+
+  @override
+  String get manageContacts => 'Manage Contacts';
 
   @override
   String get manualEntry => 'Manual Entry';

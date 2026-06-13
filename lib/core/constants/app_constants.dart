@@ -2,6 +2,9 @@ sealed class AppConstants {
   static const appName = 'Personal Wallet';
   static const preferencesBox = 'preferences_box';
   static const localePreferenceKey = 'locale';
+  static const themeModePreferenceKey = 'theme_mode';
+  static const defaultCurrencyPreferenceKey = 'default_currency';
+  static const dateFormatPreferenceKey = 'date_format';
   static const usersBox = 'users_box';
   static const sessionsBox = 'sessions_box';
   static const walletsBox = 'wallets_box';

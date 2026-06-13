@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/presentation/providers/app_preferences_provider.dart';
 import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
 import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
@@ -54,6 +55,7 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
   @override
   void initState() {
     super.initState();
+    _currency = ref.read(appPreferencesProvider).defaultCurrency;
     _amountFocusNode.addListener(
       () => _handleFocusChange(_amountFocusNode, _amountFieldKey),
     );
@@ -194,8 +196,9 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
                       onChanged: (String? value) {
                         setState(() => _sourceWalletId = value);
                       },
-                      validator: (String? value) =>
-                          value == null ? context.tr.sourceWalletRequired : null,
+                      validator: (String? value) => value == null
+                          ? context.tr.sourceWalletRequired
+                          : null,
                     ),
                     SizedBox(height: gap),
                     DropdownButtonFormField<String>(
@@ -221,7 +224,9 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
                     SizedBox(height: gap),
                     DropdownButtonFormField<Currency>(
                       initialValue: _currency,
-                      decoration: InputDecoration(labelText: context.tr.currency),
+                      decoration: InputDecoration(
+                        labelText: context.tr.currency,
+                      ),
                       items: Currency.values
                           .map(
                             (Currency currency) => DropdownMenuItem(

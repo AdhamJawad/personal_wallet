@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../app/presentation/providers/app_preferences_provider.dart';
 import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
 import '../../../../core/design_system/widgets/pw_scaffold.dart';
 import '../../../../core/design_system/widgets/pw_section_card.dart';
@@ -73,6 +74,7 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
   @override
   void initState() {
     super.initState();
+    _currency = ref.read(appPreferencesProvider).defaultCurrency;
     _contactId = widget.initialContactId;
     _amountFocusNode.addListener(
       () => _handleFocusChange(_amountFocusNode, _amountFieldKey),

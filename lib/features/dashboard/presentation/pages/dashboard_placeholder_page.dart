@@ -34,8 +34,6 @@ class DashboardPlaceholderPage extends ConsumerStatefulWidget {
 
 class _DashboardPlaceholderPageState
     extends ConsumerState<DashboardPlaceholderPage> {
-  bool _showBalances = true;
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
@@ -119,6 +117,7 @@ class _DashboardPlaceholderPageState
         visibleRecentActivities.isEmpty;
     final String userName =
         session?.user.displayName ?? context.tr.userFallback;
+    final String? profileImageUri = session?.user.profileImageUri;
 
     return Scaffold(
       body: SafeArea(
@@ -158,17 +157,14 @@ class _DashboardPlaceholderPageState
                       DashboardHeader(
                         greeting: _resolveGreeting(context),
                         userName: userName,
+                        profileImageUri: profileImageUri,
                       ),
                     const SizedBox(height: AppSpacing.xl),
                     DashboardTotalAssetsCard(
                       totalUsd: dashboardSnapshot?.totalUsd ?? '0',
                       totalSyp: dashboardSnapshot?.totalSyp ?? '0',
-                      showBalances: _showBalances,
                       updatedLabel: context.tr.updatedNow,
                       isLoading: isInitialDashboardLoading,
-                      onToggleVisibility: () {
-                        setState(() => _showBalances = !_showBalances);
-                      },
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     DashboardSectionTitle(
@@ -180,7 +176,7 @@ class _DashboardPlaceholderPageState
                     _WalletsPreviewSection(
                       wallets: recentWallets,
                       columns: walletColumns,
-                      showBalances: _showBalances,
+                      showBalances: true,
                       isLoading: isWalletsLoading,
                     ),
                     const SizedBox(height: AppSpacing.xl),

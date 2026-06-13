@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_wallet/l10n/app_localizations.dart';
 
 import '../core/localization/localization_extensions.dart';
+import '../core/utils/date_formatter.dart';
 import 'presentation/providers/app_preferences_provider.dart';
 import '../core/theme/app_theme.dart';
 import 'router/app_router.dart';
@@ -15,6 +16,11 @@ class PersonalWalletApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final preferences = ref.watch(appPreferencesProvider);
+
+    DateFormatter.configure(
+      dateFormatPattern: preferences.dateFormatPattern,
+      locale: preferences.locale.languageCode,
+    );
 
     return MaterialApp.router(
       onGenerateTitle: (BuildContext context) => context.tr.appName,

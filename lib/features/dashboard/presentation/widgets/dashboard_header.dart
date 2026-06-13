@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 
@@ -5,17 +7,20 @@ class DashboardHeader extends StatelessWidget {
   const DashboardHeader({
     required this.greeting,
     required this.userName,
+    this.profileImageUri,
     super.key,
   });
 
   final String greeting;
   final String userName;
+  final String? profileImageUri;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final String initials = _resolveInitials(userName);
+    final File? imageFile = _resolvedImageFile(profileImageUri);
     final bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return Row(
@@ -39,13 +44,23 @@ class DashboardHeader extends StatelessWidget {
             child: Stack(
               children: <Widget>[
                 Center(
-                  child: Text(
-                    initials,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  child: imageFile == null
+                      ? Text(
+                          initials,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(19),
+                          child: Image.file(
+                            imageFile,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                 ),
                 PositionedDirectional(
                   end: 6,
@@ -84,14 +99,14 @@ class DashboardHeader extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 userName,
-                  textAlign: TextAlign.right,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: isArabic ? 0 : -0.4,
-                  ),
+                textAlign: TextAlign.right,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: isArabic ? 0 : -0.4,
                 ),
+              ),
             ],
           ),
         ),
@@ -116,5 +131,17 @@ class DashboardHeader extends StatelessWidget {
 
     return '${parts.first.characters.first}${parts.last.characters.first}'
         .toUpperCase();
+  }
+
+  File? _resolvedImageFile(String? path) {
+    final String normalized = (path ?? '').trim();
+    if (normalized.isEmpty) {
+      return null;
+    }
+    final File file = File(normalized);
+    if (!file.existsSync()) {
+      return null;
+    }
+    return file;
   }
 }

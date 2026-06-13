@@ -14,4 +14,8 @@ abstract class BiometricCapability with _$BiometricCapability {
   }) = _BiometricCapability;
 
   bool get canAuthenticate => isDeviceSupported && hasEnrolledBiometrics;
+
+  bool get hasSingleFaceOnly => hasFaceId && !hasFingerprint;
+
+  bool get hasSingleFingerprintOnly => hasFingerprint && !hasFaceId;
 }

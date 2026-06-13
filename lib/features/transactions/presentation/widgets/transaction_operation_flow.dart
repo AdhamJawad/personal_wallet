@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/presentation/providers/app_preferences_provider.dart';
 import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
@@ -77,7 +78,10 @@ class _TransactionOperationFlowState
   @override
   void initState() {
     super.initState();
+    final preferences = ref.read(appPreferencesProvider);
     _walletId = widget.initialWalletId;
+    _primaryCurrency = preferences.defaultCurrency;
+    _secondaryCurrency = preferences.secondaryCurrency;
     _amountFocusNode.addListener(
       () => _handleFocusChange(_amountFocusNode, _amountFieldKey),
     );
@@ -349,6 +353,7 @@ class _TransactionOperationFlowState
   }
 
   void _resetFlow() {
+    final preferences = ref.read(appPreferencesProvider);
     setState(() {
       _showSuccess = false;
       _showReview = false;
@@ -356,8 +361,8 @@ class _TransactionOperationFlowState
       _exchangeError = null;
       _attachmentWarning = null;
       _walletId = null;
-      _primaryCurrency = Currency.usd;
-      _secondaryCurrency = Currency.syp;
+      _primaryCurrency = preferences.defaultCurrency;
+      _secondaryCurrency = preferences.secondaryCurrency;
       _attachments.clear();
       _amountController.clear();
       _exchangeRateController.clear();

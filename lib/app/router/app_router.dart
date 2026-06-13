@@ -22,6 +22,7 @@ import '../../features/debts/presentation/pages/debt_details_page.dart';
 import '../../features/debts/presentation/pages/debts_page.dart';
 import '../../features/notifications/presentation/pages/notification_center_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/profile/presentation/pages/profile_account_page.dart';
 import '../../features/qr/presentation/pages/my_qr_page.dart';
 import '../../features/qr/presentation/pages/qr_scanner_page.dart';
 import '../../features/qr/presentation/pages/user_preview_page.dart';
@@ -53,7 +54,9 @@ final GlobalKey<NavigatorState> _profileBranchNavigatorKey =
     GlobalKey<NavigatorState>();
 
 final appRouterProvider = Provider<GoRouter>((Ref ref) {
-  final authState = ref.watch(authControllerProvider);
+  final authStatus = ref.watch(
+    authControllerProvider.select((state) => state.status),
+  );
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -68,18 +71,18 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
           location == AppRoutes.otpVerificationPath ||
           location == AppRoutes.forgotPasswordPath;
 
-      if (authState.status == AuthStatus.initializing) {
+      if (authStatus == AuthStatus.initializing) {
         return isSplash ? null : AppRoutes.splashPath;
       }
 
-      if (authState.status == AuthStatus.authenticated) {
+      if (authStatus == AuthStatus.authenticated) {
         if (isSplash || isAuthRoute) {
           return AppRoutes.dashboardPath;
         }
         return null;
       }
 
-      if (authState.status == AuthStatus.awaitingOtp) {
+      if (authStatus == AuthStatus.awaitingOtp) {
         return location == AppRoutes.otpVerificationPath
             ? null
             : AppRoutes.otpVerificationPath;
@@ -286,6 +289,14 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.profileAccountPath,
+        name: AppRoutes.profileAccount,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (BuildContext context, GoRouterState state) {
+          return const ProfileAccountPage();
+        },
       ),
       GoRoute(
         path: AppRoutes.transactionsPath,

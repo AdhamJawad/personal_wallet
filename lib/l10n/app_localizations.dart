@@ -866,6 +866,12 @@ abstract class AppLocalizations {
   /// **'Preferences'**
   String get preferencesSection;
 
+  /// No description provided for @financialPreferencesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Preferences'**
+  String get financialPreferencesSection;
+
   /// No description provided for @applicationSection.
   ///
   /// In en, this message translates to:
@@ -883,6 +889,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'User Identifier'**
   String get userIdentifier;
+
+  /// No description provided for @notAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not added'**
+  String get notAdded;
+
+  /// No description provided for @defaultCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Default currency'**
+  String get defaultCurrency;
+
+  /// No description provided for @dateFormatSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Date format'**
+  String get dateFormatSetting;
+
+  /// No description provided for @aboutApplication.
+  ///
+  /// In en, this message translates to:
+  /// **'About Application'**
+  String get aboutApplication;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @accountInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Information'**
+  String get accountInformation;
+
+  /// No description provided for @optionalField.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optionalField;
+
+  /// No description provided for @invalidEmailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get invalidEmailAddress;
+
+  /// No description provided for @removeProfilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Profile Photo'**
+  String get removeProfilePhoto;
 
   /// No description provided for @biometricLogin.
   ///
@@ -919,6 +979,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change Password'**
   String get changePassword;
+
+  /// No description provided for @changePasswordDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your account password securely.'**
+  String get changePasswordDescription;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Password'**
+  String get currentPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get newPassword;
+
+  /// No description provided for @confirmNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm New Password'**
+  String get confirmNewPassword;
+
+  /// No description provided for @confirmPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password is required.'**
+  String get confirmPasswordRequired;
+
+  /// No description provided for @passwordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters.'**
+  String get passwordTooShort;
+
+  /// No description provided for @newPasswordMustDiffer.
+  ///
+  /// In en, this message translates to:
+  /// **'New password must be different from the current password.'**
+  String get newPasswordMustDiffer;
 
   /// No description provided for @comingSoon.
   ///
@@ -1195,12 +1297,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirm password'**
   String get confirmPassword;
-
-  /// No description provided for @confirmPasswordRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm password is required.'**
-  String get confirmPasswordRequired;
 
   /// No description provided for @passwordsDoNotMatch.
   ///
@@ -2113,6 +2209,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Contacts'**
   String get contacts;
+
+  /// No description provided for @manageContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Contacts'**
+  String get manageContacts;
 
   /// No description provided for @manualEntry.
   ///

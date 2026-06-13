@@ -11,6 +11,8 @@ abstract class AppUser with _$AppUser {
     required String id,
     required String phoneNumber,
     required String displayName,
+    String? emailAddress,
+    String? profileImageUri,
     required bool isVerified,
     required bool biometricEnabled,
     required String personalQrToken,

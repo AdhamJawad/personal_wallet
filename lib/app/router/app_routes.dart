@@ -34,6 +34,7 @@ sealed class AppRoutes {
   static const attachmentViewer = 'attachmentViewer';
   static const attachmentPicker = 'attachmentPicker';
   static const profile = 'profile';
+  static const profileAccount = 'profileAccount';
 
   static const dashboardPath = '/';
   static const authPath = '/auth';
@@ -62,6 +63,7 @@ sealed class AppRoutes {
   static const attachmentViewerPath = '/attachments/viewer';
   static const attachmentPickerPath = '/attachments/picker';
   static const profilePath = '/profile';
+  static const profileAccountPath = '/profile/account';
 
   static String walletDetailsLocation(String walletId) => '/wallets/$walletId';
   static String walletEditLocation(String walletId) =>

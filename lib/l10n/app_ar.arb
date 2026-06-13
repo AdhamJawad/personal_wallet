@@ -216,7 +216,7 @@
   "transactions": "العمليات",
   "unknownWallet": "محفظة غير معروفة",
   "searchTransactions": "ابحث في العمليات",
-  "transactionsSearchHint": "المرجع أو المحفظة أو الجهة أو الملاحظة",
+  "transactionsSearchHint": "ابحث عن عملية",
   "transactionReferenceHint": "TX-2026-000001",
   "filter": "تصفية",
   "sort": "ترتيب",
@@ -495,8 +495,27 @@
       "fileName": {}
     }
   },
+  "attachmentSaved": "تم حفظ {fileName} على الجهاز.",
+  "@attachmentSaved": {
+    "placeholders": {
+      "fileName": {}
+    }
+  },
   "attachmentDownloadFailed": "تعذر تنزيل المرفق.",
   "attachmentDownloadUnsupported": "تنزيل المرفقات غير مدعوم على هذا الجهاز بعد.",
+  "attachmentShareUnsupported": "مشاركة المرفقات غير مدعومة على هذا الجهاز بعد.",
+  "attachmentShareFailed": "تعذرت مشاركة المرفق.",
+  "attachmentsAddAction": "إضافة مرفق",
+  "attachmentsRelatedTransaction": "عملية مرتبطة:",
+  "attachmentsRelatedRecord": "سجل مرتبط:",
+  "attachmentsEmptyTitle": "لا توجد مرفقات لهذه العملية",
+  "attachmentsEmptyMessage": "يمكنك إضافة إيصالات أو صور أو ملفات داعمة هنا.",
+  "attachmentsShareAction": "مشاركة",
+  "attachmentsSaveToDeviceAction": "حفظ على الجهاز",
+  "attachmentsTypeImage": "صورة",
+  "attachmentsTypeReceipt": "إيصال",
+  "attachmentsTypeProofOfPayment": "إثبات دفع",
+  "attachmentsTypeDocument": "مستند",
   "timeline": "الخط الزمني",
   "debtCreatedEvent": "تم إنشاء الدين",
   "partialPaymentEvent": "دفعة جزئية",

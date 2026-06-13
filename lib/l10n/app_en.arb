@@ -495,8 +495,27 @@
       "fileName": {}
     }
   },
+  "attachmentSaved": "{fileName} was saved to your device.",
+  "@attachmentSaved": {
+    "placeholders": {
+      "fileName": {}
+    }
+  },
   "attachmentDownloadFailed": "The attachment could not be downloaded.",
   "attachmentDownloadUnsupported": "Downloading attachments is not supported on this device yet.",
+  "attachmentShareUnsupported": "Sharing attachments is not supported on this device yet.",
+  "attachmentShareFailed": "The attachment could not be shared.",
+  "attachmentsAddAction": "Add attachment",
+  "attachmentsRelatedTransaction": "Related transaction:",
+  "attachmentsRelatedRecord": "Related record:",
+  "attachmentsEmptyTitle": "No attachments for this record",
+  "attachmentsEmptyMessage": "You can add receipts, images, or supporting files here.",
+  "attachmentsShareAction": "Share",
+  "attachmentsSaveToDeviceAction": "Save to device",
+  "attachmentsTypeImage": "Image",
+  "attachmentsTypeReceipt": "Receipt",
+  "attachmentsTypeProofOfPayment": "Proof of payment",
+  "attachmentsTypeDocument": "Document",
   "timeline": "Timeline",
   "debtCreatedEvent": "Debt Created",
   "partialPaymentEvent": "Partial Payment",

@@ -34,7 +34,8 @@ class TransactionFlowLayout extends StatelessWidget {
       builder: (BuildContext context, BoxConstraints constraints) {
         final EdgeInsets contentPadding = EdgeInsets.only(
           bottom:
-              (compact ? AppSpacing.xs : AppSpacing.lg) + extraScrollBottomSpacing,
+              (compact ? AppSpacing.xs : AppSpacing.lg) +
+              extraScrollBottomSpacing,
         );
         final Widget scrollableContent = SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -56,7 +57,10 @@ class TransactionFlowLayout extends StatelessWidget {
           child: Column(
             mainAxisSize: canUseFlex ? MainAxisSize.max : MainAxisSize.min,
             children: <Widget>[
-              if (canUseFlex) Expanded(child: scrollableContent) else scrollableContent,
+              if (canUseFlex)
+                Expanded(child: scrollableContent)
+              else
+                scrollableContent,
               SizedBox(height: compact ? AppSpacing.xs : AppSpacing.md),
               actionBar,
             ],
@@ -94,10 +98,7 @@ class TransactionFormSection extends StatelessWidget {
               Text(title!, style: Theme.of(context).textTheme.titleMedium),
               if (subtitle != null) ...<Widget>[
                 const SizedBox(height: 2),
-                Text(
-                  subtitle!,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
               ],
               SizedBox(height: compact ? AppSpacing.sm : AppSpacing.md),
             ],
@@ -197,8 +198,9 @@ class TransactionPickerField extends StatelessWidget {
                 trailing ??
                     Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color:
-                          enabled ? theme.colorScheme.primary : theme.hintColor,
+                      color: enabled
+                          ? theme.colorScheme.primary
+                          : theme.hintColor,
                     ),
               ],
             ),
@@ -274,9 +276,7 @@ class TransactionEmptyState extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.outlineSoft.withValues(alpha: 0.8),
-        ),
+        border: Border.all(color: AppColors.outlineSoft.withValues(alpha: 0.8)),
       ),
       child: Column(
         children: <Widget>[
@@ -393,6 +393,7 @@ class TransactionSuccessState extends StatelessWidget {
     required this.onPrimaryPressed,
     required this.onSecondaryPressed,
     this.summary,
+    this.compact = false,
     super.key,
   });
 
@@ -403,10 +404,12 @@ class TransactionSuccessState extends StatelessWidget {
   final VoidCallback onPrimaryPressed;
   final VoidCallback onSecondaryPressed;
   final Widget? summary;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     return TransactionFlowLayout(
+      compact: compact,
       primaryLabel: primaryLabel,
       onPrimaryPressed: onPrimaryPressed,
       secondaryLabel: secondaryLabel,
@@ -512,10 +515,7 @@ class AttachmentCompactField extends StatelessWidget {
 }
 
 class SelectionChipOption<T> {
-  const SelectionChipOption({
-    required this.value,
-    required this.label,
-  });
+  const SelectionChipOption({required this.value, required this.label});
 
   final T value;
   final String label;
@@ -546,9 +546,7 @@ class CurrencyChip<T> extends StatelessWidget {
       onSelected: onSelected,
       color: theme.colorScheme.surface,
       elevation: 12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       itemBuilder: (BuildContext context) {
         return options
             .map(
@@ -609,9 +607,7 @@ class _StickyActionBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: AppColors.outlineSoft.withValues(alpha: 0.8),
-        ),
+        border: Border.all(color: AppColors.outlineSoft.withValues(alpha: 0.8)),
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),

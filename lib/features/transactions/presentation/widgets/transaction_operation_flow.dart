@@ -78,14 +78,19 @@ class _TransactionOperationFlowState
   void initState() {
     super.initState();
     _walletId = widget.initialWalletId;
-    _amountFocusNode.addListener(() => _handleFocusChange(_amountFocusNode, _amountFieldKey));
+    _amountFocusNode.addListener(
+      () => _handleFocusChange(_amountFocusNode, _amountFieldKey),
+    );
     _amountReceivedFocusNode.addListener(
-      () => _handleFocusChange(_amountReceivedFocusNode, _amountReceivedFieldKey),
+      () =>
+          _handleFocusChange(_amountReceivedFocusNode, _amountReceivedFieldKey),
     );
     _exchangeRateFocusNode.addListener(
       () => _handleFocusChange(_exchangeRateFocusNode, _exchangeRateFieldKey),
     );
-    _noteFocusNode.addListener(() => _handleFocusChange(_noteFocusNode, _noteFieldKey));
+    _noteFocusNode.addListener(
+      () => _handleFocusChange(_noteFocusNode, _noteFieldKey),
+    );
   }
 
   @override
@@ -130,24 +135,24 @@ class _TransactionOperationFlowState
   }
 
   String get _title => switch (widget.operationType) {
-        TransactionOperationType.deposit => context.tr.deposit,
-        TransactionOperationType.withdraw => context.tr.withdraw,
-        TransactionOperationType.exchange => context.tr.exchange,
-      };
+    TransactionOperationType.deposit => context.tr.deposit,
+    TransactionOperationType.withdraw => context.tr.withdraw,
+    TransactionOperationType.exchange => context.tr.exchange,
+  };
 
   String get _continueLabel => context.tr.continueReview;
 
   String get _confirmLabel => switch (widget.operationType) {
-        TransactionOperationType.deposit => context.tr.confirmDeposit,
-        TransactionOperationType.withdraw => context.tr.confirmWithdrawal,
-        TransactionOperationType.exchange => context.tr.confirmExchange,
-      };
+    TransactionOperationType.deposit => context.tr.confirmDeposit,
+    TransactionOperationType.withdraw => context.tr.confirmWithdrawal,
+    TransactionOperationType.exchange => context.tr.confirmExchange,
+  };
 
   String get _successMessage => switch (widget.operationType) {
-        TransactionOperationType.deposit => context.tr.depositSuccessMessage,
-        TransactionOperationType.withdraw => context.tr.withdrawSuccessMessage,
-        TransactionOperationType.exchange => context.tr.exchangeSuccessMessage,
-      };
+    TransactionOperationType.deposit => context.tr.depositSuccessMessage,
+    TransactionOperationType.withdraw => context.tr.withdrawSuccessMessage,
+    TransactionOperationType.exchange => context.tr.exchangeSuccessMessage,
+  };
 
   Future<void> _selectWallet(List<WalletOverview> wallets) async {
     final String? result = await showAppModalBottomSheet<String>(
@@ -295,7 +300,9 @@ class _TransactionOperationFlowState
 
   String? get _attachmentLabel => _attachments.isEmpty
       ? null
-      : _attachments.map((TransactionAttachmentDraft item) => item.fileName).join(', ');
+      : _attachments
+            .map((TransactionAttachmentDraft item) => item.fileName)
+            .join(', ');
 
   Future<void> _persistAttachments() async {
     _attachmentWarning = null;
@@ -303,8 +310,9 @@ class _TransactionOperationFlowState
       return;
     }
 
-    final LedgerTransaction? transaction =
-        ref.read(transactionControllerProvider).selectedTransaction;
+    final LedgerTransaction? transaction = ref
+        .read(transactionControllerProvider)
+        .selectedTransaction;
     if (transaction == null) {
       return;
     }
@@ -369,10 +377,12 @@ class _TransactionOperationFlowState
         wallets.every((WalletOverview item) => item.wallet.id != _walletId)) {
       _walletId = null;
     }
-    final WalletOverview? selectedWallet = wallets.cast<WalletOverview?>().firstWhere(
-      (WalletOverview? item) => item?.wallet.id == _walletId,
-      orElse: () => null,
-    );
+    final WalletOverview? selectedWallet = wallets
+        .cast<WalletOverview?>()
+        .firstWhere(
+          (WalletOverview? item) => item?.wallet.id == _walletId,
+          orElse: () => null,
+        );
 
     if (_showSuccess) {
       return _buildSuccess(selectedWallet);
@@ -463,7 +473,9 @@ class _TransactionOperationFlowState
                               label: context.tr.amountGiven,
                               hint: context.tr.enterAmountHint,
                               keyboardType:
-                                  const TextInputType.numberWithOptions(decimal: true),
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               textInputAction: TextInputAction.next,
                               validator: (String? value) =>
                                   amountValidator(context, value),
@@ -497,7 +509,9 @@ class _TransactionOperationFlowState
                               label: context.tr.amountReceived,
                               hint: context.tr.enterAmountHint,
                               keyboardType:
-                                  const TextInputType.numberWithOptions(decimal: true),
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               textInputAction: TextInputAction.next,
                               validator: (String? value) =>
                                   amountValidator(context, value),
@@ -523,8 +537,8 @@ class _TransactionOperationFlowState
                       Text(
                         _exchangeError!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ],
                     SizedBox(height: gap),
@@ -535,8 +549,9 @@ class _TransactionOperationFlowState
                         focusNode: _exchangeRateFocusNode,
                         label: context.tr.exchangeRate,
                         hint: context.tr.enterExchangeRateHint,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         textInputAction: TextInputAction.next,
                         validator: (String? value) =>
                             amountValidator(context, value),
@@ -558,7 +573,9 @@ class _TransactionOperationFlowState
                               label: context.tr.amount,
                               hint: context.tr.enterAmountHint,
                               keyboardType:
-                                  const TextInputType.numberWithOptions(decimal: true),
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               textInputAction: TextInputAction.next,
                               validator: (String? value) =>
                                   amountValidator(context, value),
@@ -601,14 +618,19 @@ class _TransactionOperationFlowState
                     value: transactionAttachmentSummary(
                       context,
                       _attachments.length,
-                      fileName:
-                          _attachments.isEmpty ? null : _attachments.first.fileName,
+                      fileName: _attachments.isEmpty
+                          ? null
+                          : _attachments.first.fileName,
                     ),
                     onTap: _addAttachment,
                     thumbnails: _attachmentThumbnails(context),
                   ),
                   if (_attachments.isNotEmpty) ...<Widget>[
-                    SizedBox(height: widget.embeddedInSheet ? AppSpacing.xs : AppSpacing.sm),
+                    SizedBox(
+                      height: widget.embeddedInSheet
+                          ? AppSpacing.xs
+                          : AppSpacing.sm,
+                    ),
                     TransactionAttachmentList(
                       attachments: _attachments,
                       onRemove: (TransactionAttachmentDraft attachment) {
@@ -635,8 +657,9 @@ class _TransactionOperationFlowState
       primaryLabel: _confirmLabel,
       onPrimaryPressed: isSubmitting ? null : _confirm,
       secondaryLabel: context.tr.back,
-      onSecondaryPressed:
-          isSubmitting ? null : () => setState(() => _showReview = false),
+      onSecondaryPressed: isSubmitting
+          ? null
+          : () => setState(() => _showReview = false),
       isPrimaryLoading: isSubmitting,
       content: TransactionFormSection(
         title: context.tr.review,
@@ -689,6 +712,7 @@ class _TransactionOperationFlowState
 
   Widget _buildSuccess(WalletOverview? selectedWallet) {
     return TransactionSuccessState(
+      compact: widget.embeddedInSheet,
       title: context.tr.success,
       message: _attachmentWarning ?? _successMessage,
       primaryLabel: context.tr.done,
@@ -747,10 +771,7 @@ class _TransactionOperationFlowState
 }
 
 class _PickerSheet<T> extends StatelessWidget {
-  const _PickerSheet({
-    required this.title,
-    required this.items,
-  });
+  const _PickerSheet({required this.title, required this.items});
 
   final String title;
   final List<_PickerItem<T>> items;
@@ -775,7 +796,8 @@ class _PickerSheet<T> extends StatelessWidget {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
                 itemBuilder: (BuildContext context, int index) {
                   final _PickerItem<T> item = items[index];
                   return ListTile(
@@ -785,7 +807,9 @@ class _PickerSheet<T> extends StatelessWidget {
                     ),
                     tileColor: Theme.of(context).colorScheme.surface,
                     title: Text(item.title),
-                    subtitle: item.subtitle == null ? null : Text(item.subtitle!),
+                    subtitle: item.subtitle == null
+                        ? null
+                        : Text(item.subtitle!),
                     trailing: const Icon(Icons.chevron_right_rounded),
                   );
                 },
@@ -799,11 +823,7 @@ class _PickerSheet<T> extends StatelessWidget {
 }
 
 class _PickerItem<T> {
-  const _PickerItem({
-    required this.value,
-    required this.title,
-    this.subtitle,
-  });
+  const _PickerItem({required this.value, required this.title, this.subtitle});
 
   final T value;
   final String title;

@@ -599,7 +599,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchTransactions => 'ابحث في العمليات';
 
   @override
-  String get transactionsSearchHint => 'المرجع أو المحفظة أو الجهة أو الملاحظة';
+  String get transactionsSearchHint => 'ابحث عن عملية';
 
   @override
   String get transactionReferenceHint => 'TX-2026-000001';
@@ -1254,11 +1254,57 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String attachmentSaved(Object fileName) {
+    return 'تم حفظ $fileName على الجهاز.';
+  }
+
+  @override
   String get attachmentDownloadFailed => 'تعذر تنزيل المرفق.';
 
   @override
   String get attachmentDownloadUnsupported =>
       'تنزيل المرفقات غير مدعوم على هذا الجهاز بعد.';
+
+  @override
+  String get attachmentShareUnsupported =>
+      'مشاركة المرفقات غير مدعومة على هذا الجهاز بعد.';
+
+  @override
+  String get attachmentShareFailed => 'تعذرت مشاركة المرفق.';
+
+  @override
+  String get attachmentsAddAction => 'إضافة مرفق';
+
+  @override
+  String get attachmentsRelatedTransaction => 'عملية مرتبطة:';
+
+  @override
+  String get attachmentsRelatedRecord => 'سجل مرتبط:';
+
+  @override
+  String get attachmentsEmptyTitle => 'لا توجد مرفقات لهذه العملية';
+
+  @override
+  String get attachmentsEmptyMessage =>
+      'يمكنك إضافة إيصالات أو صور أو ملفات داعمة هنا.';
+
+  @override
+  String get attachmentsShareAction => 'مشاركة';
+
+  @override
+  String get attachmentsSaveToDeviceAction => 'حفظ على الجهاز';
+
+  @override
+  String get attachmentsTypeImage => 'صورة';
+
+  @override
+  String get attachmentsTypeReceipt => 'إيصال';
+
+  @override
+  String get attachmentsTypeProofOfPayment => 'إثبات دفع';
+
+  @override
+  String get attachmentsTypeDocument => 'مستند';
 
   @override
   String get timeline => 'الخط الزمني';

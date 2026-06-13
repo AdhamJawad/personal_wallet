@@ -136,13 +136,6 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
     return PwScaffold(
       title: context.tr.transactions,
-      actions: <Widget>[
-        IconButton(
-          onPressed: _showCreateActionSheet,
-          icon: const Icon(Icons.add_rounded),
-          tooltip: context.tr.transactionsCreateFirst,
-        ),
-      ],
       body: CustomScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         slivers: <Widget>[
@@ -151,10 +144,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               controller: _searchController,
               onSearchChanged: (_) => setState(() {}),
               onOpenFilters: _showFilterSheet,
-              onOpenDateRange: _showFilterSheet,
-              dateRangeLabel: _dateRangeLabel(context, _dateRange),
               activeFilterCount: _activeFilterCount,
-              hasCustomDateRange: _dateRange != _DateRangeFilter.all,
             ),
           ),
           SliverToBoxAdapter(
@@ -165,19 +155,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   : _TransactionsSummaryStrip(summary: summary),
             ),
           ),
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _PinnedHeaderDelegate(
-              minHeight: 52,
-              maxHeight: 52,
-              child: Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xs),
-                child: _CategoryChips(
-                  selectedCategory: _selectedCategory,
-                  onSelected: (_ActivityCategory value) {
-                    setState(() => _selectedCategory = value);
-                  },
-                ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: _CategoryChips(
+                selectedCategory: _selectedCategory,
+                onSelected: (_ActivityCategory value) {
+                  setState(() => _selectedCategory = value);
+                },
               ),
             ),
           ),
@@ -367,19 +352,13 @@ class _TransactionsHeader extends StatelessWidget {
     required this.controller,
     required this.onSearchChanged,
     required this.onOpenFilters,
-    required this.onOpenDateRange,
-    required this.dateRangeLabel,
     required this.activeFilterCount,
-    required this.hasCustomDateRange,
   });
 
   final TextEditingController controller;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onOpenFilters;
-  final VoidCallback onOpenDateRange;
-  final String dateRangeLabel;
   final int activeFilterCount;
-  final bool hasCustomDateRange;
 
   @override
   Widget build(BuildContext context) {
@@ -426,29 +405,20 @@ class _TransactionsHeader extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(width: AppSpacing.xs),
+                      _HeaderIconButton(
+                        icon: Icons.tune_rounded,
+                        isActive: activeFilterCount > 0,
+                        badgeLabel: activeFilterCount > 0
+                            ? '$activeFilterCount'
+                            : null,
+                        onTap: onOpenFilters,
+                      ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              _HeaderActionButton(
-                icon: Icons.tune_rounded,
-                label: context.tr.filter,
-                isActive: activeFilterCount > 0,
-                badgeLabel: activeFilterCount > 0 ? '$activeFilterCount' : null,
-                onTap: onOpenFilters,
-              ),
             ],
-          ),
-          const SizedBox(height: AppSpacing.xs + 2),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: _HeaderActionButton(
-              icon: Icons.date_range_rounded,
-              label: dateRangeLabel,
-              isActive: hasCustomDateRange,
-              onTap: onOpenDateRange,
-            ),
           ),
         ],
       ),
@@ -456,71 +426,15 @@ class _TransactionsHeader extends StatelessWidget {
   }
 }
 
-class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _PinnedHeaderDelegate({
-    required this.minHeight,
-    required this.maxHeight,
-    required this.child,
-  });
-
-  final double minHeight;
-  final double maxHeight;
-  final Widget child;
-
-  @override
-  double get minExtent => minHeight;
-
-  @override
-  double get maxExtent => maxHeight;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest,
-        border: Border(
-          bottom: BorderSide(
-            color: colorScheme.outline.withValues(alpha: 0.10),
-          ),
-        ),
-        boxShadow: overlapsContent
-            ? <BoxShadow>[
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
-                ),
-              ]
-            : const <BoxShadow>[],
-      ),
-      child: Align(alignment: AlignmentDirectional.centerStart, child: child),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _PinnedHeaderDelegate oldDelegate) {
-    return minHeight != oldDelegate.minHeight ||
-        maxHeight != oldDelegate.maxHeight ||
-        child != oldDelegate.child;
-  }
-}
-
-class _HeaderActionButton extends StatelessWidget {
-  const _HeaderActionButton({
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({
     required this.icon,
-    required this.label,
     required this.onTap,
     this.isActive = false,
     this.badgeLabel,
   });
 
   final IconData icon;
-  final String label;
   final VoidCallback onTap;
   final bool isActive;
   final String? badgeLabel;
@@ -531,35 +445,33 @@ class _HeaderActionButton extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.pill),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs + 2,
-        ),
-        decoration: BoxDecoration(
-          color: isActive
-              ? colorScheme.primary.withValues(alpha: 0.1)
-              : colorScheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(
-            color: isActive ? colorScheme.primary : AppColors.outlineSoft,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(icon, size: 16, color: colorScheme.primary),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: Theme.of(
-                context,
-              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: isActive
+                  ? colorScheme.primary.withValues(alpha: 0.12)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
             ),
-            if (badgeLabel != null) ...<Widget>[
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              size: 18,
+              color: isActive
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+            ),
+          ),
+          if (badgeLabel != null)
+            PositionedDirectional(
+              top: -4,
+              end: -2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 decoration: BoxDecoration(
                   color: colorScheme.primary,
                   borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -572,9 +484,8 @@ class _HeaderActionButton extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -592,7 +503,7 @@ class _TransactionsSummaryStrip extends StatelessWidget {
         Expanded(
           child: _SummaryCard(
             value: '${summary.totalCount}',
-            label: context.tr.transactionsTotalSummary,
+            label: context.tr.transactions,
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -1238,22 +1149,6 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
               const SizedBox(height: AppSpacing.md),
               Row(
                 children: <Widget>[
-                  Expanded(
-                    child: PwButton.secondary(
-                      label: context.tr.clearSearch,
-                      onPressed: () {
-                        setState(() {
-                          _sortOption = TransactionSortOption.newest;
-                          _dateRange = _DateRangeFilter.all;
-                          _currencyCode = null;
-                          _walletName = null;
-                          _contactName = null;
-                          _status = null;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: PwButton.primary(
                       label: context.tr.saveChanges,

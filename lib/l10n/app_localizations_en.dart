@@ -1269,12 +1269,58 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String attachmentSaved(Object fileName) {
+    return '$fileName was saved to your device.';
+  }
+
+  @override
   String get attachmentDownloadFailed =>
       'The attachment could not be downloaded.';
 
   @override
   String get attachmentDownloadUnsupported =>
       'Downloading attachments is not supported on this device yet.';
+
+  @override
+  String get attachmentShareUnsupported =>
+      'Sharing attachments is not supported on this device yet.';
+
+  @override
+  String get attachmentShareFailed => 'The attachment could not be shared.';
+
+  @override
+  String get attachmentsAddAction => 'Add attachment';
+
+  @override
+  String get attachmentsRelatedTransaction => 'Related transaction:';
+
+  @override
+  String get attachmentsRelatedRecord => 'Related record:';
+
+  @override
+  String get attachmentsEmptyTitle => 'No attachments for this record';
+
+  @override
+  String get attachmentsEmptyMessage =>
+      'You can add receipts, images, or supporting files here.';
+
+  @override
+  String get attachmentsShareAction => 'Share';
+
+  @override
+  String get attachmentsSaveToDeviceAction => 'Save to device';
+
+  @override
+  String get attachmentsTypeImage => 'Image';
+
+  @override
+  String get attachmentsTypeReceipt => 'Receipt';
+
+  @override
+  String get attachmentsTypeProofOfPayment => 'Proof of payment';
+
+  @override
+  String get attachmentsTypeDocument => 'Document';
 
   @override
   String get timeline => 'Timeline';

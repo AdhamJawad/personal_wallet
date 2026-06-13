@@ -2462,6 +2462,12 @@ abstract class AppLocalizations {
   /// **'{fileName} was downloaded.'**
   String attachmentDownloaded(Object fileName);
 
+  /// No description provided for @attachmentSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'{fileName} was saved to your device.'**
+  String attachmentSaved(Object fileName);
+
   /// No description provided for @attachmentDownloadFailed.
   ///
   /// In en, this message translates to:
@@ -2473,6 +2479,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Downloading attachments is not supported on this device yet.'**
   String get attachmentDownloadUnsupported;
+
+  /// No description provided for @attachmentShareUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing attachments is not supported on this device yet.'**
+  String get attachmentShareUnsupported;
+
+  /// No description provided for @attachmentShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The attachment could not be shared.'**
+  String get attachmentShareFailed;
+
+  /// No description provided for @attachmentsAddAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add attachment'**
+  String get attachmentsAddAction;
+
+  /// No description provided for @attachmentsRelatedTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Related transaction:'**
+  String get attachmentsRelatedTransaction;
+
+  /// No description provided for @attachmentsRelatedRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Related record:'**
+  String get attachmentsRelatedRecord;
+
+  /// No description provided for @attachmentsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No attachments for this record'**
+  String get attachmentsEmptyTitle;
+
+  /// No description provided for @attachmentsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add receipts, images, or supporting files here.'**
+  String get attachmentsEmptyMessage;
+
+  /// No description provided for @attachmentsShareAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get attachmentsShareAction;
+
+  /// No description provided for @attachmentsSaveToDeviceAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to device'**
+  String get attachmentsSaveToDeviceAction;
+
+  /// No description provided for @attachmentsTypeImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get attachmentsTypeImage;
+
+  /// No description provided for @attachmentsTypeReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get attachmentsTypeReceipt;
+
+  /// No description provided for @attachmentsTypeProofOfPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Proof of payment'**
+  String get attachmentsTypeProofOfPayment;
+
+  /// No description provided for @attachmentsTypeDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Document'**
+  String get attachmentsTypeDocument;
 
   /// No description provided for @timeline.
   ///

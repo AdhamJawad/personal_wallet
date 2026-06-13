@@ -6,6 +6,10 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../debts/domain/models/debt_summary.dart';
+import '../../../debts/presentation/providers/debt_providers.dart';
+import '../../../transfers/domain/models/transfer_summary.dart';
+import '../../../transfers/presentation/providers/transfer_providers.dart';
 import '../../../transactions/domain/models/ledger_transaction.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../../wallets/domain/models/wallet_overview.dart';
@@ -37,6 +41,8 @@ class _DashboardPlaceholderPageState
     final authState = ref.watch(authControllerProvider);
     final walletState = ref.watch(walletControllerProvider);
     final transactionState = ref.watch(transactionControllerProvider);
+    final transferState = ref.watch(transferControllerProvider);
+    final debtState = ref.watch(debtControllerProvider);
     final session = authState.session;
     final dashboardSnapshot = walletState.dashboardSnapshot;
     final List<WalletOverview> recentWallets =
@@ -46,110 +52,154 @@ class _DashboardPlaceholderPageState
       for (final WalletOverview wallet in walletState.wallets)
         wallet.wallet.id: wallet.wallet.name,
     };
-    final List<DashboardActivityData> recentActivities = transactionState
-        .transactions
-        .take(10)
-        .map(
-          (LedgerTransaction transaction) =>
-              DashboardActivityData.fromTransaction(
-                transaction,
-                walletNames[transaction.sourceWalletId ??
-                        transaction.destinationWalletId ??
-                        ''] ??
-                    context.tr.walletFallback,
-                context,
+    final Set<String> hiddenLedgerIds = transferState.transfers
+        .map((TransferSummary item) => item.transfer.ledgerTransactionId)
+        .toSet();
+    final List<DashboardActivityData> recentActivities =
+        <DashboardActivityData>[
+          ...transactionState.transactions
+              .where(
+                (LedgerTransaction transaction) =>
+                    !hiddenLedgerIds.contains(transaction.id) &&
+                    transaction.recipientUserId == null &&
+                    transaction.transferRecordId == null &&
+                    transaction.debtSettlementId == null,
+              )
+              .map(
+                (LedgerTransaction transaction) =>
+                    DashboardActivityData.fromTransaction(
+                      transaction,
+                      walletNames[transaction.sourceWalletId ??
+                              transaction.destinationWalletId ??
+                              ''] ??
+                          context.tr.walletFallback,
+                      context,
+                    ),
               ),
-        )
+          ...transferState.transfers.map(
+            (TransferSummary transfer) => DashboardActivityData.fromTransfer(
+              transfer,
+              context,
+              senderWalletName:
+                  walletNames[transfer.transfer.senderWalletId] ??
+                  context.tr.walletFallback,
+              recipientWalletName:
+                  walletNames[transfer.transfer.recipientWalletId] ??
+                  context.tr.walletFallback,
+            ),
+          ),
+          ...debtState.debts.expand(
+            (DebtSummary summary) => <DashboardActivityData>[
+              DashboardActivityData.fromDebt(summary, context),
+              ...summary.repayments.map(
+                (repayment) => DashboardActivityData.fromRepayment(
+                  summary,
+                  repayment,
+                  context,
+                ),
+              ),
+            ],
+          ),
+        ]..sort(
+          (DashboardActivityData left, DashboardActivityData right) =>
+              right.timestamp.compareTo(left.timestamp),
+        );
+    final List<DashboardActivityData> visibleRecentActivities = recentActivities
+        .take(10)
         .toList(growable: false);
     final bool isInitialDashboardLoading =
         walletState.isLoading && dashboardSnapshot == null;
     final bool isWalletsLoading =
         walletState.isLoading && recentWallets.isEmpty;
     final bool isActivitiesLoading =
-        transactionState.isLoading && recentActivities.isEmpty;
-    final String userName = session?.user.displayName ?? context.tr.userFallback;
+        ((transactionState.isLoading &&
+                transactionState.transactions.isEmpty) ||
+            (transferState.isLoading && transferState.transfers.isEmpty) ||
+            (debtState.isLoading && debtState.debts.isEmpty)) &&
+        visibleRecentActivities.isEmpty;
+    final String userName =
+        session?.user.displayName ?? context.tr.userFallback;
 
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
-              final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
-                constraints.maxWidth,
-              );
-              final double horizontalPadding = switch (breakpoint) {
-                DashboardBreakpoint.smallPhone => AppSpacing.lg,
-                DashboardBreakpoint.phone => AppSpacing.xl,
-                DashboardBreakpoint.tablet => AppSpacing.xxl,
-                DashboardBreakpoint.largeTablet => 40,
-              };
-              final int walletColumns = switch (breakpoint) {
-                DashboardBreakpoint.largeTablet => 3,
-                DashboardBreakpoint.tablet => 2,
-                DashboardBreakpoint.phone => 1,
-                DashboardBreakpoint.smallPhone => 1,
-              };
+            final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
+              constraints.maxWidth,
+            );
+            final double horizontalPadding = switch (breakpoint) {
+              DashboardBreakpoint.smallPhone => AppSpacing.lg,
+              DashboardBreakpoint.phone => AppSpacing.xl,
+              DashboardBreakpoint.tablet => AppSpacing.xxl,
+              DashboardBreakpoint.largeTablet => 40,
+            };
+            final int walletColumns = switch (breakpoint) {
+              DashboardBreakpoint.largeTablet => 3,
+              DashboardBreakpoint.tablet => 2,
+              DashboardBreakpoint.phone => 1,
+              DashboardBreakpoint.smallPhone => 1,
+            };
 
-              return Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1120),
-                  child: ListView(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      AppSpacing.xl,
-                      horizontalPadding,
-                      AppSpacing.xxl,
-                    ),
-                    children: <Widget>[
-                      if (isInitialDashboardLoading)
-                        const _DashboardHeaderSkeleton()
-                      else
-                        DashboardHeader(
-                          greeting: _resolveGreeting(context),
-                          userName: userName,
-                        ),
-                      const SizedBox(height: AppSpacing.xl),
-                      DashboardTotalAssetsCard(
-                        totalUsd: dashboardSnapshot?.totalUsd ?? '0',
-                        totalSyp: dashboardSnapshot?.totalSyp ?? '0',
-                        showBalances: _showBalances,
-                        updatedLabel: context.tr.updatedNow,
-                        isLoading: isInitialDashboardLoading,
-                        onToggleVisibility: () {
-                          setState(() => _showBalances = !_showBalances);
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                      DashboardSectionTitle(
-                        title: context.tr.myWallets,
-                        actionLabel: context.tr.seeAll,
-                        onActionPressed: () =>
-                            context.go(AppRoutes.walletsPath),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _WalletsPreviewSection(
-                        wallets: recentWallets,
-                        columns: walletColumns,
-                        showBalances: _showBalances,
-                        isLoading: isWalletsLoading,
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                      DashboardSectionTitle(
-                        title: context.tr.recentActivity,
-                        actionLabel: context.tr.seeAll,
-                        onActionPressed: () =>
-                            context.push(AppRoutes.transactionsPath),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      DashboardActivityList(
-                        items: recentActivities,
-                        isLoading: isActivitiesLoading,
-                      ),
-                    ],
+            return Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1120),
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    AppSpacing.xl,
+                    horizontalPadding,
+                    AppSpacing.xxl,
                   ),
+                  children: <Widget>[
+                    if (isInitialDashboardLoading)
+                      const _DashboardHeaderSkeleton()
+                    else
+                      DashboardHeader(
+                        greeting: _resolveGreeting(context),
+                        userName: userName,
+                      ),
+                    const SizedBox(height: AppSpacing.xl),
+                    DashboardTotalAssetsCard(
+                      totalUsd: dashboardSnapshot?.totalUsd ?? '0',
+                      totalSyp: dashboardSnapshot?.totalSyp ?? '0',
+                      showBalances: _showBalances,
+                      updatedLabel: context.tr.updatedNow,
+                      isLoading: isInitialDashboardLoading,
+                      onToggleVisibility: () {
+                        setState(() => _showBalances = !_showBalances);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    DashboardSectionTitle(
+                      title: context.tr.myWallets,
+                      actionLabel: context.tr.seeAll,
+                      onActionPressed: () => context.go(AppRoutes.walletsPath),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _WalletsPreviewSection(
+                      wallets: recentWallets,
+                      columns: walletColumns,
+                      showBalances: _showBalances,
+                      isLoading: isWalletsLoading,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    DashboardSectionTitle(
+                      title: context.tr.recentActivity,
+                      actionLabel: context.tr.seeAll,
+                      onActionPressed: () =>
+                          context.push(AppRoutes.transactionsPath),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    DashboardActivityList(
+                      items: visibleRecentActivities,
+                      isLoading: isActivitiesLoading,
+                    ),
+                  ],
                 ),
-              );
-            },
+              ),
+            );
+          },
         ),
       ),
     );

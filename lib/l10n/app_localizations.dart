@@ -2384,6 +2384,24 @@ abstract class AppLocalizations {
   /// **'Record a repayment amount and keep a supporting note or attachment if needed.'**
   String get debtRepaymentDescription;
 
+  /// No description provided for @debtRepaymentDepositWalletLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit wallet'**
+  String get debtRepaymentDepositWalletLabel;
+
+  /// No description provided for @debtRepaymentWithdrawWalletLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawal wallet'**
+  String get debtRepaymentWithdrawWalletLabel;
+
+  /// No description provided for @debtRepaymentNoWalletsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a wallet before recording this debt repayment.'**
+  String get debtRepaymentNoWalletsMessage;
+
   /// No description provided for @saveDebtRecord.
   ///
   /// In en, this message translates to:
@@ -2483,13 +2501,13 @@ abstract class AppLocalizations {
   /// No description provided for @closeDebtConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to mark this debt as settled?'**
+  /// **'This will settle the full remaining balance and record the matching wallet transaction.'**
   String get closeDebtConfirmation;
 
   /// No description provided for @markAsSettled.
   ///
   /// In en, this message translates to:
-  /// **'Mark as Settled'**
+  /// **'Settle Remaining Balance'**
   String get markAsSettled;
 
   /// No description provided for @reopenDebt.
@@ -2533,6 +2551,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reopening debt records is not available yet.'**
   String get debtReopenUnavailable;
+
+  /// No description provided for @debtUpdatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt updated successfully.'**
+  String get debtUpdatedSuccessfully;
+
+  /// No description provided for @debtEditFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update the debt.'**
+  String get debtEditFailed;
+
+  /// No description provided for @debtClosedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt closed successfully.'**
+  String get debtClosedSuccessfully;
+
+  /// No description provided for @debtCloseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to close the debt.'**
+  String get debtCloseFailed;
+
+  /// No description provided for @debtReopenedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt reopened successfully.'**
+  String get debtReopenedSuccessfully;
+
+  /// No description provided for @debtReopenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reopen the debt.'**
+  String get debtReopenFailed;
 
   /// No description provided for @previewAttachment.
   ///

@@ -1212,6 +1212,16 @@ class AppLocalizationsAr extends AppLocalizations {
       'سجّل مبلغ السداد واحتفظ بملاحظة أو مرفق داعم عند الحاجة.';
 
   @override
+  String get debtRepaymentDepositWalletLabel => 'محفظة الإيداع';
+
+  @override
+  String get debtRepaymentWithdrawWalletLabel => 'محفظة السحب';
+
+  @override
+  String get debtRepaymentNoWalletsMessage =>
+      'أنشئ محفظة قبل تسجيل سداد هذا الدين.';
+
+  @override
   String get saveDebtRecord => 'حفظ الدين';
 
   @override
@@ -1262,10 +1272,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get closeDebt => 'إغلاق الدين';
 
   @override
-  String get closeDebtConfirmation => 'هل أنت متأكد من وضع هذا الدين كمسدد؟';
+  String get closeDebtConfirmation =>
+      'سيتم تسديد كامل المبلغ المتبقي وتسجيل الحركة المالية المطابقة على المحفظة المحددة.';
 
   @override
-  String get markAsSettled => 'تحديده كمسدد';
+  String get markAsSettled => 'تسديد كامل المتبقي';
 
   @override
   String get reopenDebt => 'إعادة فتح الدين';
@@ -1288,6 +1299,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get debtReopenUnavailable => 'إعادة فتح سجلات الديون غير متاحة بعد.';
+
+  @override
+  String get debtUpdatedSuccessfully => 'تم تحديث الدين بنجاح.';
+
+  @override
+  String get debtEditFailed => 'تعذر تحديث الدين.';
+
+  @override
+  String get debtClosedSuccessfully => 'تم إغلاق الدين بنجاح.';
+
+  @override
+  String get debtCloseFailed => 'تعذر إغلاق الدين.';
+
+  @override
+  String get debtReopenedSuccessfully => 'تمت إعادة فتح الدين بنجاح.';
+
+  @override
+  String get debtReopenFailed => 'تعذر إعادة فتح الدين.';
 
   @override
   String get previewAttachment => 'معاينة';

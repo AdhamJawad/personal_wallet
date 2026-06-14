@@ -12,9 +12,12 @@ import '../../../../features/attachments/domain/models/attachment_draft.dart';
 import '../../../../features/attachments/domain/models/attachment_reference.dart';
 import '../../../../features/attachments/presentation/providers/attachment_providers.dart';
 import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
+import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../../transactions/presentation/widgets/transaction_attachment_picker.dart';
 import '../../../transactions/presentation/widgets/transaction_flow_support.dart';
 import '../../../transactions/presentation/widgets/transaction_form_validators.dart';
+import '../../../wallets/domain/models/wallet_overview.dart';
+import '../../../wallets/presentation/providers/wallet_providers.dart';
 import '../providers/debt_providers.dart';
 
 Future<void> showCreateDebtRepaymentSheet(
@@ -60,10 +63,18 @@ class _CreateDebtRepaymentPageState
   final FocusNode _noteFocusNode = FocusNode();
   final List<TransactionAttachmentDraft> _attachments =
       <TransactionAttachmentDraft>[];
+  String? _walletId;
 
   @override
   void initState() {
     super.initState();
+    Future<void>.microtask(() async {
+      await ref.read(debtControllerProvider.notifier).loadDebt(widget.debtId);
+      if (!mounted) {
+        return;
+      }
+      await ref.read(walletControllerProvider.notifier).initialize();
+    });
     _amountFocusNode.addListener(
       () => _handleFocusChange(_amountFocusNode, _amountFieldKey),
     );
@@ -120,14 +131,57 @@ class _CreateDebtRepaymentPageState
       return;
     }
 
+    final debtSummary = ref.read(debtControllerProvider).selectedDebt;
+    if (debtSummary == null || _walletId == null) {
+      return;
+    }
+
+    final String? note = _noteController.text.trim().isEmpty
+        ? null
+        : _noteController.text.trim();
+
+    final bool transactionSaved = debtSummary.debt.isOwedToMe
+        ? await ref
+              .read(transactionControllerProvider.notifier)
+              .createDeposit(
+                walletId: _walletId!,
+                currency: debtSummary.currency,
+                amount: _amountController.text.trim(),
+                note: note,
+              )
+        : await ref
+              .read(transactionControllerProvider.notifier)
+              .createWithdraw(
+                walletId: _walletId!,
+                currency: debtSummary.currency,
+                amount: _amountController.text.trim(),
+                note: note,
+              );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (!transactionSaved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ref.read(transactionControllerProvider).errorMessage ??
+                (debtSummary.debt.isOwedToMe
+                    ? context.tr.failedCreateDeposit
+                    : context.tr.failedCreateWithdrawal),
+          ),
+        ),
+      );
+      return;
+    }
+
     final bool success = await ref
         .read(debtControllerProvider.notifier)
         .createRepayment(
           debtId: widget.debtId,
           amount: _amountController.text.trim(),
-          note: _noteController.text.trim().isEmpty
-              ? null
-              : _noteController.text.trim(),
+          note: note,
         );
 
     if (!mounted) {
@@ -143,6 +197,13 @@ class _CreateDebtRepaymentPageState
           ),
         ),
       );
+      return;
+    }
+
+    await ref.read(walletControllerProvider.notifier).initialize();
+    await ref.read(transactionControllerProvider.notifier).initialize();
+
+    if (!mounted) {
       return;
     }
 
@@ -204,6 +265,12 @@ class _CreateDebtRepaymentPageState
   @override
   Widget build(BuildContext context) {
     final debtState = ref.watch(debtControllerProvider);
+    final walletState = ref.watch(walletControllerProvider);
+    final debtSummary = debtState.selectedDebt;
+    final bool isIncomingRepayment = debtSummary?.debt.isOwedToMe ?? false;
+    final List<WalletOverview> activeWallets = walletState.wallets
+        .where((WalletOverview item) => !item.wallet.isArchived)
+        .toList(growable: false);
     final double gap = widget.embeddedInSheet ? AppSpacing.sm : AppSpacing.md;
     final Widget content = DashboardSurfaceCard(
       padding: EdgeInsets.all(
@@ -234,6 +301,40 @@ class _CreateDebtRepaymentPageState
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
+                SizedBox(height: gap),
+                if (walletState.isLoading && activeWallets.isEmpty)
+                  const Center(child: CircularProgressIndicator())
+                else if (activeWallets.isEmpty)
+                  TransactionEmptyState(
+                    icon: Icons.account_balance_wallet_outlined,
+                    title: context.tr.noTransactionWalletsTitle,
+                    message: context.tr.debtRepaymentNoWalletsMessage,
+                  )
+                else
+                  DropdownButtonFormField<String>(
+                    initialValue: _walletId,
+                    decoration: InputDecoration(
+                      labelText: isIncomingRepayment
+                          ? context.tr.debtRepaymentDepositWalletLabel
+                          : context.tr.debtRepaymentWithdrawWalletLabel,
+                      prefixIcon: const Icon(
+                        Icons.account_balance_wallet_outlined,
+                      ),
+                    ),
+                    items: activeWallets
+                        .map(
+                          (WalletOverview item) => DropdownMenuItem<String>(
+                            value: item.wallet.id,
+                            child: Text(item.wallet.name),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (String? value) {
+                      setState(() => _walletId = value);
+                    },
+                    validator: (String? value) =>
+                        value == null ? context.tr.walletRequired : null,
+                  ),
                 SizedBox(height: gap),
               ],
               KeyedSubtree(
@@ -309,8 +410,13 @@ class _CreateDebtRepaymentPageState
                   Expanded(
                     child: PwButton.primary(
                       label: context.tr.saveRepayment,
-                      onPressed: debtState.isLoading ? null : _submit,
-                      isLoading: debtState.isLoading,
+                      onPressed:
+                          debtState.isLoading ||
+                              walletState.isLoading ||
+                              activeWallets.isEmpty
+                          ? null
+                          : _submit,
+                      isLoading: debtState.isLoading || walletState.isLoading,
                     ),
                   ),
                 ],

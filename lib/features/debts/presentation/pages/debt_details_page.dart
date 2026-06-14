@@ -17,13 +17,17 @@ import '../../../../core/utils/amount_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../features/attachments/domain/enums/attachment_reference_type.dart';
 import '../../../../features/attachments/domain/models/attachment.dart';
+import '../../../../features/attachments/domain/models/attachment_draft.dart';
 import '../../../../features/attachments/domain/models/attachment_reference.dart';
 import '../../../../shared/domain/enums/currency.dart';
 import '../../../attachments/presentation/providers/attachment_providers.dart';
 import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
+import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../../transactions/presentation/widgets/transaction_attachment_picker.dart';
 import '../../../transactions/presentation/widgets/transaction_flow_support.dart';
 import '../../../transactions/presentation/widgets/transaction_form_validators.dart';
+import '../../../wallets/domain/models/wallet_overview.dart';
+import '../../../wallets/presentation/providers/wallet_providers.dart';
 import '../../domain/models/debt_summary.dart';
 import '../../domain/models/settlement_summary.dart';
 import 'create_debt_repayment_page.dart';
@@ -260,41 +264,9 @@ class _DebtDetailsPageState extends ConsumerState<DebtDetailsPage> {
     return showAppModalBottomSheet<void>(
       context: context,
       builder: (BuildContext context) {
-        return _DebtStateChangeSheet(
-          title: context.tr.closeDebt,
-          description: context.tr.closeDebtConfirmation,
-          primaryLabel: context.tr.markAsSettled,
-          amountLabel: _formatMoney(
-            context,
-            summary.remainingAmount,
-            summary.currency,
-          ),
-          onConfirm: () {
-            Navigator.of(context).pop();
-            _showUnavailableMessage(context.tr.debtCloseUnavailable);
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> _showReopenDebtSheet(DebtSummary summary) {
-    return showAppModalBottomSheet<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return _DebtStateChangeSheet(
-          title: context.tr.reopenDebt,
-          description: context.tr.reopenDebtConfirmation,
-          primaryLabel: context.tr.reopenDebt,
-          amountLabel: _formatMoney(
-            context,
-            summary.remainingAmount,
-            summary.currency,
-          ),
-          onConfirm: () {
-            Navigator.of(context).pop();
-            _showUnavailableMessage(context.tr.debtReopenUnavailable);
-          },
+        return _CloseDebtSettlementSheet(
+          summary: summary,
+          onCompleted: _loadData,
         );
       },
     );
@@ -360,7 +332,6 @@ class _DebtDetailsPageState extends ConsumerState<DebtDetailsPage> {
                           ),
                           onEditDebt: () => _showEditDebtSheet(summary),
                           onCloseDebt: () => _showCloseDebtSheet(summary),
-                          onReopenDebt: () => _showReopenDebtSheet(summary),
                           onViewHistory: _scrollToTimeline,
                         ),
                         const SizedBox(height: AppSpacing.md),
@@ -522,7 +493,6 @@ class _DebtQuickActionsRow extends StatelessWidget {
     required this.onRecordPayment,
     required this.onEditDebt,
     required this.onCloseDebt,
-    required this.onReopenDebt,
     required this.onViewHistory,
   });
 
@@ -530,18 +500,12 @@ class _DebtQuickActionsRow extends StatelessWidget {
   final VoidCallback onRecordPayment;
   final VoidCallback onEditDebt;
   final VoidCallback onCloseDebt;
-  final VoidCallback onReopenDebt;
   final VoidCallback onViewHistory;
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> actions = summary.isCompleted
         ? <Widget>[
-            _DebtActionIconButton(
-              icon: Icons.refresh_rounded,
-              label: context.tr.reopenDebt,
-              onTap: onReopenDebt,
-            ),
             _DebtActionIconButton(
               icon: Icons.history_rounded,
               label: context.tr.viewHistory,
@@ -1182,23 +1146,116 @@ class _AttachmentFallbackPreview extends StatelessWidget {
   }
 }
 
-class _DebtStateChangeSheet extends StatelessWidget {
-  const _DebtStateChangeSheet({
-    required this.title,
-    required this.description,
-    required this.primaryLabel,
-    required this.amountLabel,
-    required this.onConfirm,
+class _CloseDebtSettlementSheet extends ConsumerStatefulWidget {
+  const _CloseDebtSettlementSheet({
+    required this.summary,
+    required this.onCompleted,
   });
 
-  final String title;
-  final String description;
-  final String primaryLabel;
-  final String amountLabel;
-  final VoidCallback onConfirm;
+  final DebtSummary summary;
+  final Future<void> Function() onCompleted;
+
+  @override
+  ConsumerState<_CloseDebtSettlementSheet> createState() =>
+      _CloseDebtSettlementSheetState();
+}
+
+class _CloseDebtSettlementSheetState
+    extends ConsumerState<_CloseDebtSettlementSheet> {
+  String? _walletId;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.microtask(
+      () => ref.read(walletControllerProvider.notifier).initialize(),
+    );
+  }
+
+  Future<void> _submit() async {
+    final String? walletId = _walletId;
+    if (walletId == null) {
+      return;
+    }
+
+    final DebtSummary summary = widget.summary;
+    final String amount = summary.remainingAmount;
+    final bool transactionSaved = summary.debt.isOwedToMe
+        ? await ref
+              .read(transactionControllerProvider.notifier)
+              .createDeposit(
+                walletId: walletId,
+                currency: summary.currency,
+                amount: amount,
+              )
+        : await ref
+              .read(transactionControllerProvider.notifier)
+              .createWithdraw(
+                walletId: walletId,
+                currency: summary.currency,
+                amount: amount,
+              );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (!transactionSaved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ref.read(transactionControllerProvider).errorMessage ??
+                (summary.debt.isOwedToMe
+                    ? context.tr.failedCreateDeposit
+                    : context.tr.failedCreateWithdrawal),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final bool repaymentSaved = await ref
+        .read(debtControllerProvider.notifier)
+        .createRepayment(debtId: summary.debt.id, amount: amount);
+
+    if (!mounted) {
+      return;
+    }
+
+    if (!repaymentSaved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ref.read(debtControllerProvider).errorMessage ??
+                context.tr.failedCreateRepayment,
+          ),
+        ),
+      );
+      return;
+    }
+
+    await ref.read(walletControllerProvider.notifier).initialize();
+    await ref.read(transactionControllerProvider.notifier).initialize();
+    await widget.onCompleted();
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.tr.debtClosedSuccessfully)));
+  }
 
   @override
   Widget build(BuildContext context) {
+    final walletState = ref.watch(walletControllerProvider);
+    final List<WalletOverview> activeWallets = walletState.wallets
+        .where((WalletOverview item) => !item.wallet.isArchived)
+        .toList(growable: false);
+    final bool isIncomingSettlement = widget.summary.debt.isOwedToMe;
+
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: DashboardSurfaceCard(
@@ -1208,20 +1265,53 @@ class _DebtStateChangeSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              title,
+              context.tr.closeDebt,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              '${context.tr.currentRemainingAmount}: $amountLabel',
+              '${context.tr.currentRemainingAmount}: ${_formatMoney(context, widget.summary.remainingAmount, widget.summary.currency)}',
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(description, style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              context.tr.closeDebtConfirmation,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            if (walletState.isLoading && activeWallets.isEmpty)
+              const Center(child: CircularProgressIndicator())
+            else if (activeWallets.isEmpty)
+              TransactionEmptyState(
+                icon: Icons.account_balance_wallet_outlined,
+                title: context.tr.noTransactionWalletsTitle,
+                message: context.tr.debtRepaymentNoWalletsMessage,
+              )
+            else
+              DropdownButtonFormField<String>(
+                initialValue: _walletId,
+                decoration: InputDecoration(
+                  labelText: isIncomingSettlement
+                      ? context.tr.debtRepaymentDepositWalletLabel
+                      : context.tr.debtRepaymentWithdrawWalletLabel,
+                  prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+                ),
+                items: activeWallets
+                    .map(
+                      (WalletOverview item) => DropdownMenuItem<String>(
+                        value: item.wallet.id,
+                        child: Text(item.wallet.name),
+                      ),
+                    )
+                    .toList(growable: false),
+                onChanged: (String? value) {
+                  setState(() => _walletId = value);
+                },
+              ),
             const SizedBox(height: AppSpacing.md),
             Row(
               children: <Widget>[
@@ -1234,8 +1324,14 @@ class _DebtStateChangeSheet extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: PwButton.primary(
-                    label: primaryLabel,
-                    onPressed: onConfirm,
+                    label: context.tr.markAsSettled,
+                    onPressed:
+                        walletState.isLoading ||
+                            activeWallets.isEmpty ||
+                            _walletId == null
+                        ? null
+                        : _submit,
+                    isLoading: walletState.isLoading,
                   ),
                 ),
               ],
@@ -1315,14 +1411,83 @@ class _EditDebtSheetState extends ConsumerState<_EditDebtSheet> {
     }
   }
 
-  void _submit() {
+  Future<String?> _persistAttachments() async {
+    if (_attachments.isEmpty) {
+      return null;
+    }
+    final String warningMessage = context.tr.debtAttachmentSaveFailed;
+
+    final bool saved = await ref
+        .read(attachmentControllerProvider.notifier)
+        .createAttachments(
+          reference: AttachmentReference(
+            type: AttachmentReferenceType.debt,
+            entityId: widget.summary.debt.id,
+            label: context.tr.transactionReferenceLabel(
+              context.tr.debt,
+              widget.summary.contact.name,
+            ),
+          ),
+          drafts: _attachments
+              .map(
+                (TransactionAttachmentDraft item) => AttachmentDraft(
+                  kind: item.kind,
+                  fileName: item.fileName,
+                  localUri: item.localUri,
+                  mimeType: item.mimeType,
+                  byteSize: item.byteSize,
+                ),
+              )
+              .toList(growable: false),
+        );
+
+    return saved ? null : warningMessage;
+  }
+
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(
+
+    final ScaffoldMessengerState? messenger = ScaffoldMessenger.maybeOf(
       context,
-    ).showSnackBar(SnackBar(content: Text(context.tr.debtEditUnavailable)));
+    );
+    final NavigatorState navigator = Navigator.of(context);
+    final bool success = await ref
+        .read(debtControllerProvider.notifier)
+        .updateDebt(
+          debtId: widget.summary.debt.id,
+          amount: _amountController.text.trim(),
+          note: _noteController.text.trim().isEmpty
+              ? null
+              : _noteController.text.trim(),
+        );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (!success) {
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(
+            ref.read(debtControllerProvider).errorMessage ??
+                context.tr.debtEditFailed,
+          ),
+        ),
+      );
+      return;
+    }
+
+    final String? warning = await _persistAttachments();
+    if (!mounted) {
+      return;
+    }
+
+    navigator.pop();
+    messenger?.showSnackBar(
+      SnackBar(content: Text(warning ?? context.tr.debtUpdatedSuccessfully)),
+    );
   }
 
   @override

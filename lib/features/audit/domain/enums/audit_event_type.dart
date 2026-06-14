@@ -1,8 +1,11 @@
 enum AuditEventType {
   transactionCreated,
   debtCreated,
+  debtUpdated,
   debtRepaid,
   debtSettled,
+  debtClosed,
+  debtReopened,
   transferExecuted,
   walletCreated,
   walletRenamed,

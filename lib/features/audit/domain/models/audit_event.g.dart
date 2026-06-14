@@ -37,8 +37,11 @@ Map<String, dynamic> _$AuditEventToJson(_AuditEvent instance) =>
 const _$AuditEventTypeEnumMap = {
   AuditEventType.transactionCreated: 'transactionCreated',
   AuditEventType.debtCreated: 'debtCreated',
+  AuditEventType.debtUpdated: 'debtUpdated',
   AuditEventType.debtRepaid: 'debtRepaid',
   AuditEventType.debtSettled: 'debtSettled',
+  AuditEventType.debtClosed: 'debtClosed',
+  AuditEventType.debtReopened: 'debtReopened',
   AuditEventType.transferExecuted: 'transferExecuted',
   AuditEventType.walletCreated: 'walletCreated',
   AuditEventType.walletRenamed: 'walletRenamed',

@@ -172,6 +172,8 @@ class MockDebtRepository implements LocalDebtRepository {
     );
     final num totalRecovered = repaidAmount + settledAmount;
     final num resolvedRemainingAmount = originalAmount - totalRecovered;
+    final bool manuallyCompleted = record.debt.completedAt != null;
+    final bool isCompleted = manuallyCompleted || resolvedRemainingAmount <= 0;
     final List<SettlementSummary> settlements = <SettlementSummary>[];
     num remainingAfterSettlement = originalAmount - repaidAmount;
     DateTime latestActivityAt = record.debt.updatedAt;
@@ -203,20 +205,20 @@ class MockDebtRepository implements LocalDebtRepository {
     return DebtSummary(
       debt: record.debt.copyWith(
         updatedAt: latestActivityAt,
-        completedAt: resolvedRemainingAmount <= 0
-            ? record.settlements.lastOrNull?.createdAt ??
-                  record.repayments.lastOrNull?.createdAt ??
-                  record.debt.completedAt
+        completedAt: isCompleted
+            ? record.debt.completedAt ??
+                  record.settlements.lastOrNull?.createdAt ??
+                  record.repayments.lastOrNull?.createdAt
             : null,
       ),
       contact: contact,
       repayments: record.repayments,
       settlements: settlements,
       repaidAmount: totalRecovered.toString(),
-      remainingAmount: resolvedRemainingAmount
-          .clamp(0, double.infinity)
-          .toString(),
-      isCompleted: resolvedRemainingAmount <= 0,
+      remainingAmount: isCompleted
+          ? '0'
+          : resolvedRemainingAmount.clamp(0, double.infinity).toString(),
+      isCompleted: isCompleted,
       currency: record.debt.currency,
     );
   }
@@ -340,6 +342,153 @@ class MockDebtRepository implements LocalDebtRepository {
       type: AuditEventType.debtRepaid,
       entityId: repayment.id,
       relatedEntityType: 'debtRepayment',
+    );
+    return _toSummary(ownerUserId, updatedRecord);
+  }
+
+  @override
+  Future<DebtSummary> updateDebt({
+    required String ownerUserId,
+    required String debtId,
+    required String amount,
+    String? note,
+  }) async {
+    final DateTime now = DateTime.now().toUtc();
+    final List<MockDebtRecord> records = await _loadRecords(ownerUserId);
+    final int index = records.indexWhere(
+      (MockDebtRecord record) => record.debt.id == debtId,
+    );
+
+    if (index < 0) {
+      throw const DebtRepositoryException('Debt was not found.');
+    }
+
+    final MockDebtRecord currentRecord = records[index];
+    final MockDebtRecord updatedRecord = currentRecord.copyWith(
+      debt: currentRecord.debt.copyWith(
+        originalAmount: amount,
+        note: note,
+        updatedAt: now,
+      ),
+    );
+
+    final List<MockDebtRecord> updatedRecords = List<MockDebtRecord>.from(
+      records,
+    )..[index] = updatedRecord;
+    await _saveRecords(ownerUserId, updatedRecords);
+    await _syncQueueRepository.addOperation(
+      ownerUserId: ownerUserId,
+      entityId: debtId,
+      type: SyncOperationType.debtUpdate,
+      payload: <String, dynamic>{'amount': amount, 'note': note},
+    );
+    await _notificationPublisher.publish(
+      ownerUserId: ownerUserId,
+      type: 'debtUpdated',
+      title: 'Debt updated',
+      message: 'A debt record was updated.',
+      relatedEntityId: debtId,
+      relatedEntityType: 'debt',
+    );
+    await _auditLogger.log(
+      ownerUserId: ownerUserId,
+      type: AuditEventType.debtUpdated,
+      entityId: debtId,
+      relatedEntityType: 'debt',
+    );
+    return _toSummary(ownerUserId, updatedRecord);
+  }
+
+  @override
+  Future<DebtSummary> closeDebt({
+    required String ownerUserId,
+    required String debtId,
+  }) async {
+    final DateTime now = DateTime.now().toUtc();
+    final List<MockDebtRecord> records = await _loadRecords(ownerUserId);
+    final int index = records.indexWhere(
+      (MockDebtRecord record) => record.debt.id == debtId,
+    );
+
+    if (index < 0) {
+      throw const DebtRepositoryException('Debt was not found.');
+    }
+
+    final MockDebtRecord currentRecord = records[index];
+    final MockDebtRecord updatedRecord = currentRecord.copyWith(
+      debt: currentRecord.debt.copyWith(updatedAt: now, completedAt: now),
+    );
+
+    final List<MockDebtRecord> updatedRecords = List<MockDebtRecord>.from(
+      records,
+    )..[index] = updatedRecord;
+    await _saveRecords(ownerUserId, updatedRecords);
+    await _syncQueueRepository.addOperation(
+      ownerUserId: ownerUserId,
+      entityId: debtId,
+      type: SyncOperationType.debtClose,
+      payload: <String, dynamic>{'completedAt': now.toIso8601String()},
+    );
+    await _notificationPublisher.publish(
+      ownerUserId: ownerUserId,
+      type: 'debtClosed',
+      title: 'Debt closed',
+      message: 'A debt record was marked as settled.',
+      relatedEntityId: debtId,
+      relatedEntityType: 'debt',
+    );
+    await _auditLogger.log(
+      ownerUserId: ownerUserId,
+      type: AuditEventType.debtClosed,
+      entityId: debtId,
+      relatedEntityType: 'debt',
+    );
+    return _toSummary(ownerUserId, updatedRecord);
+  }
+
+  @override
+  Future<DebtSummary> reopenDebt({
+    required String ownerUserId,
+    required String debtId,
+  }) async {
+    final DateTime now = DateTime.now().toUtc();
+    final List<MockDebtRecord> records = await _loadRecords(ownerUserId);
+    final int index = records.indexWhere(
+      (MockDebtRecord record) => record.debt.id == debtId,
+    );
+
+    if (index < 0) {
+      throw const DebtRepositoryException('Debt was not found.');
+    }
+
+    final MockDebtRecord currentRecord = records[index];
+    final MockDebtRecord updatedRecord = currentRecord.copyWith(
+      debt: currentRecord.debt.copyWith(updatedAt: now, completedAt: null),
+    );
+
+    final List<MockDebtRecord> updatedRecords = List<MockDebtRecord>.from(
+      records,
+    )..[index] = updatedRecord;
+    await _saveRecords(ownerUserId, updatedRecords);
+    await _syncQueueRepository.addOperation(
+      ownerUserId: ownerUserId,
+      entityId: debtId,
+      type: SyncOperationType.debtReopen,
+      payload: const <String, dynamic>{'completedAt': null},
+    );
+    await _notificationPublisher.publish(
+      ownerUserId: ownerUserId,
+      type: 'debtReopened',
+      title: 'Debt reopened',
+      message: 'A closed debt record was reopened.',
+      relatedEntityId: debtId,
+      relatedEntityType: 'debt',
+    );
+    await _auditLogger.log(
+      ownerUserId: ownerUserId,
+      type: AuditEventType.debtReopened,
+      entityId: debtId,
+      relatedEntityType: 'debt',
     );
     return _toSummary(ownerUserId, updatedRecord);
   }

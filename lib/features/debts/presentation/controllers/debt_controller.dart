@@ -75,6 +75,60 @@ class DebtController extends StateNotifier<DebtState> {
     }
   }
 
+  Future<bool> updateDebt({
+    required String debtId,
+    required String amount,
+    String? note,
+  }) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final DebtSummary summary = await _debtRepository.updateDebt(
+        ownerUserId: _resolvedOwnerUserId,
+        debtId: debtId,
+        amount: amount,
+        note: note,
+      );
+      await initialize(selectedDebtId: summary.debt.id);
+      return true;
+    } catch (error) {
+      state = state.copyWith(isLoading: false, errorMessage: error.toString());
+      return false;
+    }
+  }
+
+  Future<bool> closeDebt({required String debtId}) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final DebtSummary summary = await _debtRepository.closeDebt(
+        ownerUserId: _resolvedOwnerUserId,
+        debtId: debtId,
+      );
+      await initialize(selectedDebtId: summary.debt.id);
+      return true;
+    } catch (error) {
+      state = state.copyWith(isLoading: false, errorMessage: error.toString());
+      return false;
+    }
+  }
+
+  Future<bool> reopenDebt({required String debtId}) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final DebtSummary summary = await _debtRepository.reopenDebt(
+        ownerUserId: _resolvedOwnerUserId,
+        debtId: debtId,
+      );
+      await initialize(selectedDebtId: summary.debt.id);
+      return true;
+    } catch (error) {
+      state = state.copyWith(isLoading: false, errorMessage: error.toString());
+      return false;
+    }
+  }
+
   Future<void> initialize({String? selectedDebtId}) async {
     state = state.copyWith(isLoading: true);
 

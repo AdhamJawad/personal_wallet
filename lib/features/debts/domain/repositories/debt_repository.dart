@@ -16,6 +16,20 @@ abstract interface class DebtRepository {
     required String amount,
     String? note,
   });
+  Future<DebtSummary> updateDebt({
+    required String ownerUserId,
+    required String debtId,
+    required String amount,
+    String? note,
+  });
+  Future<DebtSummary> closeDebt({
+    required String ownerUserId,
+    required String debtId,
+  });
+  Future<DebtSummary> reopenDebt({
+    required String ownerUserId,
+    required String debtId,
+  });
   Future<SettlementSummary> createSettlement({
     required String ownerUserId,
     required String debtId,

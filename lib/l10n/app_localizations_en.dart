@@ -1221,6 +1221,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Record a repayment amount and keep a supporting note or attachment if needed.';
 
   @override
+  String get debtRepaymentDepositWalletLabel => 'Deposit wallet';
+
+  @override
+  String get debtRepaymentWithdrawWalletLabel => 'Withdrawal wallet';
+
+  @override
+  String get debtRepaymentNoWalletsMessage =>
+      'Create a wallet before recording this debt repayment.';
+
+  @override
   String get saveDebtRecord => 'Save Debt';
 
   @override
@@ -1273,10 +1283,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get closeDebtConfirmation =>
-      'Are you sure you want to mark this debt as settled?';
+      'This will settle the full remaining balance and record the matching wallet transaction.';
 
   @override
-  String get markAsSettled => 'Mark as Settled';
+  String get markAsSettled => 'Settle Remaining Balance';
 
   @override
   String get reopenDebt => 'Reopen Debt';
@@ -1302,6 +1312,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get debtReopenUnavailable =>
       'Reopening debt records is not available yet.';
+
+  @override
+  String get debtUpdatedSuccessfully => 'Debt updated successfully.';
+
+  @override
+  String get debtEditFailed => 'Failed to update the debt.';
+
+  @override
+  String get debtClosedSuccessfully => 'Debt closed successfully.';
+
+  @override
+  String get debtCloseFailed => 'Failed to close the debt.';
+
+  @override
+  String get debtReopenedSuccessfully => 'Debt reopened successfully.';
+
+  @override
+  String get debtReopenFailed => 'Failed to reopen the debt.';
 
   @override
   String get previewAttachment => 'Preview';

@@ -6,6 +6,8 @@ import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_scaffold.dart';
 import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/feedback/app_feedback.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../providers/wallet_providers.dart';
 
@@ -52,13 +54,14 @@ class _EditWalletPageState extends ConsumerState<EditWalletPage> {
     }
 
     if (success) {
+      showAppSuccessSnackBar(context, context.tr.walletArchivedSuccessfully);
       context.pop();
       return;
     }
 
     final errorMessage = ref.read(walletControllerProvider).errorMessage;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(errorMessage ?? 'Failed to archive wallet.')),
+      SnackBar(content: Text(errorMessage ?? context.tr.failedArchiveWallet)),
     );
   }
 
@@ -76,13 +79,14 @@ class _EditWalletPageState extends ConsumerState<EditWalletPage> {
     }
 
     if (success) {
+      showAppSuccessSnackBar(context, context.tr.walletRenamedSuccessfully);
       context.pop();
       return;
     }
 
     final errorMessage = ref.read(walletControllerProvider).errorMessage;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(errorMessage ?? 'Failed to save wallet.')),
+      SnackBar(content: Text(errorMessage ?? context.tr.failedSaveWallet)),
     );
   }
 
@@ -92,7 +96,7 @@ class _EditWalletPageState extends ConsumerState<EditWalletPage> {
     final walletOverview = walletState.selectedWallet;
 
     return PwScaffold(
-      title: 'Edit Wallet',
+      title: context.tr.editWallet,
       body: walletState.isLoading && walletOverview == null
           ? const Center(child: CircularProgressIndicator())
           : Center(
@@ -109,13 +113,13 @@ class _EditWalletPageState extends ConsumerState<EditWalletPage> {
                         children: <Widget>[
                           PwTextField(
                             controller: _nameController,
-                            label: 'Wallet name',
+                            label: context.tr.walletNameLabel,
                             validator: (String? value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Wallet name is required.';
+                                return context.tr.walletNameRequired;
                               }
                               if (value.trim().length < 3) {
-                                return 'Wallet name must be at least 3 characters.';
+                                return context.tr.walletNameTooShort;
                               }
                               return null;
                             },
@@ -123,15 +127,15 @@ class _EditWalletPageState extends ConsumerState<EditWalletPage> {
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           PwButton.primary(
-                            label: 'Save changes',
+                            label: context.tr.saveChanges,
                             isLoading: walletState.isLoading,
                             onPressed: _save,
                           ),
                           const SizedBox(height: AppSpacing.md),
                           PwButton.secondary(
                             label: walletOverview?.wallet.isArchived == true
-                                ? 'Wallet archived'
-                                : 'Archive wallet',
+                                ? context.tr.walletArchivedLabel
+                                : context.tr.archiveWallet,
                             onPressed: walletOverview?.wallet.isArchived == true
                                 ? null
                                 : _archive,

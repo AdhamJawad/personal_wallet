@@ -350,6 +350,18 @@ abstract class AppLocalizations {
   /// **'Wallet created successfully'**
   String get walletCreatedSuccess;
 
+  /// No description provided for @walletRenamedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet renamed successfully.'**
+  String get walletRenamedSuccessfully;
+
+  /// No description provided for @walletArchivedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet archived successfully.'**
+  String get walletArchivedSuccessfully;
+
   /// No description provided for @walletCreateFailure.
   ///
   /// In en, this message translates to:
@@ -494,6 +506,36 @@ abstract class AppLocalizations {
   /// **'Clear Search'**
   String get clearSearch;
 
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Filters'**
+  String get clearFilters;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain;
+
+  /// No description provided for @walletsLoadFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your wallets right now.'**
+  String get walletsLoadFailedMessage;
+
+  /// No description provided for @dashboardWalletsLoadFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load the wallet preview right now.'**
+  String get dashboardWalletsLoadFailedMessage;
+
+  /// No description provided for @dashboardActivityLoadFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load recent activity right now.'**
+  String get dashboardActivityLoadFailedMessage;
+
   /// No description provided for @noActivityYet.
   ///
   /// In en, this message translates to:
@@ -577,6 +619,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The first financial activity for this wallet will appear here.'**
   String get noWalletActivityMessage;
+
+  /// No description provided for @noWalletActivityFilterResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity matches this filter'**
+  String get noWalletActivityFilterResultsTitle;
+
+  /// No description provided for @noWalletActivityFilterResultsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another activity filter to see more records.'**
+  String get noWalletActivityFilterResultsMessage;
 
   /// No description provided for @walletNotFound.
   ///
@@ -775,6 +829,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose another filter to view more debt records.'**
   String get noDebtFilterResultsMessage;
+
+  /// No description provided for @debtsLoadFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your debt records right now.'**
+  String get debtsLoadFailedMessage;
 
   /// No description provided for @outstandingDebts.
   ///
@@ -1340,6 +1400,12 @@ abstract class AppLocalizations {
   /// **'Reference, wallet, contact, or note'**
   String get transactionsSearchHint;
 
+  /// No description provided for @transactionsLoadFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your transactions right now.'**
+  String get transactionsLoadFailedMessage;
+
   /// No description provided for @transactionReferenceHint.
   ///
   /// In en, this message translates to:
@@ -1381,6 +1447,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No transactions match the current filters.'**
   String get noTransactionsForFilters;
+
+  /// No description provided for @noTransactionsSearchResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching transactions'**
+  String get noTransactionsSearchResultsTitle;
+
+  /// No description provided for @transactionsSearchResultsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another search term or clear the current search.'**
+  String get transactionsSearchResultsMessage;
+
+  /// No description provided for @noTransactionsFilterResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions match this view'**
+  String get noTransactionsFilterResultsTitle;
 
   /// No description provided for @transactionsNoResultsMessage.
   ///
@@ -2552,6 +2636,12 @@ abstract class AppLocalizations {
   /// **'Reopening debt records is not available yet.'**
   String get debtReopenUnavailable;
 
+  /// No description provided for @debtCreatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt created successfully.'**
+  String get debtCreatedSuccessfully;
+
   /// No description provided for @debtUpdatedSuccessfully.
   ///
   /// In en, this message translates to:
@@ -2563,6 +2653,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to update the debt.'**
   String get debtEditFailed;
+
+  /// No description provided for @debtPaymentRecordedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment recorded successfully.'**
+  String get debtPaymentRecordedSuccessfully;
 
   /// No description provided for @debtClosedSuccessfully.
   ///
@@ -2677,6 +2773,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can add receipts, images, or supporting files here.'**
   String get attachmentsEmptyMessage;
+
+  /// No description provided for @attachmentsLoadFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load attachments right now.'**
+  String get attachmentsLoadFailedMessage;
 
   /// No description provided for @attachmentsShareAction.
   ///
@@ -2936,6 +3038,12 @@ abstract class AppLocalizations {
   /// **'Failed to create contact.'**
   String get contactCreateFailed;
 
+  /// No description provided for @contactCreatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact created successfully.'**
+  String get contactCreatedSuccessfully;
+
   /// No description provided for @editContact.
   ///
   /// In en, this message translates to:
@@ -2953,6 +3061,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to save contact.'**
   String get contactSaveFailed;
+
+  /// No description provided for @contactUpdatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact updated successfully.'**
+  String get contactUpdatedSuccessfully;
+
+  /// No description provided for @contactsLoadFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your contacts right now.'**
+  String get contactsLoadFailedMessage;
 
   /// No description provided for @openContactProfile.
   ///
@@ -3098,6 +3218,12 @@ abstract class AppLocalizations {
   /// **'Failed to delete contact.'**
   String get contactDeleteFailed;
 
+  /// No description provided for @contactDeletedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact deleted successfully.'**
+  String get contactDeletedSuccessfully;
+
   /// No description provided for @contactsEmptyTitle.
   ///
   /// In en, this message translates to:
@@ -3121,6 +3247,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try another name, phone number, or email.'**
   String get noContactsSearchResultsMessage;
+
+  /// No description provided for @noContactsFilterResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts match this filter'**
+  String get noContactsFilterResultsTitle;
+
+  /// No description provided for @noContactsFilterResultsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another filter to see more contacts.'**
+  String get noContactsFilterResultsMessage;
 
   /// No description provided for @contactNeutralBalance.
   ///

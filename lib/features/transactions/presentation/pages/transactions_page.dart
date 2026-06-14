@@ -81,6 +81,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     super.dispose();
   }
 
+  Future<void> _retryFeed() async {
+    await Future.wait(<Future<void>>[
+      ref.read(transactionControllerProvider.notifier).initialize(),
+      ref.read(transferControllerProvider.notifier).initialize(),
+      ref.read(debtControllerProvider.notifier).initialize(),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final transactionState = ref.watch(transactionControllerProvider);
@@ -91,6 +99,12 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         (transactionState.isLoading && transactionState.transactions.isEmpty) ||
         (transferState.isLoading && transferState.transfers.isEmpty) ||
         (debtState.isLoading && debtState.debts.isEmpty);
+    final String? feedErrorMessage = _firstNonEmpty(<String?>[
+      transactionState.errorMessage,
+      transferState.errorMessage,
+      debtState.errorMessage,
+    ]);
+    final bool hasFeedError = feedErrorMessage != null;
 
     final Map<String, WalletOverview> walletLookup = <String, WalletOverview>{
       for (final WalletOverview wallet in walletState.wallets)
@@ -133,6 +147,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       context,
       visibleItems,
     );
+    final bool hasSearchQuery = _searchController.text.trim().isNotEmpty;
+    final bool hasActiveFilters =
+        _selectedCategory != _ActivityCategory.all ||
+        _dateRange != _DateRangeFilter.all ||
+        _activeFilterCount > 0;
 
     return PwScaffold(
       title: context.tr.transactions,
@@ -175,6 +194,15 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 ? const SliverToBoxAdapter(
                     child: _TransactionsTimelineSkeleton(),
                   )
+                : hasFeedError && allItems.isEmpty
+                ? SliverToBoxAdapter(
+                    child: DashboardEmptyState.error(
+                      title: context.tr.somethingWentWrong,
+                      message: context.tr.transactionsLoadFailedMessage,
+                      actionLabel: context.tr.tryAgain,
+                      onActionPressed: _retryFeed,
+                    ),
+                  )
                 : allItems.isEmpty
                 ? SliverToBoxAdapter(
                     child: DashboardEmptyState(
@@ -187,38 +215,51 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   )
                 : visibleItems.isEmpty
                 ? SliverToBoxAdapter(
-                    child: DashboardEmptyState(
-                      icon: Icons.search_off_rounded,
-                      title: context.tr.noTransactionsTitle,
-                      message: context.tr.transactionsNoResultsMessage,
-                      actionLabel: context.tr.clearSearch,
-                      onActionPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          _selectedCategory = _ActivityCategory.all;
-                          _dateRange = _DateRangeFilter.all;
-                          _selectedCurrencyCode = null;
-                          _selectedWalletName = null;
-                          _selectedContactName = null;
-                          _selectedStatus = null;
-                        });
-                      },
-                    ),
+                    child: hasSearchQuery
+                        ? DashboardEmptyState.search(
+                            title: context.tr.noTransactionsSearchResultsTitle,
+                            message:
+                                context.tr.transactionsSearchResultsMessage,
+                            actionLabel: context.tr.clearSearch,
+                            onActionPressed: () {
+                              _searchController.clear();
+                              setState(() {});
+                            },
+                            secondaryActionLabel: hasActiveFilters
+                                ? context.tr.clearFilters
+                                : null,
+                            onSecondaryActionPressed: hasActiveFilters
+                                ? _clearFilters
+                                : null,
+                          )
+                        : DashboardEmptyState.filter(
+                            title: context.tr.noTransactionsFilterResultsTitle,
+                            message: context.tr.noTransactionsForFilters,
+                            actionLabel: context.tr.clearFilters,
+                            onActionPressed: _clearFilters,
+                          ),
                   )
                 : SliverList(
-                    delegate: SliverChildBuilderDelegate((
-                      BuildContext context,
-                      int index,
-                    ) {
-                      final _ActivitySection section = sections[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                        child: _ActivityGroupSection(
-                          section: section,
-                          onTap: _showActivityDetails,
+                    delegate: SliverChildListDelegate.fixed(<Widget>[
+                      if (hasFeedError) ...<Widget>[
+                        _TransactionsStateBanner(
+                          icon: Icons.error_outline_rounded,
+                          message: context.tr.transactionsLoadFailedMessage,
+                          actionLabel: context.tr.tryAgain,
+                          onActionPressed: _retryFeed,
                         ),
-                      );
-                    }, childCount: sections.length),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                      ...sections.map((_ActivitySection section) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                          child: _ActivityGroupSection(
+                            section: section,
+                            onTap: _openActivity,
+                          ),
+                        );
+                      }),
+                    ]),
                   ),
           ),
         ],
@@ -241,6 +282,17 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       count += 1;
     }
     return count;
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _selectedCategory = _ActivityCategory.all;
+      _dateRange = _DateRangeFilter.all;
+      _selectedCurrencyCode = null;
+      _selectedWalletName = null;
+      _selectedContactName = null;
+      _selectedStatus = null;
+    });
   }
 
   Future<void> _showFilterSheet() async {
@@ -334,6 +386,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     }
   }
 
+  Future<void> _openActivity(_ActivityItem item) {
+    final String? detailRoute = item.detailRoute;
+    if (detailRoute != null) {
+      return context.push(detailRoute).then((_) {});
+    }
+    return _showActivityDetails(item);
+  }
+
   Future<void> _showActivityDetails(_ActivityItem item) {
     return showAppModalBottomSheet<void>(
       context: context,
@@ -341,6 +401,55 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       builder: (BuildContext context) {
         return _ActivityDetailsSheet(item: item);
       },
+    );
+  }
+}
+
+String? _firstNonEmpty(List<String?> values) {
+  for (final String? value in values) {
+    if (value != null && value.trim().isNotEmpty) {
+      return value;
+    }
+  }
+  return null;
+}
+
+class _TransactionsStateBanner extends StatelessWidget {
+  const _TransactionsStateBanner({
+    required this.icon,
+    required this.message,
+    required this.actionLabel,
+    required this.onActionPressed,
+  });
+
+  final IconData icon;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onActionPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+
+    return DashboardSurfaceCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(icon, color: colorScheme.error),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              message,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          TextButton(onPressed: onActionPressed, child: Text(actionLabel)),
+        ],
+      ),
     );
   }
 }
@@ -1655,6 +1764,7 @@ class _ActivityItem {
     required this.walletNames,
     required this.currencyCodes,
     required this.referenceLabel,
+    this.detailRoute,
     this.notePreview,
     this.contactName,
     this.status,
@@ -1681,6 +1791,7 @@ class _ActivityItem {
   final List<String> walletNames;
   final List<String> currencyCodes;
   final String? referenceLabel;
+  final String? detailRoute;
   final String? notePreview;
   final String? contactName;
   final _ActivityStatus? status;
@@ -1842,6 +1953,7 @@ _ActivityItem _ledgerToActivity(
     icon: icon,
     status: status,
     referenceLabel: transaction.reference.value,
+    detailRoute: AppRoutes.transactionDetailsLocation(transaction.id),
     notePreview: _trimmedText(transaction.note),
     walletNames: <String>[
       if (sourceWallet.isNotEmpty) sourceWallet,
@@ -1972,6 +2084,9 @@ _ActivityItem _transferToActivity(
         : Icons.swap_horizontal_circle_rounded,
     status: _ActivityStatus.completed,
     referenceLabel: transfer.transfer.reference.value,
+    detailRoute: AppRoutes.transactionDetailsLocation(
+      transfer.transfer.ledgerTransactionId,
+    ),
     notePreview: _trimmedText(transfer.transfer.note),
     contactName: transfer.counterpartyDisplayName,
     walletNames: <String>[sourceWallet, destinationWallet],
@@ -2054,6 +2169,7 @@ _ActivityItem _debtToActivity(BuildContext context, DebtSummary summary) {
     walletNames: const <String>[],
     currencyCodes: <String>[summary.currency.name.toUpperCase()],
     referenceLabel: summary.debt.id,
+    detailRoute: AppRoutes.debtDetailsLocation(summary.debt.id),
     attachmentReference: AttachmentReference(
       type: AttachmentReferenceType.debt,
       entityId: summary.debt.id,
@@ -2123,6 +2239,7 @@ _ActivityItem _repaymentToActivity(
     walletNames: const <String>[],
     currencyCodes: <String>[summary.currency.name.toUpperCase()],
     referenceLabel: repayment.id,
+    detailRoute: AppRoutes.debtDetailsLocation(summary.debt.id),
     attachmentReference: AttachmentReference(
       type: AttachmentReferenceType.debt,
       entityId: summary.debt.id,

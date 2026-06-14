@@ -9,6 +9,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_scaffold.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/feedback/app_feedback.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -19,7 +20,9 @@ import '../../../../shared/domain/enums/contact_entity_type.dart';
 import '../../domain/models/contact.dart';
 import '../../../debts/domain/models/debt_summary.dart';
 import '../../../debts/presentation/providers/debt_providers.dart';
+import '../../../dashboard/presentation/widgets/dashboard_breakpoints.dart';
 import '../../../dashboard/presentation/widgets/dashboard_empty_state.dart';
+import '../../../dashboard/presentation/widgets/dashboard_skeleton_block.dart';
 import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
 import '../../../transactions/presentation/widgets/transaction_attachment_picker.dart';
 import '../providers/contact_providers.dart';
@@ -105,7 +108,12 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
     final bool success = await ref
         .read(contactControllerProvider.notifier)
         .deleteContact(contactId: contact.id);
-    if (!mounted || success) {
+    if (!mounted) {
+      return;
+    }
+
+    if (success) {
+      showAppSuccessSnackBar(context, context.tr.contactDeletedSuccessfully);
       return;
     }
 
@@ -127,6 +135,12 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
     final _ContactsSummary summary = _ContactsSummary.fromContacts(
       contactState.contacts,
     );
+    final bool isInitialLoading =
+        contactState.isLoading && contactState.contacts.isEmpty;
+    final bool hasLoadError =
+        contactState.errorMessage != null && contactState.contacts.isEmpty;
+    final bool hasSearchQuery = _searchController.text.trim().isNotEmpty;
+    final bool hasActiveFilter = _selectedFilter != _ContactFilter.all;
 
     return PwScaffold(
       title: context.tr.contacts,
@@ -140,58 +154,318 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.translucent,
-        child: ListView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
-          children: <Widget>[
-            _ContactsSummaryCard(summary: summary),
-            const SizedBox(height: AppSpacing.md),
-            _ContactsSearchField(controller: _searchController),
-            const SizedBox(height: AppSpacing.md),
-            _ContactsFilterRow(
-              selectedFilter: _selectedFilter,
-              onSelected: (_ContactFilter value) {
-                setState(() => _selectedFilter = value);
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            if (contactState.contacts.isEmpty)
-              DashboardEmptyState(
-                icon: Icons.people_outline_rounded,
-                title: context.tr.contactsEmptyTitle,
-                message: context.tr.contactsEmptyMessage,
-                actionLabel: context.tr.addContact,
-                onActionPressed: () => _showContactSheet(),
-              )
-            else if (contacts.isEmpty)
-              DashboardEmptyState(
-                icon: Icons.search_off_rounded,
-                title: context.tr.noContactsSearchResultsTitle,
-                message: context.tr.noContactsSearchResultsMessage,
-                actionLabel: context.tr.clearSearch,
-                onActionPressed: () => _searchController.clear(),
-              )
-            else
-              ...contacts.map(
-                (Contact contact) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: _ContactListCard(
-                    contact: contact,
-                    position: _ContactBalancePosition.fromData(
-                      contact: contact,
-                      debts: debtState.debts,
-                      context: context,
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
+              constraints.biggest,
+            );
+            final double horizontalPadding = resolveDashboardHorizontalPadding(
+              breakpoint,
+            );
+            final int columns = usesTabletLayout(breakpoint) ? 2 : 1;
+
+            return SafeArea(
+              top: false,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: dashboardPageMaxWidth,
+                  ),
+                  child: ListView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      AppSpacing.md,
+                      horizontalPadding,
+                      AppSpacing.xxl,
                     ),
-                    onTap: () => context.push(
-                      AppRoutes.contactDetailsLocation(contact.id),
-                    ),
-                    onEdit: () => _showContactSheet(contact: contact),
-                    onDelete: () => _confirmDelete(contact),
+                    children: <Widget>[
+                      if (isInitialLoading)
+                        _ContactsLoadingState(columns: columns)
+                      else ...<Widget>[
+                        _ContactsSummaryCard(summary: summary),
+                        const SizedBox(height: AppSpacing.md),
+                        _ContactsSearchField(controller: _searchController),
+                        const SizedBox(height: AppSpacing.md),
+                        _ContactsFilterRow(
+                          selectedFilter: _selectedFilter,
+                          onSelected: (_ContactFilter value) {
+                            setState(() => _selectedFilter = value);
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        if (hasLoadError)
+                          DashboardEmptyState.error(
+                            title: context.tr.somethingWentWrong,
+                            message: context.tr.contactsLoadFailedMessage,
+                            actionLabel: context.tr.tryAgain,
+                            onActionPressed: () {
+                              ref
+                                  .read(contactControllerProvider.notifier)
+                                  .initialize();
+                            },
+                          )
+                        else if (contactState.contacts.isEmpty)
+                          DashboardEmptyState(
+                            icon: Icons.people_outline_rounded,
+                            title: context.tr.contactsEmptyTitle,
+                            message: context.tr.contactsEmptyMessage,
+                            actionLabel: context.tr.addContact,
+                            onActionPressed: () => _showContactSheet(),
+                          )
+                        else if (contacts.isEmpty && hasSearchQuery)
+                          DashboardEmptyState.search(
+                            title: context.tr.noContactsSearchResultsTitle,
+                            message: context.tr.noContactsSearchResultsMessage,
+                            actionLabel: context.tr.clearSearch,
+                            onActionPressed: () => _searchController.clear(),
+                            secondaryActionLabel: hasActiveFilter
+                                ? context.tr.clearFilters
+                                : null,
+                            onSecondaryActionPressed: hasActiveFilter
+                                ? () => setState(
+                                    () => _selectedFilter = _ContactFilter.all,
+                                  )
+                                : null,
+                          )
+                        else if (contacts.isEmpty && hasActiveFilter)
+                          DashboardEmptyState.filter(
+                            title: context.tr.noContactsFilterResultsTitle,
+                            message: context.tr.noContactsFilterResultsMessage,
+                            actionLabel: context.tr.clearFilters,
+                            onActionPressed: () {
+                              setState(
+                                () => _selectedFilter = _ContactFilter.all,
+                              );
+                            },
+                          )
+                        else
+                          _ContactsCardGrid(
+                            columns: columns,
+                            children: contacts
+                                .map(
+                                  (Contact contact) => _ContactListCard(
+                                    contact: contact,
+                                    position: _ContactBalancePosition.fromData(
+                                      contact: contact,
+                                      debts: debtState.debts,
+                                      context: context,
+                                    ),
+                                    onTap: () => context.push(
+                                      AppRoutes.contactDetailsLocation(
+                                        contact.id,
+                                      ),
+                                    ),
+                                    onEdit: () =>
+                                        _showContactSheet(contact: contact),
+                                    onDelete: () => _confirmDelete(contact),
+                                  ),
+                                )
+                                .toList(growable: false),
+                          ),
+                      ],
+                    ],
                   ),
                 ),
               ),
-          ],
+            );
+          },
         ),
+      ),
+    );
+  }
+}
+
+class _ContactsLoadingState extends StatelessWidget {
+  const _ContactsLoadingState({required this.columns});
+
+  final int columns;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        _ContactsSummarySkeleton(),
+        const SizedBox(height: AppSpacing.md),
+        _ContactsSearchSkeleton(),
+        const SizedBox(height: AppSpacing.md),
+        _ContactsFilterSkeleton(),
+        const SizedBox(height: AppSpacing.md),
+        _ContactsListSkeleton(columns: columns),
+      ],
+    );
+  }
+}
+
+class _ContactsSummarySkeleton extends StatelessWidget {
+  const _ContactsSummarySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DashboardSurfaceCard(
+      padding: EdgeInsets.all(AppSpacing.sm),
+      child: Row(
+        children: <Widget>[
+          Expanded(child: _ContactsMetricSkeleton()),
+          SizedBox(width: AppSpacing.sm),
+          Expanded(child: _ContactsMetricSkeleton()),
+          SizedBox(width: AppSpacing.sm),
+          Expanded(child: _ContactsMetricSkeleton()),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactsMetricSkeleton extends StatelessWidget {
+  const _ContactsMetricSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        DashboardSkeletonBlock(height: 12, width: 78),
+        SizedBox(height: 6),
+        DashboardSkeletonBlock(height: 20, width: 32),
+      ],
+    );
+  }
+}
+
+class _ContactsSearchSkeleton extends StatelessWidget {
+  const _ContactsSearchSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DashboardSurfaceCard(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: DashboardSkeletonBlock(height: 24, width: double.infinity),
+    );
+  }
+}
+
+class _ContactsFilterSkeleton extends StatelessWidget {
+  const _ContactsFilterSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: <Widget>[
+        Expanded(
+          child: DashboardSkeletonBlock(
+            height: 34,
+            width: 96,
+            radius: AppRadius.pill,
+          ),
+        ),
+        SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: DashboardSkeletonBlock(
+            height: 34,
+            width: 96,
+            radius: AppRadius.pill,
+          ),
+        ),
+        SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: DashboardSkeletonBlock(
+            height: 34,
+            width: 96,
+            radius: AppRadius.pill,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ContactsListSkeleton extends StatelessWidget {
+  const _ContactsListSkeleton({required this.columns});
+
+  final int columns;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ContactsCardGrid(
+      columns: columns,
+      children: const <Widget>[
+        _ContactCardSkeleton(),
+        _ContactCardSkeleton(),
+        _ContactCardSkeleton(),
+      ],
+    );
+  }
+}
+
+class _ContactsCardGrid extends StatelessWidget {
+  const _ContactsCardGrid({required this.columns, required this.children});
+
+  final int columns;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    if (columns <= 1) {
+      return Column(
+        children: children
+            .map(
+              (Widget child) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: child,
+              ),
+            )
+            .toList(growable: false),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double spacing = AppSpacing.sm;
+        final double itemWidth =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: children
+              .map((Widget child) => SizedBox(width: itemWidth, child: child))
+              .toList(growable: false),
+        );
+      },
+    );
+  }
+}
+
+class _ContactCardSkeleton extends StatelessWidget {
+  const _ContactCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DashboardSurfaceCard(
+      padding: EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: <Widget>[
+          DashboardSkeletonBlock(height: 48, width: 48, radius: 999),
+          SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                DashboardSkeletonBlock(height: 18, width: 132),
+                SizedBox(height: AppSpacing.xs),
+                DashboardSkeletonBlock(height: 14, width: 88),
+              ],
+            ),
+          ),
+          SizedBox(width: AppSpacing.md),
+          DashboardSkeletonBlock(height: 30, width: 68, radius: AppRadius.pill),
+        ],
       ),
     );
   }
@@ -626,7 +900,15 @@ class _ContactEditorSheetState extends ConsumerState<_ContactEditorSheet> {
       return;
     }
     if (success) {
+      final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+      final SnackBar successSnackBar = buildAppSuccessSnackBar(
+        context,
+        _isEditing
+            ? context.tr.contactUpdatedSuccessfully
+            : context.tr.contactCreatedSuccessfully,
+      );
       Navigator.of(context).pop();
+      messenger.showSnackBar(successSnackBar);
       return;
     }
 
@@ -736,25 +1018,39 @@ class _ContactEditorSheetState extends ConsumerState<_ContactEditorSheet> {
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: PwButton.secondary(
-                      label: context.tr.cancel,
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: PwButton.primary(
-                      label: _isEditing
-                          ? context.tr.saveChanges
-                          : context.tr.saveContact,
-                      isLoading: isLoading,
-                      onPressed: _submit,
-                    ),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  final Widget cancelButton = PwButton.secondary(
+                    label: context.tr.cancel,
+                    onPressed: () => Navigator.of(context).pop(),
+                  );
+                  final Widget submitButton = PwButton.primary(
+                    label: _isEditing
+                        ? context.tr.saveChanges
+                        : context.tr.saveContact,
+                    isLoading: isLoading,
+                    onPressed: _submit,
+                  );
+
+                  if (constraints.maxWidth < 360) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        submitButton,
+                        const SizedBox(height: AppSpacing.sm),
+                        cancelButton,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    children: <Widget>[
+                      Expanded(child: cancelButton),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: submitButton),
+                    ],
+                  );
+                },
               ),
             ],
           ),

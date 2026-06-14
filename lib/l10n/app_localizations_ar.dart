@@ -136,6 +136,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get walletCreatedSuccess => 'تم إنشاء المحفظة بنجاح';
 
   @override
+  String get walletRenamedSuccessfully => 'تمت إعادة تسمية المحفظة بنجاح.';
+
+  @override
+  String get walletArchivedSuccessfully => 'تمت أرشفة المحفظة بنجاح.';
+
+  @override
   String get walletCreateFailure => 'تعذر إنشاء المحفظة.';
 
   @override
@@ -210,6 +216,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get clearSearch => 'مسح البحث';
 
   @override
+  String get clearFilters => 'مسح الفلاتر';
+
+  @override
+  String get tryAgain => 'حاول مرة أخرى';
+
+  @override
+  String get walletsLoadFailedMessage => 'تعذر تحميل المحافظ الآن.';
+
+  @override
+  String get dashboardWalletsLoadFailedMessage =>
+      'تعذر تحميل معاينة المحافظ الآن.';
+
+  @override
+  String get dashboardActivityLoadFailedMessage =>
+      'تعذر تحميل النشاط الأخير الآن.';
+
+  @override
   String get noActivityYet => 'لا حركة بعد';
 
   @override
@@ -257,6 +280,14 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get noWalletActivityMessage =>
       'ستظهر أول عملية مالية لهذه المحفظة هنا.';
+
+  @override
+  String get noWalletActivityFilterResultsTitle =>
+      'لا توجد عمليات تطابق هذا الفلتر';
+
+  @override
+  String get noWalletActivityFilterResultsMessage =>
+      'جرّب فلتر نشاط آخر لعرض المزيد من السجلات.';
 
   @override
   String get walletNotFound => 'لم يتم العثور على المحفظة.';
@@ -360,6 +391,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get noDebtFilterResultsMessage =>
       'اختر فلترًا آخر لعرض المزيد من سجلات الديون.';
+
+  @override
+  String get debtsLoadFailedMessage => 'تعذر تحميل سجلات الديون الآن.';
 
   @override
   String get outstandingDebts => 'الديون القائمة';
@@ -652,6 +686,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transactionsSearchHint => 'ابحث عن عملية';
 
   @override
+  String get transactionsLoadFailedMessage => 'تعذر تحميل العمليات الآن.';
+
+  @override
   String get transactionReferenceHint => 'TX-2026-000001';
 
   @override
@@ -672,6 +709,16 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get noTransactionsForFilters =>
       'لا توجد عمليات تطابق عوامل التصفية الحالية.';
+
+  @override
+  String get noTransactionsSearchResultsTitle => 'لا توجد عمليات مطابقة';
+
+  @override
+  String get transactionsSearchResultsMessage =>
+      'جرّب عبارة بحث أخرى أو امسح البحث الحالي.';
+
+  @override
+  String get noTransactionsFilterResultsTitle => 'لا توجد عمليات في هذا العرض';
 
   @override
   String get transactionsNoResultsMessage =>
@@ -1301,10 +1348,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get debtReopenUnavailable => 'إعادة فتح سجلات الديون غير متاحة بعد.';
 
   @override
+  String get debtCreatedSuccessfully => 'تم إنشاء الدين بنجاح.';
+
+  @override
   String get debtUpdatedSuccessfully => 'تم تحديث الدين بنجاح.';
 
   @override
   String get debtEditFailed => 'تعذر تحديث الدين.';
+
+  @override
+  String get debtPaymentRecordedSuccessfully => 'تم تسجيل الدفعة بنجاح.';
 
   @override
   String get debtClosedSuccessfully => 'تم إغلاق الدين بنجاح.';
@@ -1369,6 +1422,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get attachmentsEmptyMessage =>
       'يمكنك إضافة إيصالات أو صور أو ملفات داعمة هنا.';
+
+  @override
+  String get attachmentsLoadFailedMessage => 'تعذر تحميل المرفقات الآن.';
 
   @override
   String get attachmentsShareAction => 'مشاركة';
@@ -1502,6 +1558,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contactCreateFailed => 'تعذر إنشاء جهة الاتصال.';
 
   @override
+  String get contactCreatedSuccessfully => 'تم إنشاء جهة الاتصال بنجاح.';
+
+  @override
   String get editContact => 'تعديل جهة الاتصال';
 
   @override
@@ -1509,6 +1568,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get contactSaveFailed => 'تعذر حفظ جهة الاتصال.';
+
+  @override
+  String get contactUpdatedSuccessfully => 'تم تحديث جهة الاتصال بنجاح.';
+
+  @override
+  String get contactsLoadFailedMessage => 'تعذر تحميل جهات الاتصال الآن.';
 
   @override
   String get openContactProfile => 'فتح ملف جهة الاتصال';
@@ -1584,6 +1649,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contactDeleteFailed => 'تعذر حذف جهة الاتصال.';
 
   @override
+  String get contactDeletedSuccessfully => 'تم حذف جهة الاتصال بنجاح.';
+
+  @override
   String get contactsEmptyTitle => 'لا توجد جهات اتصال بعد';
 
   @override
@@ -1596,6 +1664,14 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get noContactsSearchResultsMessage =>
       'جرّب اسمًا أو رقم هاتف أو بريدًا إلكترونيًا آخر.';
+
+  @override
+  String get noContactsFilterResultsTitle =>
+      'لا توجد جهات اتصال تطابق هذا الفلتر';
+
+  @override
+  String get noContactsFilterResultsMessage =>
+      'جرّب فلترًا آخر لعرض المزيد من جهات الاتصال.';
 
   @override
   String get contactNeutralBalance => 'لا يوجد رصيد';

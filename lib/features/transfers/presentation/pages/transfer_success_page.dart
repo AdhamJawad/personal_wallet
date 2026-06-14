@@ -18,62 +18,80 @@ class TransferSuccessPage extends ConsumerWidget {
     final transfer = ref
         .watch(transferControllerProvider)
         .lastCompletedTransfer;
+    final notifier = ref.read(transferControllerProvider.notifier);
 
-    if (transfer == null) {
-      return TransferPageShell(
-        title: 'Transfer Complete',
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Text('No completed transfer is available.'),
-            const SizedBox(height: AppSpacing.lg),
-            PwButton.primary(
-              label: 'Back to dashboard',
-              onPressed: () => context.go(AppRoutes.dashboardPath),
-            ),
-          ],
-        ),
-      );
+    void goToDashboard() {
+      notifier.clearCompletionState();
+      context.go(AppRoutes.dashboardPath);
     }
 
-    return TransferPageShell(
-      title: 'Transfer Complete',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text('Transfer recorded', style: context.titleLarge),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            transfer.transfer.reference.value,
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            '${AmountFormatter.format(transfer.transfer.amount)} ${transfer.transfer.currency.name.toUpperCase()} sent to ${transfer.counterpartyDisplayName}.',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(transfer.transfer.note ?? 'No note attached.'),
-          const SizedBox(height: AppSpacing.xl),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: PwButton.secondary(
-                  label: 'View ledger',
-                  onPressed: () => context.go(AppRoutes.transactionsPath),
-                ),
+    void goToTransactions() {
+      notifier.clearCompletionState();
+      context.go(AppRoutes.transactionsPath);
+    }
+
+    return PopScope<void>(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, void result) {
+        if (didPop) {
+          return;
+        }
+        goToDashboard();
+      },
+      child: transfer == null
+          ? TransferPageShell(
+              title: 'Transfer Complete',
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  const Text('No completed transfer is available.'),
+                  const SizedBox(height: AppSpacing.lg),
+                  PwButton.primary(
+                    label: 'Back to dashboard',
+                    onPressed: goToDashboard,
+                  ),
+                ],
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: PwButton.primary(
-                  label: 'Dashboard',
-                  onPressed: () => context.go(AppRoutes.dashboardPath),
-                ),
+            )
+          : TransferPageShell(
+              title: 'Transfer Complete',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text('Transfer recorded', style: context.titleLarge),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    transfer.transfer.reference.value,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    '${AmountFormatter.format(transfer.transfer.amount)} ${transfer.transfer.currency.name.toUpperCase()} sent to ${transfer.counterpartyDisplayName}.',
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(transfer.transfer.note ?? 'No note attached.'),
+                  const SizedBox(height: AppSpacing.xl),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: PwButton.secondary(
+                          label: 'View ledger',
+                          onPressed: goToTransactions,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: PwButton.primary(
+                          label: 'Dashboard',
+                          onPressed: goToDashboard,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
     );
   }
 }

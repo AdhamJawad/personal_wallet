@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/attachments/presentation/pages/attachment_picker_page.dart';
 import '../../features/attachments/presentation/pages/attachment_viewer_page.dart';
 import '../../features/auth/domain/enums/auth_status.dart';
 import '../../features/audit/presentation/pages/audit_history_page.dart';
@@ -14,14 +13,13 @@ import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/contacts/presentation/pages/contacts_page.dart';
 import '../../features/contacts/presentation/pages/contact_details_page.dart';
-import '../../features/contacts/presentation/pages/create_external_contact_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_placeholder_page.dart';
-import '../../features/debts/presentation/pages/create_debt_page.dart';
 import '../../features/debts/presentation/pages/create_debt_repayment_page.dart';
 import '../../features/debts/presentation/pages/debt_details_page.dart';
 import '../../features/debts/presentation/pages/debts_page.dart';
 import '../../features/notifications/presentation/pages/notification_center_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/profile/presentation/pages/security_page.dart';
 import '../../features/profile/presentation/pages/profile_account_page.dart';
 import '../../features/qr/presentation/pages/my_qr_page.dart';
 import '../../features/qr/presentation/pages/qr_scanner_page.dart';
@@ -36,7 +34,6 @@ import '../../features/transfers/presentation/pages/transfer_success_page.dart';
 import '../../features/transactions/presentation/pages/create_transfer_page.dart';
 import '../../features/transactions/presentation/pages/transaction_details_page.dart';
 import '../../features/transactions/presentation/pages/transactions_page.dart';
-import '../../features/wallets/presentation/pages/create_wallet_page.dart';
 import '../../features/wallets/presentation/pages/edit_wallet_page.dart';
 import '../../features/wallets/presentation/pages/wallet_details_page.dart';
 import '../../features/wallets/presentation/pages/wallets_page.dart';
@@ -162,6 +159,36 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
                 builder: (BuildContext context, GoRouterState state) {
                   return const DashboardPlaceholderPage();
                 },
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'transactions',
+                    name: AppRoutes.transactions,
+                    builder: (BuildContext context, GoRouterState state) {
+                      return const TransactionsPage();
+                    },
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: 'transfer',
+                        name: AppRoutes.transferCreate,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (BuildContext context, GoRouterState state) {
+                          return const CreateTransferPage();
+                        },
+                      ),
+                      GoRoute(
+                        path: ':transactionId',
+                        name: AppRoutes.transactionDetails,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (BuildContext context, GoRouterState state) {
+                          return TransactionDetailsPage(
+                            transactionId:
+                                state.pathParameters['transactionId']!,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
@@ -175,14 +202,6 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
                   return const WalletsPage();
                 },
                 routes: <RouteBase>[
-                  GoRoute(
-                    path: 'create',
-                    name: AppRoutes.walletCreate,
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (BuildContext context, GoRouterState state) {
-                      return const CreateWalletPage();
-                    },
-                  ),
                   GoRoute(
                     path: ':walletId',
                     name: AppRoutes.walletDetails,
@@ -219,17 +238,6 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
                   return const DebtsPage();
                 },
                 routes: <RouteBase>[
-                  GoRoute(
-                    path: 'create',
-                    name: AppRoutes.debtCreate,
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (BuildContext context, GoRouterState state) {
-                      return CreateDebtPage(
-                        initialContactId:
-                            state.uri.queryParameters['contactId'],
-                      );
-                    },
-                  ),
                   GoRoute(
                     path: ':debtId',
                     name: AppRoutes.debtDetails,
@@ -285,67 +293,43 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
                 builder: (BuildContext context, GoRouterState state) {
                   return const ProfilePage();
                 },
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'account',
+                    name: AppRoutes.profileAccount,
+                    builder: (BuildContext context, GoRouterState state) {
+                      return const ProfileAccountPage();
+                    },
+                  ),
+                  GoRoute(
+                    path: 'security',
+                    name: AppRoutes.security,
+                    builder: (BuildContext context, GoRouterState state) {
+                      return const SecurityPage();
+                    },
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: AppRoutes.contactsPath,
+                name: AppRoutes.contacts,
+                builder: (BuildContext context, GoRouterState state) {
+                  return const ContactsPage();
+                },
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: ':contactId',
+                    name: AppRoutes.contactDetails,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (BuildContext context, GoRouterState state) {
+                      return ContactDetailsPage(
+                        contactId: state.pathParameters['contactId']!,
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
-          ),
-        ],
-      ),
-      GoRoute(
-        path: AppRoutes.profileAccountPath,
-        name: AppRoutes.profileAccount,
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (BuildContext context, GoRouterState state) {
-          return const ProfileAccountPage();
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.transactionsPath,
-        name: AppRoutes.transactions,
-        builder: (BuildContext context, GoRouterState state) {
-          return const TransactionsPage();
-        },
-        routes: <RouteBase>[
-          GoRoute(
-            path: 'transfer',
-            name: AppRoutes.transferCreate,
-            builder: (BuildContext context, GoRouterState state) {
-              return const CreateTransferPage();
-            },
-          ),
-          GoRoute(
-            path: ':transactionId',
-            name: AppRoutes.transactionDetails,
-            builder: (BuildContext context, GoRouterState state) {
-              return TransactionDetailsPage(
-                transactionId: state.pathParameters['transactionId']!,
-              );
-            },
-          ),
-        ],
-      ),
-      GoRoute(
-        path: AppRoutes.contactsPath,
-        name: AppRoutes.contacts,
-        builder: (BuildContext context, GoRouterState state) {
-          return const ContactsPage();
-        },
-        routes: <RouteBase>[
-          GoRoute(
-            path: 'create',
-            name: AppRoutes.contactCreate,
-            builder: (BuildContext context, GoRouterState state) {
-              return const CreateExternalContactPage();
-            },
-          ),
-          GoRoute(
-            path: ':contactId',
-            name: AppRoutes.contactDetails,
-            parentNavigatorKey: _rootNavigatorKey,
-            builder: (BuildContext context, GoRouterState state) {
-              return ContactDetailsPage(
-                contactId: state.pathParameters['contactId']!,
-              );
-            },
           ),
         ],
       ),
@@ -424,18 +408,6 @@ final appRouterProvider = Provider<GoRouter>((Ref ref) {
         name: AppRoutes.attachmentViewer,
         builder: (BuildContext context, GoRouterState state) {
           return AttachmentViewerPage(
-            entityType:
-                state.uri.queryParameters['entityType'] ?? 'transaction',
-            entityId: state.uri.queryParameters['entityId'] ?? '',
-            label: state.uri.queryParameters['label'],
-          );
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.attachmentPickerPath,
-        name: AppRoutes.attachmentPicker,
-        builder: (BuildContext context, GoRouterState state) {
-          return AttachmentPickerPage(
             entityType:
                 state.uri.queryParameters['entityType'] ?? 'transaction',
             entityId: state.uri.queryParameters['entityId'] ?? '',

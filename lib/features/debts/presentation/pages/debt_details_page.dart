@@ -8,6 +8,7 @@ import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/feedback/app_feedback.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -21,6 +22,8 @@ import '../../../../features/attachments/domain/models/attachment_draft.dart';
 import '../../../../features/attachments/domain/models/attachment_reference.dart';
 import '../../../../shared/domain/enums/currency.dart';
 import '../../../attachments/presentation/providers/attachment_providers.dart';
+import '../../../dashboard/presentation/widgets/dashboard_empty_state.dart';
+import '../../../dashboard/presentation/widgets/dashboard_skeleton_block.dart';
 import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
 import '../../../transactions/presentation/providers/transaction_providers.dart';
 import '../../../transactions/presentation/widgets/transaction_attachment_picker.dart';
@@ -79,6 +82,10 @@ class _DebtDetailsPageState extends ConsumerState<DebtDetailsPage> {
     await ref
         .read(attachmentControllerProvider.notifier)
         .loadReference(_attachmentReference);
+  }
+
+  Future<void> _retryLoadData() async {
+    await _loadData();
   }
 
   Future<void> _scrollToTimeline() async {
@@ -181,72 +188,9 @@ class _DebtDetailsPageState extends ConsumerState<DebtDetailsPage> {
     return candidate;
   }
 
-  Future<void> _showAttachmentPreview(Attachment attachment) async {
-    await showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        final ThemeData theme = Theme.of(context);
-        final bool isImage = _isImageAttachment(attachment);
-
-        return Dialog(
-          insetPadding: const EdgeInsets.all(AppSpacing.lg),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Text(
-                          attachment.fileName,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  if (isImage)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      child: Image.file(
-                        File(attachment.localUri),
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => _AttachmentFallbackPreview(
-                          title: context.tr.attachmentPreviewUnavailable,
-                          subtitle: attachment.fileName,
-                        ),
-                      ),
-                    )
-                  else
-                    _AttachmentFallbackPreview(
-                      title: context.tr.attachmentPreviewUnavailable,
-                      subtitle: attachment.fileName,
-                    ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    '${context.tr.createdLabel}: ${DateFormatter.short(attachment.createdAt)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+  void _openAttachmentViewer(DebtSummary summary) {
+    context.push(
+      '${AppRoutes.attachmentViewerPath}?entityType=debt&entityId=${Uri.encodeComponent(summary.debt.id)}&label=${Uri.encodeComponent(summary.contact.name)}',
     );
   }
 
@@ -305,9 +249,37 @@ class _DebtDetailsPageState extends ConsumerState<DebtDetailsPage> {
           ),
         ),
         child: debtState.isLoading && summary == null
-            ? const Center(child: CircularProgressIndicator())
+            ? const _DebtDetailsSkeleton()
+            : debtState.errorMessage != null && summary == null
+            ? Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: DashboardEmptyState.error(
+                    title: context.tr.somethingWentWrong,
+                    message: context.tr.debtsLoadFailedMessage,
+                    actionLabel: context.tr.tryAgain,
+                    onActionPressed: _retryLoadData,
+                    secondaryActionLabel: context.tr.back,
+                    onSecondaryActionPressed: () =>
+                        context.go(AppRoutes.debtsPath),
+                  ),
+                ),
+              )
             : summary == null
-            ? Center(child: Text(context.tr.debtNotFound))
+            ? Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: DashboardEmptyState.notFound(
+                    title: context.tr.debtNotFound,
+                    message: context.tr.debtNotFound,
+                    actionLabel: context.tr.tryAgain,
+                    onActionPressed: _retryLoadData,
+                    secondaryActionLabel: context.tr.back,
+                    onSecondaryActionPressed: () =>
+                        context.go(AppRoutes.debtsPath),
+                  ),
+                ),
+              )
             : RefreshIndicator(
                 onRefresh: _loadData,
                 child: Center(
@@ -346,16 +318,30 @@ class _DebtDetailsPageState extends ConsumerState<DebtDetailsPage> {
                             isAttachmentReferenceActive)
                           const Padding(
                             padding: EdgeInsets.only(top: AppSpacing.md),
-                            child: Center(child: CircularProgressIndicator()),
+                            child: _DebtAttachmentsLoadingCard(),
+                          )
+                        else if (attachmentState.errorMessage != null &&
+                            isAttachmentReferenceActive &&
+                            attachments.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.md),
+                            child: DashboardEmptyState.error(
+                              title: context.tr.somethingWentWrong,
+                              message: context.tr.attachmentsLoadFailedMessage,
+                              actionLabel: context.tr.tryAgain,
+                              onActionPressed: () {
+                                ref
+                                    .read(attachmentControllerProvider.notifier)
+                                    .loadReference(_attachmentReference);
+                              },
+                            ),
                           )
                         else if (attachments.isNotEmpty) ...<Widget>[
                           const SizedBox(height: AppSpacing.md),
                           _DebtAttachmentsCard(
                             attachments: attachments,
-                            onPreview: _showAttachmentPreview,
-                            onOpen: () => context.push(
-                              '${AppRoutes.attachmentViewerPath}?entityType=debt&entityId=${Uri.encodeComponent(summary.debt.id)}&label=${Uri.encodeComponent(summary.contact.name)}',
-                            ),
+                            onPreview: () => _openAttachmentViewer(summary),
+                            onOpen: () => _openAttachmentViewer(summary),
                             onDownload: _downloadAttachment,
                           ),
                         ],
@@ -369,6 +355,106 @@ class _DebtDetailsPageState extends ConsumerState<DebtDetailsPage> {
                   ),
                 ),
               ),
+      ),
+    );
+  }
+}
+
+class _DebtDetailsSkeleton extends StatelessWidget {
+  const _DebtDetailsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
+      children: const <Widget>[
+        DashboardSurfaceCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              DashboardSkeletonBlock(height: 22, width: 156),
+              SizedBox(height: AppSpacing.sm),
+              DashboardSkeletonBlock(height: 14, width: 118),
+              SizedBox(height: AppSpacing.sm),
+              DashboardSkeletonBlock(height: 30, width: 188),
+              SizedBox(height: AppSpacing.sm),
+              DashboardSkeletonBlock(height: 8, width: double.infinity),
+            ],
+          ),
+        ),
+        SizedBox(height: AppSpacing.md),
+        DashboardSurfaceCard(
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: DashboardSkeletonBlock(
+                  height: 38,
+                  width: 88,
+                  radius: AppRadius.pill,
+                ),
+              ),
+              SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: DashboardSkeletonBlock(
+                  height: 38,
+                  width: 88,
+                  radius: AppRadius.pill,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: AppSpacing.md),
+        DashboardSurfaceCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              DashboardSkeletonBlock(height: 18, width: 132),
+              SizedBox(height: AppSpacing.sm),
+              DashboardSkeletonBlock(height: 14, width: double.infinity),
+              SizedBox(height: AppSpacing.xs),
+              DashboardSkeletonBlock(height: 14, width: double.infinity),
+              SizedBox(height: AppSpacing.xs),
+              DashboardSkeletonBlock(height: 14, width: 220),
+            ],
+          ),
+        ),
+        SizedBox(height: AppSpacing.md),
+        _DebtAttachmentsLoadingCard(),
+        SizedBox(height: AppSpacing.md),
+        DashboardSurfaceCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              DashboardSkeletonBlock(height: 18, width: 128),
+              SizedBox(height: AppSpacing.sm),
+              DashboardSkeletonBlock(height: 72, width: double.infinity),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DebtAttachmentsLoadingCard extends StatelessWidget {
+  const _DebtAttachmentsLoadingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DashboardSurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          DashboardSkeletonBlock(height: 18, width: 132),
+          SizedBox(height: AppSpacing.sm),
+          DashboardSkeletonBlock(height: 56, width: double.infinity),
+        ],
       ),
     );
   }
@@ -655,7 +741,7 @@ class _DebtAttachmentsCard extends StatelessWidget {
   });
 
   final List<Attachment> attachments;
-  final ValueChanged<Attachment> onPreview;
+  final VoidCallback onPreview;
   final VoidCallback onOpen;
   final ValueChanged<Attachment> onDownload;
 
@@ -690,7 +776,7 @@ class _DebtAttachmentsCard extends StatelessWidget {
                 .map(
                   (Attachment attachment) => _DebtAttachmentCard(
                     attachment: attachment,
-                    onPreview: () => onPreview(attachment),
+                    onPreview: onPreview,
                     onOpen: onOpen,
                     onDownload: () => onDownload(attachment),
                   ),
@@ -1111,41 +1197,6 @@ class _AttachmentThumbnailFallback extends StatelessWidget {
   }
 }
 
-class _AttachmentFallbackPreview extends StatelessWidget {
-  const _AttachmentFallbackPreview({
-    required this.title,
-    required this.subtitle,
-  });
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Column(
-        children: <Widget>[
-          const Icon(Icons.insert_drive_file_outlined, size: 42),
-          const SizedBox(height: AppSpacing.sm),
-          Text(title, style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _CloseDebtSettlementSheet extends ConsumerStatefulWidget {
   const _CloseDebtSettlementSheet({
     required this.summary,
@@ -1243,9 +1294,9 @@ class _CloseDebtSettlementSheetState
     }
 
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(context.tr.debtClosedSuccessfully)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      buildAppSuccessSnackBar(context, context.tr.debtClosedSuccessfully),
+    );
   }
 
   @override
@@ -1485,8 +1536,12 @@ class _EditDebtSheetState extends ConsumerState<_EditDebtSheet> {
     }
 
     navigator.pop();
+    if (warning != null) {
+      messenger?.showSnackBar(SnackBar(content: Text(warning)));
+      return;
+    }
     messenger?.showSnackBar(
-      SnackBar(content: Text(warning ?? context.tr.debtUpdatedSuccessfully)),
+      buildAppSuccessSnackBar(context, context.tr.debtUpdatedSuccessfully),
     );
   }
 

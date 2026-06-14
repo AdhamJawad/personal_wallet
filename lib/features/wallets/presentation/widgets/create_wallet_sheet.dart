@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
+import '../../../../core/feedback/app_feedback.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -85,10 +86,13 @@ class _CreateWalletSheetState extends ConsumerState<_CreateWalletSheet> {
     }
 
     if (success) {
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(
+      final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+      final SnackBar successSnackBar = buildAppSuccessSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.tr.walletCreatedSuccess)));
+        context.tr.walletCreatedSuccess,
+      );
+      Navigator.of(context).pop();
+      messenger.showSnackBar(successSnackBar);
       return;
     }
 

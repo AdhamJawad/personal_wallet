@@ -7,20 +7,17 @@ sealed class AppRoutes {
   static const otpVerification = 'otpVerification';
   static const forgotPassword = 'forgotPassword';
   static const wallets = 'wallets';
-  static const walletCreate = 'walletCreate';
   static const walletDetails = 'walletDetails';
   static const walletEdit = 'walletEdit';
   static const transactions = 'transactions';
   static const transferCreate = 'transferCreate';
   static const transactionDetails = 'transactionDetails';
   static const debts = 'debts';
-  static const debtCreate = 'debtCreate';
   static const debtDetails = 'debtDetails';
   static const debtRepayment = 'debtRepayment';
   static const debtSettlement = 'debtSettlement';
   static const debtSettlementSuccess = 'debtSettlementSuccess';
   static const contacts = 'contacts';
-  static const contactCreate = 'contactCreate';
   static const contactDetails = 'contactDetails';
   static const qr = 'qr';
   static const qrScanner = 'qrScanner';
@@ -32,9 +29,9 @@ sealed class AppRoutes {
   static const notificationCenter = 'notificationCenter';
   static const auditHistory = 'auditHistory';
   static const attachmentViewer = 'attachmentViewer';
-  static const attachmentPicker = 'attachmentPicker';
   static const profile = 'profile';
   static const profileAccount = 'profileAccount';
+  static const security = 'security';
 
   static const dashboardPath = '/';
   static const authPath = '/auth';
@@ -44,13 +41,10 @@ sealed class AppRoutes {
   static const otpVerificationPath = '/auth/otp';
   static const forgotPasswordPath = '/auth/forgot-password';
   static const walletsPath = '/wallets';
-  static const walletCreatePath = '/wallets/create';
   static const transactionsPath = '/transactions';
   static const transferCreatePath = '/transactions/transfer';
   static const debtsPath = '/debts';
-  static const debtCreatePath = '/debts/create';
   static const contactsPath = '/contacts';
-  static const contactCreatePath = '/contacts/create';
   static const qrPath = '/qr';
   static const qrScannerPath = '/qr/scan';
   static const qrPreviewPath = '/qr/preview';
@@ -61,9 +55,9 @@ sealed class AppRoutes {
   static const notificationCenterPath = '/notifications';
   static const auditHistoryPath = '/developer/audit';
   static const attachmentViewerPath = '/attachments/viewer';
-  static const attachmentPickerPath = '/attachments/picker';
   static const profilePath = '/profile';
   static const profileAccountPath = '/profile/account';
+  static const securityPath = '/profile/security';
 
   static String walletDetailsLocation(String walletId) => '/wallets/$walletId';
   static String walletEditLocation(String walletId) =>

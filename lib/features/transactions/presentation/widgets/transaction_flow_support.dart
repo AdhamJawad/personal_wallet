@@ -5,6 +5,7 @@ import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../dashboard/presentation/widgets/dashboard_empty_state.dart';
 
 class TransactionFlowLayout extends StatelessWidget {
   const TransactionFlowLayout({
@@ -268,41 +269,11 @@ class TransactionEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: colorScheme.surface.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.outlineSoft.withValues(alpha: 0.8)),
-      ),
-      child: Column(
-        children: <Widget>[
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: colorScheme.primary),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          if (action != null) ...<Widget>[
-            const SizedBox(height: AppSpacing.lg),
-            action!,
-          ],
-        ],
-      ),
+    return DashboardEmptyState(
+      icon: icon,
+      title: title,
+      message: message,
+      actions: action,
     );
   }
 }

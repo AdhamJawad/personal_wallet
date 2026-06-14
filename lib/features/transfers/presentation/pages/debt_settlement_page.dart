@@ -99,7 +99,9 @@ class _DebtSettlementPageState extends ConsumerState<DebtSettlementPage> {
       return;
     }
 
-    context.go(AppRoutes.debtSettlementSuccessLocation(summary.debt.id));
+    context.pushReplacement(
+      AppRoutes.debtSettlementSuccessLocation(summary.debt.id),
+    );
   }
 
   @override

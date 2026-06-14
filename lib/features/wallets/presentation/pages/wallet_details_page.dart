@@ -56,6 +56,7 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
       walletTransactions,
       _filter,
     );
+    final bool hasActiveFilter = _filter != _WalletActivityFilter.all;
 
     return Scaffold(
       appBar: AppBar(
@@ -85,14 +86,11 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
       body: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
-            constraints.maxWidth,
+            constraints.biggest,
           );
-          final double horizontalPadding = switch (breakpoint) {
-            DashboardBreakpoint.smallPhone => AppSpacing.lg,
-            DashboardBreakpoint.phone => AppSpacing.xl,
-            DashboardBreakpoint.tablet => AppSpacing.xxl,
-            DashboardBreakpoint.largeTablet => 40,
-          };
+          final double horizontalPadding = resolveDashboardHorizontalPadding(
+            breakpoint,
+          );
 
           if (walletState.isLoading && walletOverview == null) {
             return SafeArea(
@@ -113,8 +111,7 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
                   horizontalPadding,
                   AppSpacing.xxl,
                 ),
-                child: DashboardEmptyState(
-                  icon: Icons.account_balance_wallet_outlined,
+                child: DashboardEmptyState.notFound(
                   title: context.tr.walletDetails,
                   message: context.tr.walletNotFound,
                 ),
@@ -127,7 +124,9 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
             child: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1120),
+                constraints: const BoxConstraints(
+                  maxWidth: dashboardPageMaxWidth,
+                ),
                 child: ListView(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -149,7 +148,10 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
                         walletId: walletOverview.wallet.id,
                         walletName: walletOverview.wallet.name,
                       ),
-                      onTransfer: () => showCreateTransferSheet(context),
+                      onTransfer: () => showCreateTransferSheet(
+                        context,
+                        initialSourceWalletId: walletOverview.wallet.id,
+                      ),
                       onExchange: () => showWalletExchangeSheet(
                         context,
                         walletId: walletOverview.wallet.id,
@@ -167,11 +169,22 @@ class _WalletDetailsPageState extends ConsumerState<WalletDetailsPage> {
                     if (transactionState.isLoading &&
                         walletTransactions.isEmpty)
                       const _WalletActivitySkeletonList()
-                    else if (filteredTransactions.isEmpty)
+                    else if (filteredTransactions.isEmpty &&
+                        walletTransactions.isEmpty)
                       DashboardEmptyState(
                         icon: Icons.receipt_long_outlined,
                         title: context.tr.noWalletActivityTitle,
                         message: context.tr.noWalletActivityMessage,
+                      )
+                    else if (filteredTransactions.isEmpty && hasActiveFilter)
+                      DashboardEmptyState.filter(
+                        title: context.tr.noWalletActivityFilterResultsTitle,
+                        message:
+                            context.tr.noWalletActivityFilterResultsMessage,
+                        actionLabel: context.tr.clearFilters,
+                        onActionPressed: () {
+                          setState(() => _filter = _WalletActivityFilter.all);
+                        },
                       )
                     else
                       Column(

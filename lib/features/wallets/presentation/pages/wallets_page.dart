@@ -77,6 +77,8 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
     final List<WalletOverview> visibleWallets = walletState.visibleWallets;
     final bool isInitialLoading =
         walletState.isLoading && walletState.wallets.isEmpty;
+    final bool hasLoadError =
+        walletState.errorMessage != null && walletState.wallets.isEmpty;
     final bool hasSearchQuery = walletState.searchQuery.trim().isNotEmpty;
     final _WalletSummary summary = _WalletSummary.fromWallets(
       walletState.wallets,
@@ -111,14 +113,11 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
         body: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
-              constraints.maxWidth,
+              constraints.biggest,
             );
-            final double horizontalPadding = switch (breakpoint) {
-              DashboardBreakpoint.smallPhone => AppSpacing.lg,
-              DashboardBreakpoint.phone => AppSpacing.xl,
-              DashboardBreakpoint.tablet => AppSpacing.xxl,
-              DashboardBreakpoint.largeTablet => 40,
-            };
+            final double horizontalPadding = resolveDashboardHorizontalPadding(
+              breakpoint,
+            );
             final int columns = switch (breakpoint) {
               DashboardBreakpoint.smallPhone => 1,
               DashboardBreakpoint.phone => 1,
@@ -131,7 +130,9 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
               child: Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1120),
+                  constraints: const BoxConstraints(
+                    maxWidth: dashboardPageMaxWidth,
+                  ),
                   child: ListView(
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
@@ -163,6 +164,17 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
                       const SizedBox(height: AppSpacing.md),
                       if (isInitialLoading)
                         _WalletListSkeleton(columns: columns)
+                      else if (hasLoadError)
+                        DashboardEmptyState.error(
+                          title: context.tr.somethingWentWrong,
+                          message: context.tr.walletsLoadFailedMessage,
+                          actionLabel: context.tr.tryAgain,
+                          onActionPressed: () {
+                            ref
+                                .read(walletControllerProvider.notifier)
+                                .initialize();
+                          },
+                        )
                       else if (visibleWallets.isEmpty &&
                           walletState.wallets.isEmpty)
                         DashboardEmptyState(
@@ -173,8 +185,7 @@ class _WalletsPageState extends ConsumerState<WalletsPage>
                           onActionPressed: () => showCreateWalletSheet(context),
                         )
                       else if (visibleWallets.isEmpty && hasSearchQuery)
-                        DashboardEmptyState(
-                          icon: Icons.search_off_rounded,
+                        DashboardEmptyState.search(
                           title: context.tr.noWalletSearchResultsTitle,
                           message: context.tr.noWalletSearchResultsMessage,
                           actionLabel: context.tr.clearSearch,

@@ -14,12 +14,19 @@ import '../providers/transaction_providers.dart';
 import '../widgets/transaction_flow_support.dart';
 import '../widgets/transaction_form_validators.dart';
 
-Future<void> showCreateTransferSheet(BuildContext context) {
+Future<void> showCreateTransferSheet(
+  BuildContext context, {
+  String? initialSourceWalletId,
+  String? initialDestinationWalletId,
+}) {
   return showAppModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     builder: (BuildContext context) {
-      return const _CreateTransferSheet();
+      return _CreateTransferSheet(
+        initialSourceWalletId: initialSourceWalletId,
+        initialDestinationWalletId: initialDestinationWalletId,
+      );
     },
   );
 }
@@ -28,12 +35,16 @@ class CreateTransferPage extends ConsumerStatefulWidget {
   const CreateTransferPage({
     this.embeddedInSheet = false,
     this.keyboardInset = 0,
+    this.initialSourceWalletId,
+    this.initialDestinationWalletId,
     this.onCloseRequested,
     super.key,
   });
 
   final bool embeddedInSheet;
   final double keyboardInset;
+  final String? initialSourceWalletId;
+  final String? initialDestinationWalletId;
   final VoidCallback? onCloseRequested;
 
   @override
@@ -56,6 +67,8 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
   void initState() {
     super.initState();
     _currency = ref.read(appPreferencesProvider).defaultCurrency;
+    _sourceWalletId = widget.initialSourceWalletId;
+    _destinationWalletId = widget.initialDestinationWalletId;
     _amountFocusNode.addListener(
       () => _handleFocusChange(_amountFocusNode, _amountFieldKey),
     );
@@ -306,7 +319,13 @@ class _CreateTransferPageState extends ConsumerState<CreateTransferPage> {
 }
 
 class _CreateTransferSheet extends StatelessWidget {
-  const _CreateTransferSheet();
+  const _CreateTransferSheet({
+    this.initialSourceWalletId,
+    this.initialDestinationWalletId,
+  });
+
+  final String? initialSourceWalletId;
+  final String? initialDestinationWalletId;
 
   @override
   Widget build(BuildContext context) {
@@ -328,6 +347,8 @@ class _CreateTransferSheet extends StatelessWidget {
           child: CreateTransferPage(
             embeddedInSheet: true,
             keyboardInset: keyboardInset,
+            initialSourceWalletId: initialSourceWalletId,
+            initialDestinationWalletId: initialDestinationWalletId,
             onCloseRequested: () => Navigator.of(context).pop(),
           ),
         ),

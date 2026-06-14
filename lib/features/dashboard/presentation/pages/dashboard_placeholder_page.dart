@@ -34,6 +34,18 @@ class DashboardPlaceholderPage extends ConsumerStatefulWidget {
 
 class _DashboardPlaceholderPageState
     extends ConsumerState<DashboardPlaceholderPage> {
+  Future<void> _retryWalletsSection() async {
+    await ref.read(walletControllerProvider.notifier).initialize();
+  }
+
+  Future<void> _retryActivitySection() async {
+    await Future.wait(<Future<void>>[
+      ref.read(transactionControllerProvider.notifier).initialize(),
+      ref.read(transferControllerProvider.notifier).initialize(),
+      ref.read(debtControllerProvider.notifier).initialize(),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
@@ -115,6 +127,12 @@ class _DashboardPlaceholderPageState
             (transferState.isLoading && transferState.transfers.isEmpty) ||
             (debtState.isLoading && debtState.debts.isEmpty)) &&
         visibleRecentActivities.isEmpty;
+    final String? walletSectionError = walletState.errorMessage;
+    final String? activitySectionError = _firstNonEmpty(<String?>[
+      transactionState.errorMessage,
+      transferState.errorMessage,
+      debtState.errorMessage,
+    ]);
     final String userName =
         session?.user.displayName ?? context.tr.userFallback;
     final String? profileImageUri = session?.user.profileImageUri;
@@ -124,14 +142,11 @@ class _DashboardPlaceholderPageState
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
-              constraints.maxWidth,
+              constraints.biggest,
             );
-            final double horizontalPadding = switch (breakpoint) {
-              DashboardBreakpoint.smallPhone => AppSpacing.lg,
-              DashboardBreakpoint.phone => AppSpacing.xl,
-              DashboardBreakpoint.tablet => AppSpacing.xxl,
-              DashboardBreakpoint.largeTablet => 40,
-            };
+            final double horizontalPadding = resolveDashboardHorizontalPadding(
+              breakpoint,
+            );
             final int walletColumns = switch (breakpoint) {
               DashboardBreakpoint.largeTablet => 3,
               DashboardBreakpoint.tablet => 2,
@@ -142,7 +157,9 @@ class _DashboardPlaceholderPageState
             return Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1120),
+                constraints: const BoxConstraints(
+                  maxWidth: dashboardPageMaxWidth,
+                ),
                 child: ListView(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -178,6 +195,8 @@ class _DashboardPlaceholderPageState
                       columns: walletColumns,
                       showBalances: true,
                       isLoading: isWalletsLoading,
+                      errorMessage: walletSectionError,
+                      onRetry: _retryWalletsSection,
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     DashboardSectionTitle(
@@ -187,10 +206,20 @@ class _DashboardPlaceholderPageState
                           context.push(AppRoutes.transactionsPath),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    DashboardActivityList(
-                      items: visibleRecentActivities,
-                      isLoading: isActivitiesLoading,
-                    ),
+                    if (activitySectionError != null &&
+                        !isActivitiesLoading &&
+                        visibleRecentActivities.isEmpty)
+                      DashboardEmptyState.error(
+                        title: context.tr.somethingWentWrong,
+                        message: context.tr.dashboardActivityLoadFailedMessage,
+                        actionLabel: context.tr.tryAgain,
+                        onActionPressed: _retryActivitySection,
+                      )
+                    else
+                      DashboardActivityList(
+                        items: visibleRecentActivities,
+                        isLoading: isActivitiesLoading,
+                      ),
                   ],
                 ),
               ),
@@ -219,12 +248,16 @@ class _WalletsPreviewSection extends StatelessWidget {
     required this.columns,
     required this.showBalances,
     required this.isLoading,
+    required this.onRetry,
+    this.errorMessage,
   });
 
   final List<WalletOverview> wallets;
   final int columns;
   final bool showBalances;
   final bool isLoading;
+  final String? errorMessage;
+  final Future<void> Function() onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -273,6 +306,14 @@ class _WalletsPreviewSection extends StatelessWidget {
     }
 
     if (wallets.isEmpty) {
+      if (errorMessage != null) {
+        return DashboardEmptyState.error(
+          title: context.tr.somethingWentWrong,
+          message: context.tr.dashboardWalletsLoadFailedMessage,
+          actionLabel: context.tr.tryAgain,
+          onActionPressed: onRetry,
+        );
+      }
       return DashboardEmptyState(
         icon: Icons.account_balance_wallet_outlined,
         title: context.tr.noWalletsTitle,
@@ -326,6 +367,15 @@ class _WalletsPreviewSection extends StatelessWidget {
       },
     );
   }
+}
+
+String? _firstNonEmpty(List<String?> values) {
+  for (final String? value in values) {
+    if (value != null && value.trim().isNotEmpty) {
+      return value;
+    }
+  }
+  return null;
 }
 
 class _DashboardHeaderSkeleton extends StatelessWidget {

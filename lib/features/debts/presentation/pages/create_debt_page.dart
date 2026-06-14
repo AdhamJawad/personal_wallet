@@ -5,6 +5,7 @@ import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
 import '../../../../core/design_system/widgets/pw_scaffold.dart';
 import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/feedback/app_feedback.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../features/attachments/domain/enums/attachment_reference_type.dart';
@@ -171,6 +172,9 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
     } else {
       Navigator.of(context).pop();
     }
+    messenger.showSnackBar(
+      buildAppSuccessSnackBar(context, context.tr.debtCreatedSuccessfully),
+    );
     if (warning != null) {
       messenger.showSnackBar(SnackBar(content: Text(warning)));
     }

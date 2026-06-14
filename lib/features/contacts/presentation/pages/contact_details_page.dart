@@ -10,6 +10,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_scaffold.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/feedback/app_feedback.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -23,7 +24,9 @@ import '../../../attachments/domain/models/attachment.dart';
 import '../../../attachments/domain/models/attachment_reference.dart';
 import '../../../attachments/presentation/providers/attachment_providers.dart';
 import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../dashboard/presentation/widgets/dashboard_breakpoints.dart';
 import '../../../dashboard/presentation/widgets/dashboard_empty_state.dart';
+import '../../../dashboard/presentation/widgets/dashboard_skeleton_block.dart';
 import '../../../dashboard/presentation/widgets/dashboard_surface_card.dart';
 import '../../../debts/domain/models/debt_summary.dart';
 import '../../../debts/presentation/pages/create_debt_page.dart';
@@ -70,6 +73,10 @@ class _ContactDetailsPageState extends ConsumerState<ContactDetailsPage> {
           .read(attachmentControllerProvider.notifier)
           .loadReference(_attachmentReference),
     ]);
+  }
+
+  Future<void> _retryLoadData() async {
+    await _loadData();
   }
 
   void _showMessage(String message) {
@@ -212,10 +219,45 @@ class _ContactDetailsPageState extends ConsumerState<ContactDetailsPage> {
       orElse: () => null,
     );
 
+    final bool isInitialLoading =
+        contactState.isLoading && contactState.contacts.isEmpty;
+
+    if (isInitialLoading) {
+      return PwScaffold(
+        title: context.tr.contactDetailsTitle,
+        body: const _ContactDetailsSkeleton(),
+      );
+    }
+
+    if (contactState.errorMessage != null && contact == null) {
+      return PwScaffold(
+        title: context.tr.contactDetailsTitle,
+        body: Center(
+          child: DashboardEmptyState.error(
+            title: context.tr.somethingWentWrong,
+            message: context.tr.contactsLoadFailedMessage,
+            actionLabel: context.tr.tryAgain,
+            onActionPressed: _retryLoadData,
+            secondaryActionLabel: context.tr.back,
+            onSecondaryActionPressed: () => context.go(AppRoutes.contactsPath),
+          ),
+        ),
+      );
+    }
+
     if (contact == null) {
       return PwScaffold(
-        title: context.tr.contacts,
-        body: Center(child: Text(context.tr.contactNotFound)),
+        title: context.tr.contactDetailsTitle,
+        body: Center(
+          child: DashboardEmptyState.notFound(
+            title: context.tr.contactNotFound,
+            message: context.tr.contactNotFound,
+            actionLabel: context.tr.tryAgain,
+            onActionPressed: _retryLoadData,
+            secondaryActionLabel: context.tr.back,
+            onSecondaryActionPressed: () => context.go(AppRoutes.contactsPath),
+          ),
+        ),
       );
     }
 
@@ -243,64 +285,212 @@ class _ContactDetailsPageState extends ConsumerState<ContactDetailsPage> {
       attachments: attachments,
     );
     final String? phoneNumber = _normalizedText(contact.phoneNumber);
+    final Widget openDebtsSection = openDebts.isEmpty
+        ? DashboardEmptyState(
+            icon: Icons.receipt_long_outlined,
+            title: context.tr.contactOpenDebtsEmptyTitle,
+            message: context.tr.contactOpenDebtsEmptyMessage,
+          )
+        : _ContactOpenDebtsSection(debts: openDebts);
+    final Widget activitySection = timelineEvents.isEmpty
+        ? DashboardEmptyState(
+            icon: Icons.timeline_rounded,
+            title: context.tr.contactActivityEmptyTitle,
+            message: context.tr.contactActivityEmptyMessage,
+          )
+        : _ContactTimelineSection(
+            events: timelineEvents,
+            onViewAll: () =>
+                _showContactTimelineSheet(context, events: timelineEvents),
+          );
 
     return PwScaffold(
       title: context.tr.contactDetailsTitle,
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
-        children: <Widget>[
-          _ContactHeroCard(contact: contact, balanceSummary: balanceSummary),
-          const SizedBox(height: AppSpacing.md),
-          _ContactQuickActions(
-            hasPhone: phoneNumber != null,
-            onEdit: () => _showEditSheet(contact),
-            onCreateDebt: () => showCreateDebtSheet(
-              context,
-              initialContactId: contact.id,
-              lockContact: true,
+      body: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
+            constraints.biggest,
+          );
+          final double horizontalPadding = resolveDashboardHorizontalPadding(
+            breakpoint,
+          );
+          final bool useTabletLayout = usesTabletLayout(breakpoint);
+
+          return SafeArea(
+            top: false,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: dashboardPageMaxWidth,
+                ),
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    AppSpacing.md,
+                    horizontalPadding,
+                    AppSpacing.xxl,
+                  ),
+                  children: <Widget>[
+                    _ContactHeroCard(
+                      contact: contact,
+                      balanceSummary: balanceSummary,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _ContactQuickActions(
+                      hasPhone: phoneNumber != null,
+                      onEdit: () => _showEditSheet(contact),
+                      onCreateDebt: () => showCreateDebtSheet(
+                        context,
+                        initialContactId: contact.id,
+                        lockContact: true,
+                      ),
+                      onCall: phoneNumber == null
+                          ? null
+                          : () => _launchPhone(phoneNumber),
+                      onWhatsApp: phoneNumber == null
+                          ? null
+                          : () => _launchWhatsApp(phoneNumber),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    if (useTabletLayout)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Expanded(
+                            child: Column(
+                              children: <Widget>[
+                                _ContactFinancialCard(summary: balanceSummary),
+                                const SizedBox(height: AppSpacing.md),
+                                openDebtsSection,
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              children: <Widget>[
+                                if (attachments.isNotEmpty) ...<Widget>[
+                                  _ContactAttachmentsSection(
+                                    attachments: attachments,
+                                    onPreview: () =>
+                                        _openAttachmentViewer(contact),
+                                    onOpen: () =>
+                                        _openAttachmentViewer(contact),
+                                    onDownload: _downloadAttachment,
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                ],
+                                activitySection,
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
+                    else ...<Widget>[
+                      _ContactFinancialCard(summary: balanceSummary),
+                      const SizedBox(height: AppSpacing.md),
+                      openDebtsSection,
+                      if (attachments.isNotEmpty) ...<Widget>[
+                        const SizedBox(height: AppSpacing.md),
+                        _ContactAttachmentsSection(
+                          attachments: attachments,
+                          onPreview: () => _openAttachmentViewer(contact),
+                          onOpen: () => _openAttachmentViewer(contact),
+                          onDownload: _downloadAttachment,
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.md),
+                      activitySection,
+                    ],
+                  ],
+                ),
+              ),
             ),
-            onCall: phoneNumber == null
-                ? null
-                : () => _launchPhone(phoneNumber),
-            onWhatsApp: phoneNumber == null
-                ? null
-                : () => _launchWhatsApp(phoneNumber),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _ContactFinancialCard(summary: balanceSummary),
-          const SizedBox(height: AppSpacing.md),
-          if (openDebts.isEmpty)
-            DashboardEmptyState(
-              icon: Icons.receipt_long_outlined,
-              title: context.tr.contactOpenDebtsEmptyTitle,
-              message: context.tr.contactOpenDebtsEmptyMessage,
-            )
-          else
-            _ContactOpenDebtsSection(debts: openDebts),
-          if (attachments.isNotEmpty) ...<Widget>[
-            const SizedBox(height: AppSpacing.md),
-            _ContactAttachmentsSection(
-              attachments: attachments,
-              onPreview: () => _openAttachmentViewer(contact),
-              onOpen: () => _openAttachmentViewer(contact),
-              onDownload: _downloadAttachment,
-            ),
-          ],
-          const SizedBox(height: AppSpacing.md),
-          if (timelineEvents.isEmpty)
-            DashboardEmptyState(
-              icon: Icons.timeline_rounded,
-              title: context.tr.contactActivityEmptyTitle,
-              message: context.tr.contactActivityEmptyMessage,
-            )
-          else
-            _ContactTimelineSection(
-              events: timelineEvents,
-              onViewAll: () =>
-                  _showContactTimelineSheet(context, events: timelineEvents),
-            ),
-        ],
+          );
+        },
       ),
+    );
+  }
+}
+
+class _ContactDetailsSkeleton extends StatelessWidget {
+  const _ContactDetailsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
+      children: const <Widget>[
+        DashboardSurfaceCard(
+          padding: EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: <Widget>[
+              DashboardSkeletonBlock(height: 64, width: 64, radius: 999),
+              SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    DashboardSkeletonBlock(height: 20, width: 148),
+                    SizedBox(height: AppSpacing.xs),
+                    DashboardSkeletonBlock(height: 14, width: 92),
+                    SizedBox(height: 6),
+                    DashboardSkeletonBlock(height: 18, width: 116),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: AppSpacing.md),
+        DashboardSurfaceCard(
+          padding: EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: DashboardSkeletonBlock(
+                  height: 38,
+                  width: 88,
+                  radius: AppRadius.pill,
+                ),
+              ),
+              SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: DashboardSkeletonBlock(
+                  height: 38,
+                  width: 88,
+                  radius: AppRadius.pill,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: AppSpacing.md),
+        DashboardSurfaceCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              DashboardSkeletonBlock(height: 18, width: 120),
+              SizedBox(height: AppSpacing.sm),
+              DashboardSkeletonBlock(height: 14, width: double.infinity),
+              SizedBox(height: AppSpacing.xs),
+              DashboardSkeletonBlock(height: 14, width: double.infinity),
+            ],
+          ),
+        ),
+        SizedBox(height: AppSpacing.md),
+        DashboardSurfaceCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              DashboardSkeletonBlock(height: 18, width: 132),
+              SizedBox(height: AppSpacing.sm),
+              DashboardSkeletonBlock(height: 72, width: double.infinity),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -995,7 +1185,13 @@ class _EditContactSheetState extends ConsumerState<_EditContactSheet> {
     }
 
     if (success) {
+      final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+      final SnackBar successSnackBar = buildAppSuccessSnackBar(
+        context,
+        context.tr.contactUpdatedSuccessfully,
+      );
       Navigator.of(context).pop();
+      messenger.showSnackBar(successSnackBar);
       return;
     }
 
@@ -1107,23 +1303,37 @@ class _EditContactSheetState extends ConsumerState<_EditContactSheet> {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: PwButton.secondary(
-                      label: context.tr.cancel,
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: PwButton.primary(
-                      label: context.tr.saveChanges,
-                      isLoading: isLoading,
-                      onPressed: _submit,
-                    ),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  final Widget cancelButton = PwButton.secondary(
+                    label: context.tr.cancel,
+                    onPressed: () => Navigator.of(context).pop(),
+                  );
+                  final Widget submitButton = PwButton.primary(
+                    label: context.tr.saveChanges,
+                    isLoading: isLoading,
+                    onPressed: _submit,
+                  );
+
+                  if (constraints.maxWidth < 360) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        submitButton,
+                        const SizedBox(height: AppSpacing.sm),
+                        cancelButton,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    children: <Widget>[
+                      Expanded(child: cancelButton),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: submitButton),
+                    ],
+                  );
+                },
               ),
             ],
           ),

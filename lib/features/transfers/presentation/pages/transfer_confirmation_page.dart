@@ -105,7 +105,7 @@ class TransferConfirmationPage extends ConsumerWidget {
                       return;
                     }
 
-                    context.go(AppRoutes.userTransferSuccessPath);
+                    context.pushReplacement(AppRoutes.userTransferSuccessPath);
                   },
                 ),
               ),

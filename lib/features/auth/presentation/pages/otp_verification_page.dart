@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design_system/widgets/pw_button.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
+import '../../../../core/feedback/app_feedback.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -38,7 +39,12 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
         .read(authControllerProvider.notifier)
         .verifyOtp(otpCode: _otpController.text.trim());
 
-    if (!mounted || result.isSuccess) {
+    if (!mounted) {
+      return;
+    }
+
+    if (result.isSuccess) {
+      showAppSuccessSnackBar(context, _resolveMessage(context, result.message));
       return;
     }
 

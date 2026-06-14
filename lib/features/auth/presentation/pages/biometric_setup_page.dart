@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design_system/widgets/pw_button.dart';
+import '../../../../core/feedback/app_feedback.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -67,7 +68,15 @@ class BiometricSetupPage extends ConsumerWidget {
                             .read(authControllerProvider.notifier)
                             .toggleBiometricLogin(true);
 
-                        if (!context.mounted || result.isSuccess) {
+                        if (!context.mounted) {
+                          return;
+                        }
+
+                        if (result.isSuccess) {
+                          showAppSuccessSnackBar(
+                            context,
+                            context.tr.biometricEnabledSuccessfully,
+                          );
                           return;
                         }
 

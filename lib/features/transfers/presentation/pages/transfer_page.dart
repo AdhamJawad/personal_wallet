@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
 import '../../../../app/presentation/providers/app_preferences_provider.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
 import '../../../../core/localization/localization_extensions.dart';
@@ -92,23 +93,23 @@ class _TransferPageState extends ConsumerState<TransferPage> {
   }
 
   Future<void> _pickWallet(List<WalletOverview> wallets) async {
-    final WalletOverview? result = await showModalBottomSheet<WalletOverview>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return _TransferPickerSheet<WalletOverview>(
-          title: context.tr.selectWallet,
-          items: wallets,
-          titleBuilder: (WalletOverview wallet) => wallet.wallet.name,
-          subtitleBuilder: (WalletOverview wallet) =>
-              context.tr.walletBalanceSummary(
-                AmountFormatter.format(wallet.balance.usdBalance.amount),
-                AmountFormatter.format(wallet.balance.sypBalance.amount),
-              ),
+    final WalletOverview? result =
+        await showAppModalBottomSheet<WalletOverview>(
+          context: context,
+          isScrollControlled: true,
+          builder: (BuildContext context) {
+            return _TransferPickerSheet<WalletOverview>(
+              title: context.tr.selectWallet,
+              items: wallets,
+              titleBuilder: (WalletOverview wallet) => wallet.wallet.name,
+              subtitleBuilder: (WalletOverview wallet) =>
+                  context.tr.walletBalanceSummary(
+                    AmountFormatter.format(wallet.balance.usdBalance.amount),
+                    AmountFormatter.format(wallet.balance.sypBalance.amount),
+                  ),
+            );
+          },
         );
-      },
-    );
 
     if (result != null) {
       setState(() {
@@ -122,9 +123,8 @@ class _TransferPageState extends ConsumerState<TransferPage> {
       return;
     }
 
-    final Contact? result = await showModalBottomSheet<Contact>(
+    final Contact? result = await showAppModalBottomSheet<Contact>(
       context: context,
-      useRootNavigator: true,
       isScrollControlled: true,
       builder: (BuildContext context) {
         return _TransferPickerSheet<Contact>(
@@ -152,9 +152,8 @@ class _TransferPageState extends ConsumerState<TransferPage> {
       return;
     }
 
-    final QrIdentity? result = await showModalBottomSheet<QrIdentity>(
+    final QrIdentity? result = await showAppModalBottomSheet<QrIdentity>(
       context: context,
-      useRootNavigator: true,
       isScrollControlled: true,
       builder: (BuildContext context) {
         return _TransferPickerSheet<QrIdentity>(

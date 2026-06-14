@@ -137,6 +137,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walletCreatedSuccess => 'Wallet created successfully';
 
   @override
+  String get walletRenamedSuccessfully => 'Wallet renamed successfully.';
+
+  @override
+  String get walletArchivedSuccessfully => 'Wallet archived successfully.';
+
+  @override
   String get walletCreateFailure => 'Failed to create wallet.';
 
   @override
@@ -211,6 +217,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearSearch => 'Clear Search';
 
   @override
+  String get clearFilters => 'Clear Filters';
+
+  @override
+  String get tryAgain => 'Try Again';
+
+  @override
+  String get walletsLoadFailedMessage =>
+      'We couldn\'t load your wallets right now.';
+
+  @override
+  String get dashboardWalletsLoadFailedMessage =>
+      'We couldn\'t load the wallet preview right now.';
+
+  @override
+  String get dashboardActivityLoadFailedMessage =>
+      'We couldn\'t load recent activity right now.';
+
+  @override
   String get noActivityYet => 'No activity yet';
 
   @override
@@ -258,6 +282,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noWalletActivityMessage =>
       'The first financial activity for this wallet will appear here.';
+
+  @override
+  String get noWalletActivityFilterResultsTitle =>
+      'No activity matches this filter';
+
+  @override
+  String get noWalletActivityFilterResultsMessage =>
+      'Try another activity filter to see more records.';
 
   @override
   String get walletNotFound => 'Wallet not found.';
@@ -362,6 +394,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noDebtFilterResultsMessage =>
       'Choose another filter to view more debt records.';
+
+  @override
+  String get debtsLoadFailedMessage =>
+      'We couldn\'t load your debt records right now.';
 
   @override
   String get outstandingDebts => 'Outstanding Debts';
@@ -654,6 +690,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionsSearchHint => 'Reference, wallet, contact, or note';
 
   @override
+  String get transactionsLoadFailedMessage =>
+      'We couldn\'t load your transactions right now.';
+
+  @override
   String get transactionReferenceHint => 'TX-2026-000001';
 
   @override
@@ -674,6 +714,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noTransactionsForFilters =>
       'No transactions match the current filters.';
+
+  @override
+  String get noTransactionsSearchResultsTitle => 'No matching transactions';
+
+  @override
+  String get transactionsSearchResultsMessage =>
+      'Try another search term or clear the current search.';
+
+  @override
+  String get noTransactionsFilterResultsTitle =>
+      'No transactions match this view';
 
   @override
   String get transactionsNoResultsMessage =>
@@ -1314,10 +1365,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reopening debt records is not available yet.';
 
   @override
+  String get debtCreatedSuccessfully => 'Debt created successfully.';
+
+  @override
   String get debtUpdatedSuccessfully => 'Debt updated successfully.';
 
   @override
   String get debtEditFailed => 'Failed to update the debt.';
+
+  @override
+  String get debtPaymentRecordedSuccessfully =>
+      'Payment recorded successfully.';
 
   @override
   String get debtClosedSuccessfully => 'Debt closed successfully.';
@@ -1384,6 +1442,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get attachmentsEmptyMessage =>
       'You can add receipts, images, or supporting files here.';
+
+  @override
+  String get attachmentsLoadFailedMessage =>
+      'We couldn\'t load attachments right now.';
 
   @override
   String get attachmentsShareAction => 'Share';
@@ -1518,6 +1580,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactCreateFailed => 'Failed to create contact.';
 
   @override
+  String get contactCreatedSuccessfully => 'Contact created successfully.';
+
+  @override
   String get editContact => 'Edit Contact';
 
   @override
@@ -1526,6 +1591,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactSaveFailed => 'Failed to save contact.';
+
+  @override
+  String get contactUpdatedSuccessfully => 'Contact updated successfully.';
+
+  @override
+  String get contactsLoadFailedMessage =>
+      'We couldn\'t load your contacts right now.';
 
   @override
   String get openContactProfile => 'Open Contact Profile';
@@ -1604,6 +1676,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactDeleteFailed => 'Failed to delete contact.';
 
   @override
+  String get contactDeletedSuccessfully => 'Contact deleted successfully.';
+
+  @override
   String get contactsEmptyTitle => 'No contacts yet';
 
   @override
@@ -1616,6 +1691,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noContactsSearchResultsMessage =>
       'Try another name, phone number, or email.';
+
+  @override
+  String get noContactsFilterResultsTitle => 'No contacts match this filter';
+
+  @override
+  String get noContactsFilterResultsMessage =>
+      'Try another filter to see more contacts.';
 
   @override
   String get contactNeutralBalance => 'No balance';

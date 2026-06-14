@@ -12,6 +12,8 @@ import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../dashboard/presentation/widgets/dashboard_breakpoints.dart';
+import '../../../dashboard/presentation/widgets/dashboard_empty_state.dart';
 import '../../domain/enums/attachment_kind.dart';
 import '../../domain/enums/attachment_reference_type.dart';
 import '../../domain/models/attachment.dart';
@@ -56,37 +58,92 @@ class _AttachmentViewerPageState extends ConsumerState<AttachmentViewerPage> {
   @override
   Widget build(BuildContext context) {
     final attachmentState = ref.watch(attachmentControllerProvider);
+    final bool hasLoadError =
+        attachmentState.errorMessage != null &&
+        attachmentState.attachments.isEmpty;
 
     return PwScaffold(
       title: context.tr.attachments,
-      body: ListView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        children: <Widget>[
-          _AttachmentsHeader(
-            relationLabel: _relatedLabel(context),
-            referenceLabel: widget.label?.trim().isNotEmpty == true
-                ? widget.label!.trim()
-                : widget.entityId,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          if (attachmentState.isLoading)
-            const _AttachmentLoadingList()
-          else if (attachmentState.attachments.isEmpty)
-            const _AttachmentsEmptyState()
-          else
-            ...attachmentState.attachments.map(
-              (Attachment attachment) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: _AttachmentCard(
-                  attachment: attachment,
-                  onOpen: () => _openAttachment(attachment),
-                  onActionSelected: (_AttachmentAction action) {
-                    _handleAction(action, attachment);
-                  },
+      body: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
+            constraints.biggest,
+          );
+          final double horizontalPadding = resolveDashboardHorizontalPadding(
+            breakpoint,
+          );
+          final int columns = switch (breakpoint) {
+            DashboardBreakpoint.largeTablet => 3,
+            DashboardBreakpoint.tablet => 2,
+            DashboardBreakpoint.phone => 1,
+            DashboardBreakpoint.smallPhone => 1,
+          };
+
+          return SafeArea(
+            top: false,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: dashboardWidePanelMaxWidth,
+                ),
+                child: ListView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    AppSpacing.md,
+                    horizontalPadding,
+                    AppSpacing.xxl,
+                  ),
+                  children: <Widget>[
+                    _AttachmentsHeader(
+                      relationLabel: _relatedLabel(context),
+                      referenceLabel: widget.label?.trim().isNotEmpty == true
+                          ? widget.label!.trim()
+                          : widget.entityId,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    if (attachmentState.isLoading)
+                      _AttachmentLoadingList(columns: columns)
+                    else if (hasLoadError)
+                      DashboardEmptyState.error(
+                        title: context.tr.somethingWentWrong,
+                        message: context.tr.attachmentsLoadFailedMessage,
+                        actionLabel: context.tr.tryAgain,
+                        onActionPressed: () {
+                          ref
+                              .read(attachmentControllerProvider.notifier)
+                              .loadReference(_reference);
+                        },
+                      )
+                    else if (attachmentState.attachments.isEmpty)
+                      DashboardEmptyState(
+                        icon: Icons.attach_file_rounded,
+                        title: context.tr.attachmentsEmptyTitle,
+                        message: context.tr.attachmentsEmptyMessage,
+                      )
+                    else
+                      _AttachmentGrid(
+                        columns: columns,
+                        children: attachmentState.attachments
+                            .map(
+                              (Attachment attachment) => _AttachmentCard(
+                                attachment: attachment,
+                                onOpen: () => _openAttachment(attachment),
+                                onActionSelected: (_AttachmentAction action) {
+                                  _handleAction(action, attachment);
+                                },
+                              ),
+                            )
+                            .toList(growable: false),
+                      ),
+                  ],
                 ),
               ),
             ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -270,55 +327,6 @@ class _AttachmentsHeader extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AttachmentsEmptyState extends StatelessWidget {
-  const _AttachmentsEmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return PwSectionCard(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.10),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.attach_file_rounded,
-                size: 34,
-                color: colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              context.tr.attachmentsEmptyTitle,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              context.tr.attachmentsEmptyMessage,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -523,77 +531,123 @@ class _AttachmentImageViewer extends StatelessWidget {
 }
 
 class _AttachmentLoadingList extends StatelessWidget {
-  const _AttachmentLoadingList();
+  const _AttachmentLoadingList({required this.columns});
+
+  final int columns;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return _AttachmentGrid(
+      columns: columns,
       children: List<Widget>.generate(
         4,
-        (int index) => Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-          child: PwSectionCard(
-            child: SizedBox(
-              height: 96,
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                child: Row(
+        (int index) => const _AttachmentCardSkeleton(),
+      ),
+    );
+  }
+}
+
+class _AttachmentGrid extends StatelessWidget {
+  const _AttachmentGrid({required this.columns, required this.children});
+
+  final int columns;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    if (columns <= 1) {
+      return Column(
+        children: children
+            .map(
+              (Widget child) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: child,
+              ),
+            )
+            .toList(growable: false),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        const double spacing = AppSpacing.sm;
+        final double itemWidth =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: children
+              .map((Widget child) => SizedBox(width: itemWidth, child: child))
+              .toList(growable: false),
+        );
+      },
+    );
+  }
+}
+
+class _AttachmentCardSkeleton extends StatelessWidget {
+  const _AttachmentCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return PwSectionCard(
+      child: SizedBox(
+        height: 96,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Row(
+            children: <Widget>[
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Container(
-                      width: 72,
-                      height: 72,
+                      height: 16,
+                      width: 140,
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
                         ).colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Container(
-                            height: 16,
-                            width: 140,
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Container(
-                            height: 12,
-                            width: 120,
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Container(
-                            height: 12,
-                            width: 90,
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: AppSpacing.xs),
+                    Container(
+                      height: 12,
+                      width: 120,
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Container(
+                      height: 12,
+                      width: 90,
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),

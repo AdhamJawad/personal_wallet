@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_wallet/l10n/app_localizations.dart';
 
 import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
+import '../../../../core/feedback/app_feedback.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -127,7 +128,13 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
     }
 
     if (success) {
+      final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+      final SnackBar successSnackBar = buildAppSuccessSnackBar(
+        context,
+        context.tr.walletRenamedSuccessfully,
+      );
       Navigator.of(context).pop();
+      messenger.showSnackBar(successSnackBar);
       return;
     }
 
@@ -147,7 +154,13 @@ class _EditWalletSheetState extends ConsumerState<_EditWalletSheet> {
     }
 
     if (success) {
+      final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+      final SnackBar successSnackBar = buildAppSuccessSnackBar(
+        context,
+        context.tr.walletArchivedSuccessfully,
+      );
       Navigator.of(context).pop();
+      messenger.showSnackBar(successSnackBar);
       return;
     }
 

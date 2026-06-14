@@ -66,6 +66,7 @@ class _DebtsPageState extends ConsumerState<DebtsPage> {
       query: _searchController.text,
     );
     final bool isInitialLoading = debtState.isLoading && debts.isEmpty;
+    final bool hasLoadError = debtState.errorMessage != null && debts.isEmpty;
     final bool hasSearchQuery = _searchController.text.trim().isNotEmpty;
     final bool hasActiveFilter = _selectedFilter != _DebtFilter.all;
     final _DebtOverviewSummary summary = _DebtOverviewSummary.fromDebts(debts);
@@ -90,14 +91,11 @@ class _DebtsPageState extends ConsumerState<DebtsPage> {
         body: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             final DashboardBreakpoint breakpoint = resolveDashboardBreakpoint(
-              constraints.maxWidth,
+              constraints.biggest,
             );
-            final double horizontalPadding = switch (breakpoint) {
-              DashboardBreakpoint.smallPhone => AppSpacing.lg,
-              DashboardBreakpoint.phone => AppSpacing.xl,
-              DashboardBreakpoint.tablet => AppSpacing.xxl,
-              DashboardBreakpoint.largeTablet => 40,
-            };
+            final double horizontalPadding = resolveDashboardHorizontalPadding(
+              breakpoint,
+            );
             final int columns = switch (breakpoint) {
               DashboardBreakpoint.smallPhone => 1,
               DashboardBreakpoint.phone => 1,
@@ -110,7 +108,9 @@ class _DebtsPageState extends ConsumerState<DebtsPage> {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1120),
+                  constraints: const BoxConstraints(
+                    maxWidth: dashboardPageMaxWidth,
+                  ),
                   child: ListView(
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
@@ -140,6 +140,17 @@ class _DebtsPageState extends ConsumerState<DebtsPage> {
                       const SizedBox(height: AppSpacing.md),
                       if (isInitialLoading)
                         _DebtListSkeleton(columns: columns)
+                      else if (hasLoadError)
+                        DashboardEmptyState.error(
+                          title: context.tr.somethingWentWrong,
+                          message: context.tr.debtsLoadFailedMessage,
+                          actionLabel: context.tr.tryAgain,
+                          onActionPressed: () {
+                            ref
+                                .read(debtControllerProvider.notifier)
+                                .initialize();
+                          },
+                        )
                       else if (debts.isEmpty)
                         DashboardEmptyState(
                           icon: Icons.receipt_long_outlined,
@@ -149,19 +160,25 @@ class _DebtsPageState extends ConsumerState<DebtsPage> {
                           onActionPressed: () => showCreateDebtSheet(context),
                         )
                       else if (visibleDebts.isEmpty && hasSearchQuery)
-                        DashboardEmptyState(
-                          icon: Icons.search_off_rounded,
+                        DashboardEmptyState.search(
                           title: context.tr.noDebtSearchResultsTitle,
                           message: context.tr.noDebtSearchResultsMessage,
                           actionLabel: context.tr.clearSearch,
                           onActionPressed: () => _searchController.clear(),
+                          secondaryActionLabel: hasActiveFilter
+                              ? context.tr.clearFilters
+                              : null,
+                          onSecondaryActionPressed: hasActiveFilter
+                              ? () => setState(
+                                  () => _selectedFilter = _DebtFilter.all,
+                                )
+                              : null,
                         )
                       else if (visibleDebts.isEmpty && hasActiveFilter)
-                        DashboardEmptyState(
-                          icon: Icons.filter_alt_off_rounded,
+                        DashboardEmptyState.filter(
                           title: context.tr.noDebtFilterResultsTitle,
                           message: context.tr.noDebtFilterResultsMessage,
-                          actionLabel: context.tr.all,
+                          actionLabel: context.tr.clearFilters,
                           onActionPressed: () {
                             setState(() => _selectedFilter = _DebtFilter.all);
                           },

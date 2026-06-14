@@ -5,12 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../app/presentation/widgets/app_modal_bottom_sheet.dart';
+import '../../../../app/router/app_routes.dart';
 import '../../../../core/design_system/widgets/pw_button.dart';
+import '../../../../core/design_system/widgets/pw_section_card.dart';
 import '../../../../core/design_system/widgets/pw_text_field.dart';
 import '../../../../core/localization/localization_extensions.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../auth/domain/enums/auth_status.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../dashboard/presentation/widgets/dashboard_empty_state.dart';
+import '../../../dashboard/presentation/widgets/dashboard_skeleton_block.dart';
 
 class ProfileAccountPage extends ConsumerStatefulWidget {
   const ProfileAccountPage({super.key});
@@ -88,9 +94,8 @@ class _ProfileAccountPageState extends ConsumerState<ProfileAccountPage> {
   }
 
   Future<void> _showPhotoActions() async {
-    await showModalBottomSheet<void>(
+    await showAppModalBottomSheet<void>(
       context: context,
-      showDragHandle: true,
       builder: (BuildContext context) {
         return SafeArea(
           child: Padding(
@@ -194,92 +199,170 @@ class _ProfileAccountPageState extends ConsumerState<ProfileAccountPage> {
     final authState = ref.watch(authControllerProvider);
     final user = authState.session?.user;
 
+    if (authState.status == AuthStatus.initializing) {
+      return Scaffold(
+        appBar: AppBar(title: Text(context.tr.accountInformation)),
+        body: const _ProfileAccountLoadingState(),
+      );
+    }
+
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(context.tr.accountInformation)),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: DashboardEmptyState(
+              icon: Icons.person_off_outlined,
+              title: context.tr.somethingWentWrong,
+              message: context.tr.somethingWentWrong,
+              actionLabel: context.tr.tryAgain,
+              onActionPressed: () {
+                ref.read(authControllerProvider.notifier).initialize();
+              },
+              secondaryActionLabel: context.tr.back,
+              onSecondaryActionPressed: () => context.go(AppRoutes.profilePath),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text(context.tr.accountInformation)),
-      body: user == null
-          ? const SizedBox.shrink()
-          : GestureDetector(
-              onTap: () => FocusScope.of(context).unfocus(),
-              behavior: HitTestBehavior.translucent,
-              child: ListView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.xxl + MediaQuery.paddingOf(context).bottom,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.xxl + MediaQuery.paddingOf(context).bottom,
+          ),
+          children: <Widget>[
+            _EditableProfileHeader(
+              name: _nameController.text.trim().isEmpty
+                  ? context.tr.notAdded
+                  : _nameController.text.trim(),
+              email: _emailController.text.trim(),
+              profileImageUri: _profileImageUri,
+              onTapPhoto: _showPhotoActions,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                border: Border.all(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.12),
                 ),
-                children: <Widget>[
-                  _EditableProfileHeader(
-                    name: _nameController.text.trim().isEmpty
-                        ? context.tr.notAdded
-                        : _nameController.text.trim(),
-                    email: _emailController.text.trim(),
-                    profileImageUri: _profileImageUri,
-                    onTapPhoto: _showPhotoActions,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outline.withValues(alpha: 0.12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: <Widget>[
+                      PwTextField(
+                        controller: _nameController,
+                        label: context.tr.fullName,
+                        textInputAction: TextInputAction.next,
+                        validator: _validateName,
                       ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          children: <Widget>[
-                            PwTextField(
-                              controller: _nameController,
-                              label: context.tr.fullName,
-                              textInputAction: TextInputAction.next,
-                              validator: _validateName,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            PwTextField(
-                              controller: _emailController,
-                              label: context.tr.emailAddress,
-                              hint: context.tr.optionalField,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              validator: _validateEmail,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            PwTextField(
-                              controller: _phoneController,
-                              label: context.tr.phoneNumber,
-                              readOnly: true,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            PwTextField(
-                              controller: _userIdController,
-                              label: context.tr.userIdentifier,
-                              readOnly: true,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            SizedBox(
-                              width: double.infinity,
-                              child: PwButton.primary(
-                                label: context.tr.saveChanges,
-                                isLoading: authState.isBusy,
-                                onPressed: _save,
-                              ),
-                            ),
-                          ],
+                      const SizedBox(height: AppSpacing.md),
+                      PwTextField(
+                        controller: _emailController,
+                        label: context.tr.emailAddress,
+                        hint: context.tr.optionalField,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        validator: _validateEmail,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      PwTextField(
+                        controller: _phoneController,
+                        label: context.tr.phoneNumber,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      PwTextField(
+                        controller: _userIdController,
+                        label: context.tr.userIdentifier,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      SizedBox(
+                        width: double.infinity,
+                        child: PwButton.primary(
+                          label: context.tr.saveChanges,
+                          isLoading: authState.isBusy,
+                          onPressed: _save,
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileAccountLoadingState extends StatelessWidget {
+  const _ProfileAccountLoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.xxl + MediaQuery.paddingOf(context).bottom,
+      ),
+      children: const <Widget>[
+        PwSectionCard(
+          child: Row(
+            children: <Widget>[
+              DashboardSkeletonBlock(height: 60, width: 60, radius: 999),
+              SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    DashboardSkeletonBlock(height: 20, width: 144),
+                    SizedBox(height: AppSpacing.xs),
+                    DashboardSkeletonBlock(height: 14, width: 112),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: AppSpacing.lg),
+        PwSectionCard(
+          child: Column(
+            children: <Widget>[
+              DashboardSkeletonBlock(height: 52, width: double.infinity),
+              SizedBox(height: AppSpacing.md),
+              DashboardSkeletonBlock(height: 52, width: double.infinity),
+              SizedBox(height: AppSpacing.md),
+              DashboardSkeletonBlock(height: 52, width: double.infinity),
+              SizedBox(height: AppSpacing.md),
+              DashboardSkeletonBlock(height: 52, width: double.infinity),
+              SizedBox(height: AppSpacing.lg),
+              DashboardSkeletonBlock(height: 44, width: double.infinity),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

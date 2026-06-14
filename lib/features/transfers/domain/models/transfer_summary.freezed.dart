@@ -52,7 +52,7 @@ $Res call({
 });
 
 
-$UserTransferCopyWith<$Res> get transfer;
+
 
 }
 /// @nodoc
@@ -74,16 +74,7 @@ as bool,counterpartyDisplayName: null == counterpartyDisplayName ? _self.counter
 as String,
   ));
 }
-/// Create a copy of TransferSummary
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$UserTransferCopyWith<$Res> get transfer {
-  
-  return $UserTransferCopyWith<$Res>(_self.transfer, (value) {
-    return _then(_self.copyWith(transfer: value));
-  });
-}
+
 }
 
 
@@ -266,7 +257,7 @@ $Res call({
 });
 
 
-@override $UserTransferCopyWith<$Res> get transfer;
+
 
 }
 /// @nodoc
@@ -289,16 +280,7 @@ as String,
   ));
 }
 
-/// Create a copy of TransferSummary
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$UserTransferCopyWith<$Res> get transfer {
-  
-  return $UserTransferCopyWith<$Res>(_self.transfer, (value) {
-    return _then(_self.copyWith(transfer: value));
-  });
-}
+
 }
 
 // dart format on

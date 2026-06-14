@@ -1,20 +1,53 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../../core/utils/amount_formatter.dart';
 
-import '../../../../core/utils/date_time_converter.dart';
+class DebtRepayment {
+  const DebtRepayment({
+    required this.id,
+    required this.debtId,
+    required this.amountMinor,
+    this.note,
+    required this.createdAt,
+  });
 
-part 'debt_repayment.freezed.dart';
-part 'debt_repayment.g.dart';
+  factory DebtRepayment.fromJson(Map<String, dynamic> json) {
+    return DebtRepayment(
+      id: json['id'] as String,
+      debtId: json['debtId'] as String,
+      amountMinor: (json['amountMinor'] as num).toInt(),
+      note: json['note'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
 
-@freezed
-abstract class DebtRepayment with _$DebtRepayment {
-  const factory DebtRepayment({
-    required String id,
-    required String debtId,
-    required String amount,
+  final String id;
+  final String debtId;
+  final int amountMinor;
+  final String? note;
+  final DateTime createdAt;
+
+  String get amount => AmountFormatter.majorFromMinor(amountMinor).toString();
+
+  DebtRepayment copyWith({
+    String? id,
+    String? debtId,
+    int? amountMinor,
     String? note,
-    @DateTimeConverter() required DateTime createdAt,
-  }) = _DebtRepayment;
+    DateTime? createdAt,
+  }) {
+    return DebtRepayment(
+      id: id ?? this.id,
+      debtId: debtId ?? this.debtId,
+      amountMinor: amountMinor ?? this.amountMinor,
+      note: note ?? this.note,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
-  factory DebtRepayment.fromJson(Map<String, dynamic> json) =>
-      _$DebtRepaymentFromJson(json);
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'id': id,
+    'debtId': debtId,
+    'amountMinor': amountMinor,
+    'note': note,
+    'createdAt': createdAt.toIso8601String(),
+  };
 }

@@ -52,7 +52,7 @@ $Res call({
 });
 
 
-$MoneyCopyWith<$Res> get usdBalance;$MoneyCopyWith<$Res> get sypBalance;
+
 
 }
 /// @nodoc
@@ -74,25 +74,7 @@ as Money,asOf: null == asOf ? _self.asOf : asOf // ignore: cast_nullable_to_non_
 as DateTime,
   ));
 }
-/// Create a copy of WalletBalanceSnapshot
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$MoneyCopyWith<$Res> get usdBalance {
-  
-  return $MoneyCopyWith<$Res>(_self.usdBalance, (value) {
-    return _then(_self.copyWith(usdBalance: value));
-  });
-}/// Create a copy of WalletBalanceSnapshot
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$MoneyCopyWith<$Res> get sypBalance {
-  
-  return $MoneyCopyWith<$Res>(_self.sypBalance, (value) {
-    return _then(_self.copyWith(sypBalance: value));
-  });
-}
+
 }
 
 
@@ -275,7 +257,7 @@ $Res call({
 });
 
 
-@override $MoneyCopyWith<$Res> get usdBalance;@override $MoneyCopyWith<$Res> get sypBalance;
+
 
 }
 /// @nodoc
@@ -298,25 +280,7 @@ as DateTime,
   ));
 }
 
-/// Create a copy of WalletBalanceSnapshot
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$MoneyCopyWith<$Res> get usdBalance {
-  
-  return $MoneyCopyWith<$Res>(_self.usdBalance, (value) {
-    return _then(_self.copyWith(usdBalance: value));
-  });
-}/// Create a copy of WalletBalanceSnapshot
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$MoneyCopyWith<$Res> get sypBalance {
-  
-  return $MoneyCopyWith<$Res>(_self.sypBalance, (value) {
-    return _then(_self.copyWith(sypBalance: value));
-  });
-}
+
 }
 
 // dart format on

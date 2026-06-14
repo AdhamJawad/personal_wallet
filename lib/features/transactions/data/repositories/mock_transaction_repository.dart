@@ -1,7 +1,6 @@
 import '../../../../core/sync/enums/sync_operation_type.dart';
 import '../../../../core/sync/repositories/sync_queue_repository.dart';
 import '../../../../core/utils/id_generator.dart';
-import '../../../../shared/domain/enums/currency.dart';
 import '../../../../shared/domain/enums/transaction_type.dart';
 import '../../../audit/domain/enums/audit_event_type.dart';
 import '../../../audit/domain/services/audit_logger.dart';
@@ -39,8 +38,8 @@ class MockTransactionRepository implements LocalTransactionRepository {
   Future<LedgerTransaction> createDeposit({
     required String ownerUserId,
     required String walletId,
-    required Currency currency,
-    required String amount,
+    required String currencyCode,
+    required int amountMinor,
     String? note,
     String? attachmentLabel,
   }) async {
@@ -53,8 +52,8 @@ class MockTransactionRepository implements LocalTransactionRepository {
         type: TransactionType.deposit,
         initiatedByUserId: ownerUserId,
         destinationWalletId: walletId,
-        sourceCurrency: currency,
-        sourceAmount: amount,
+        sourceCurrencyCode: currencyCode,
+        sourceAmountMinor: amountMinor,
         note: note,
         attachmentLabel: attachmentLabel,
         createdAt: DateTime.now().toUtc(),
@@ -66,8 +65,8 @@ class MockTransactionRepository implements LocalTransactionRepository {
         type: SyncOperationType.depositCreate,
         payload: <String, dynamic>{
           'walletId': walletId,
-          'currency': currency.name,
-          'amount': amount,
+          'currencyCode': currencyCode,
+          'amountMinor': amountMinor,
           'transactionId': transaction.id,
         },
       );
@@ -86,11 +85,11 @@ class MockTransactionRepository implements LocalTransactionRepository {
   Future<LedgerTransaction> createExchange({
     required String ownerUserId,
     required String walletId,
-    required Currency sourceCurrency,
-    required Currency destinationCurrency,
-    required String amountGiven,
+    required String sourceCurrencyCode,
+    required String destinationCurrencyCode,
+    required int sourceAmountMinor,
     required String exchangeRate,
-    required String amountReceived,
+    required int destinationAmountMinor,
     String? note,
     String? attachmentLabel,
   }) async {
@@ -103,10 +102,10 @@ class MockTransactionRepository implements LocalTransactionRepository {
         type: TransactionType.exchange,
         initiatedByUserId: ownerUserId,
         sourceWalletId: walletId,
-        sourceCurrency: sourceCurrency,
-        destinationCurrency: destinationCurrency,
-        sourceAmount: amountGiven,
-        destinationAmount: amountReceived,
+        sourceCurrencyCode: sourceCurrencyCode,
+        destinationCurrencyCode: destinationCurrencyCode,
+        sourceAmountMinor: sourceAmountMinor,
+        destinationAmountMinor: destinationAmountMinor,
         exchangeRate: exchangeRate,
         note: note,
         attachmentLabel: attachmentLabel,
@@ -119,11 +118,11 @@ class MockTransactionRepository implements LocalTransactionRepository {
         type: SyncOperationType.exchangeCreate,
         payload: <String, dynamic>{
           'walletId': walletId,
-          'sourceCurrency': sourceCurrency.name,
-          'destinationCurrency': destinationCurrency.name,
-          'amountGiven': amountGiven,
+          'sourceCurrencyCode': sourceCurrencyCode,
+          'destinationCurrencyCode': destinationCurrencyCode,
+          'sourceAmountMinor': sourceAmountMinor,
           'exchangeRate': exchangeRate,
-          'amountReceived': amountReceived,
+          'destinationAmountMinor': destinationAmountMinor,
           'transactionId': transaction.id,
         },
       );
@@ -143,8 +142,8 @@ class MockTransactionRepository implements LocalTransactionRepository {
     required String ownerUserId,
     required String sourceWalletId,
     required String destinationWalletId,
-    required Currency currency,
-    required String amount,
+    required String currencyCode,
+    required int amountMinor,
     String? note,
   }) async {
     final reference = await _ledgerStore.nextReference(ownerUserId);
@@ -157,8 +156,8 @@ class MockTransactionRepository implements LocalTransactionRepository {
         initiatedByUserId: ownerUserId,
         sourceWalletId: sourceWalletId,
         destinationWalletId: destinationWalletId,
-        sourceCurrency: currency,
-        sourceAmount: amount,
+        sourceCurrencyCode: currencyCode,
+        sourceAmountMinor: amountMinor,
         note: note,
         createdAt: DateTime.now().toUtc(),
       );
@@ -170,8 +169,8 @@ class MockTransactionRepository implements LocalTransactionRepository {
         payload: <String, dynamic>{
           'sourceWalletId': sourceWalletId,
           'destinationWalletId': destinationWalletId,
-          'currency': currency.name,
-          'amount': amount,
+          'currencyCode': currencyCode,
+          'amountMinor': amountMinor,
           'transactionId': transaction.id,
         },
       );
@@ -190,8 +189,8 @@ class MockTransactionRepository implements LocalTransactionRepository {
   Future<LedgerTransaction> createWithdraw({
     required String ownerUserId,
     required String walletId,
-    required Currency currency,
-    required String amount,
+    required String currencyCode,
+    required int amountMinor,
     String? note,
     String? attachmentLabel,
   }) async {
@@ -204,8 +203,8 @@ class MockTransactionRepository implements LocalTransactionRepository {
         type: TransactionType.withdraw,
         initiatedByUserId: ownerUserId,
         sourceWalletId: walletId,
-        sourceCurrency: currency,
-        sourceAmount: amount,
+        sourceCurrencyCode: currencyCode,
+        sourceAmountMinor: amountMinor,
         note: note,
         attachmentLabel: attachmentLabel,
         createdAt: DateTime.now().toUtc(),
@@ -217,8 +216,8 @@ class MockTransactionRepository implements LocalTransactionRepository {
         type: SyncOperationType.withdrawCreate,
         payload: <String, dynamic>{
           'walletId': walletId,
-          'currency': currency.name,
-          'amount': amount,
+          'currencyCode': currencyCode,
+          'amountMinor': amountMinor,
           'transactionId': transaction.id,
         },
       );

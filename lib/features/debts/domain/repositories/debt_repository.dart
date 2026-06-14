@@ -7,19 +7,19 @@ abstract interface class DebtRepository {
     required String contactId,
     required bool isOwedToMe,
     required String currencyCode,
-    required String amount,
+    required int amountMinor,
     String? note,
   });
   Future<DebtSummary> createRepayment({
     required String ownerUserId,
     required String debtId,
-    required String amount,
+    required int amountMinor,
     String? note,
   });
   Future<DebtSummary> updateDebt({
     required String ownerUserId,
     required String debtId,
-    required String amount,
+    required int amountMinor,
     String? note,
   });
   Future<DebtSummary> closeDebt({
@@ -36,7 +36,7 @@ abstract interface class DebtRepository {
     required String transferId,
     required String ledgerTransactionId,
     required String transferReference,
-    required String amount,
+    required int amountMinor,
     String? note,
   });
   Future<List<DebtSummary>> fetchDebts(String ownerUserId);

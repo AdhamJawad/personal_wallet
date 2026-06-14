@@ -5,7 +5,7 @@ import '../../../../core/storage/local_store.dart';
 import '../../../../core/sync/enums/sync_operation_type.dart';
 import '../../../../core/sync/repositories/sync_queue_repository.dart';
 import '../../../../core/utils/id_generator.dart';
-import '../../../../shared/domain/enums/currency.dart';
+import '../../../../core/utils/amount_formatter.dart';
 import '../../../../shared/domain/enums/transaction_type.dart';
 import '../../../audit/domain/enums/audit_event_type.dart';
 import '../../../audit/domain/services/audit_logger.dart';
@@ -55,7 +55,9 @@ class MockTransferRepository implements LocalTransferRepository {
     final List<dynamic> decoded = jsonDecode(rawValue) as List<dynamic>;
     return decoded
         .map(
-          (dynamic item) => UserTransfer.fromJson(item as Map<String, dynamic>),
+          (dynamic item) => UserTransfer.fromJson(
+            _migrateTransferJson(item as Map<String, dynamic>),
+          ),
         )
         .toList(growable: false);
   }
@@ -104,8 +106,8 @@ class MockTransferRepository implements LocalTransferRepository {
     required String senderWalletId,
     required String recipientUserId,
     required String recipientDisplayName,
-    required Currency currency,
-    required String amount,
+    required String currencyCode,
+    required int amountMinor,
     String? note,
   }) async {
     final DateTime now = DateTime.now().toUtc();
@@ -126,8 +128,8 @@ class MockTransferRepository implements LocalTransferRepository {
         recipientUserId: recipientUserId,
         recipientDisplayName: recipientDisplayName,
         sourceWalletId: senderWalletId,
-        sourceCurrency: currency,
-        sourceAmount: amount,
+        sourceCurrencyCode: currencyCode,
+        sourceAmountMinor: amountMinor,
         note: note,
         transferRecordId: transferId,
         createdAt: now,
@@ -145,8 +147,8 @@ class MockTransferRepository implements LocalTransferRepository {
         recipientUserId: recipientUserId,
         recipientDisplayName: recipientDisplayName,
         destinationWalletId: 'wallet_main',
-        sourceCurrency: currency,
-        sourceAmount: amount,
+        sourceCurrencyCode: currencyCode,
+        sourceAmountMinor: amountMinor,
         note: note,
         transferRecordId: transferId,
         relatedTransactionId: senderLedger.id,
@@ -164,8 +166,8 @@ class MockTransferRepository implements LocalTransferRepository {
       recipientDisplayName: recipientDisplayName,
       senderWalletId: senderWalletId,
       recipientWalletId: 'wallet_main',
-      currency: currency,
-      amount: amount,
+      currencyCode: currencyCode,
+      amountMinor: amountMinor,
       note: note,
       ledgerTransactionId: senderLedger.id,
       mirroredLedgerTransactionId: recipientLedger.id,
@@ -201,8 +203,8 @@ class MockTransferRepository implements LocalTransferRepository {
         'transferId': senderTransfer.id,
         'senderWalletId': senderWalletId,
         'recipientUserId': recipientUserId,
-        'currency': currency.name,
-        'amount': amount,
+        'currencyCode': currencyCode,
+        'amountMinor': amountMinor,
       },
     );
     await _notificationPublisher.publish(
@@ -210,7 +212,7 @@ class MockTransferRepository implements LocalTransferRepository {
       type: 'transferSent',
       title: 'Transfer sent',
       message:
-          'You sent $amount ${currency.name.toUpperCase()} to $recipientDisplayName.',
+          'You sent ${AmountFormatter.formatMinor(amountMinor)} $currencyCode to $recipientDisplayName.',
       relatedEntityId: senderTransfer.id,
       relatedEntityType: 'transfer',
     );
@@ -219,7 +221,7 @@ class MockTransferRepository implements LocalTransferRepository {
       type: 'transferReceived',
       title: 'Transfer received',
       message:
-          'You received $amount ${currency.name.toUpperCase()} from $senderDisplayName.',
+          'You received ${AmountFormatter.formatMinor(amountMinor)} $currencyCode from $senderDisplayName.',
       relatedEntityId: recipientTransfer.id,
       relatedEntityType: 'transfer',
     );
@@ -241,8 +243,8 @@ class MockTransferRepository implements LocalTransferRepository {
     required String senderWalletId,
     required String recipientUserId,
     required String recipientDisplayName,
-    required Currency currency,
-    required String amount,
+    required String currencyCode,
+    required int amountMinor,
     String? note,
   }) async {
     final TransferSummary transfer = await createTransfer(
@@ -251,8 +253,8 @@ class MockTransferRepository implements LocalTransferRepository {
       senderWalletId: senderWalletId,
       recipientUserId: recipientUserId,
       recipientDisplayName: recipientDisplayName,
-      currency: currency,
-      amount: amount,
+      currencyCode: currencyCode,
+      amountMinor: amountMinor,
       note: note,
     );
 
@@ -262,7 +264,7 @@ class MockTransferRepository implements LocalTransferRepository {
       transferId: transfer.transfer.id,
       ledgerTransactionId: transfer.transfer.ledgerTransactionId,
       transferReference: transfer.transfer.reference.value,
-      amount: amount,
+      amountMinor: amountMinor,
       note: note,
     );
 
@@ -348,5 +350,17 @@ class MockTransferRepository implements LocalTransferRepository {
       orElse: () => null,
     );
     return transfer == null ? null : _toSummary(ownerUserId, transfer);
+  }
+
+  Map<String, dynamic> _migrateTransferJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> migrated = Map<String, dynamic>.from(json);
+    migrated['currencyCode'] ??= (migrated.remove('currency') as String?)
+        ?.toUpperCase();
+    if (!migrated.containsKey('amountMinor')) {
+      migrated['amountMinor'] = AmountFormatter.parseToMinor(
+        (migrated.remove('amount') ?? '0').toString(),
+      );
+    }
+    return migrated;
   }
 }

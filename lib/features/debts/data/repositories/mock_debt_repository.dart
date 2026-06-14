@@ -5,7 +5,7 @@ import '../../../../core/storage/local_store.dart';
 import '../../../../core/sync/enums/sync_operation_type.dart';
 import '../../../../core/sync/repositories/sync_queue_repository.dart';
 import '../../../../core/utils/id_generator.dart';
-import '../../../../shared/domain/enums/currency.dart';
+import '../../../../core/utils/amount_formatter.dart';
 import '../../../audit/domain/enums/audit_event_type.dart';
 import '../../../audit/domain/services/audit_logger.dart';
 import '../../../contacts/domain/models/contact.dart';
@@ -55,8 +55,9 @@ class MockDebtRepository implements LocalDebtRepository {
     final List<dynamic> decoded = jsonDecode(rawValue) as List<dynamic>;
     return decoded
         .map(
-          (dynamic item) =>
-              MockDebtRecord.fromJson(item as Map<String, dynamic>),
+          (dynamic item) => MockDebtRecord.fromJson(
+            _migrateRecordJson(item as Map<String, dynamic>),
+          ),
         )
         .toList(growable: false);
   }
@@ -91,8 +92,8 @@ class MockDebtRepository implements LocalDebtRepository {
           ownerUserId: ownerUserId,
           counterpartyContactId: contactIdByName('Ali'),
           isOwedToMe: true,
-          currency: Currency.usd,
-          originalAmount: '100',
+          currencyCode: 'USD',
+          originalAmountMinor: 10000,
           note: 'Personal loan to Ali',
           createdAt: now.subtract(const Duration(days: 18)),
           updatedAt: now.subtract(const Duration(days: 2)),
@@ -101,7 +102,7 @@ class MockDebtRepository implements LocalDebtRepository {
           DebtRepayment(
             id: IdGenerator.next(),
             debtId: 'debt_owed_to_me_ali',
-            amount: '30',
+            amountMinor: 3000,
             note: 'First partial repayment',
             createdAt: now.subtract(const Duration(days: 6)),
           ),
@@ -113,8 +114,8 @@ class MockDebtRepository implements LocalDebtRepository {
           ownerUserId: ownerUserId,
           counterpartyContactId: contactIdByName('Local Store'),
           isOwedToMe: false,
-          currency: Currency.syp,
-          originalAmount: '750000',
+          currencyCode: 'SYP',
+          originalAmountMinor: 75000000,
           note: 'Inventory balance',
           createdAt: now.subtract(const Duration(days: 12)),
           updatedAt: now.subtract(const Duration(days: 1)),
@@ -123,7 +124,7 @@ class MockDebtRepository implements LocalDebtRepository {
           DebtRepayment(
             id: IdGenerator.next(),
             debtId: 'debt_i_owe_store',
-            amount: '250000',
+            amountMinor: 25000000,
             note: 'First settlement',
             createdAt: now.subtract(const Duration(days: 4)),
           ),
@@ -135,8 +136,8 @@ class MockDebtRepository implements LocalDebtRepository {
           ownerUserId: ownerUserId,
           counterpartyContactId: contactIdByName('Ahmad Kareem'),
           isOwedToMe: false,
-          currency: Currency.usd,
-          originalAmount: '180',
+          currencyCode: 'USD',
+          originalAmountMinor: 18000,
           note: 'Shared trip advance to Ahmad',
           createdAt: now.subtract(const Duration(days: 9)),
           updatedAt: now.subtract(const Duration(days: 1)),
@@ -159,27 +160,25 @@ class MockDebtRepository implements LocalDebtRepository {
       throw const DebtRepositoryException('Debt contact was not found.');
     }
 
-    final num originalAmount = num.tryParse(record.debt.originalAmount) ?? 0;
-    final num repaidAmount = record.repayments.fold<num>(
+    final int originalAmount = record.debt.originalAmountMinor;
+    final int repaidAmount = record.repayments.fold<int>(
       0,
-      (num total, DebtRepayment repayment) =>
-          total + (num.tryParse(repayment.amount) ?? 0),
+      (int total, DebtRepayment repayment) => total + repayment.amountMinor,
     );
-    final num settledAmount = record.settlements.fold<num>(
+    final int settledAmount = record.settlements.fold<int>(
       0,
-      (num total, DebtSettlement settlement) =>
-          total + (num.tryParse(settlement.amount) ?? 0),
+      (int total, DebtSettlement settlement) => total + settlement.amountMinor,
     );
-    final num totalRecovered = repaidAmount + settledAmount;
-    final num resolvedRemainingAmount = originalAmount - totalRecovered;
+    final int totalRecovered = repaidAmount + settledAmount;
+    final int resolvedRemainingAmount = originalAmount - totalRecovered;
     final bool manuallyCompleted = record.debt.completedAt != null;
     final bool isCompleted = manuallyCompleted || resolvedRemainingAmount <= 0;
     final List<SettlementSummary> settlements = <SettlementSummary>[];
-    num remainingAfterSettlement = originalAmount - repaidAmount;
+    int remainingAfterSettlement = originalAmount - repaidAmount;
     DateTime latestActivityAt = record.debt.updatedAt;
 
     for (final DebtSettlement settlement in record.settlements) {
-      remainingAfterSettlement -= num.tryParse(settlement.amount) ?? 0;
+      remainingAfterSettlement -= settlement.amountMinor;
       if (settlement.createdAt.isAfter(latestActivityAt)) {
         latestActivityAt = settlement.createdAt;
       }
@@ -188,9 +187,9 @@ class MockDebtRepository implements LocalDebtRepository {
           settlement: settlement,
           transferReference: settlement.transferReference,
           counterpartyDisplayName: contact.name,
-          remainingAmountAfterSettlement: remainingAfterSettlement
-              .clamp(0, double.infinity)
-              .toString(),
+          remainingAmountAfterSettlementMinor: remainingAfterSettlement < 0
+              ? 0
+              : remainingAfterSettlement,
           isCompleted: remainingAfterSettlement <= 0,
         ),
       );
@@ -214,12 +213,12 @@ class MockDebtRepository implements LocalDebtRepository {
       contact: contact,
       repayments: record.repayments,
       settlements: settlements,
-      repaidAmount: totalRecovered.toString(),
-      remainingAmount: isCompleted
-          ? '0'
-          : resolvedRemainingAmount.clamp(0, double.infinity).toString(),
+      repaidAmountMinor: totalRecovered,
+      remainingAmountMinor: isCompleted
+          ? 0
+          : (resolvedRemainingAmount < 0 ? 0 : resolvedRemainingAmount),
       isCompleted: isCompleted,
-      currency: record.debt.currency,
+      currencyCode: record.debt.currencyCode,
     );
   }
 
@@ -229,22 +228,19 @@ class MockDebtRepository implements LocalDebtRepository {
     required String contactId,
     required bool isOwedToMe,
     required String currencyCode,
-    required String amount,
+    required int amountMinor,
     String? note,
   }) async {
     final DateTime now = DateTime.now().toUtc();
     final List<MockDebtRecord> records = await _loadRecords(ownerUserId);
-    final Currency currency = Currency.values.firstWhere(
-      (Currency item) => item.name == currencyCode.toLowerCase(),
-    );
     final MockDebtRecord record = MockDebtRecord(
       debt: Debt(
         id: IdGenerator.next(),
         ownerUserId: ownerUserId,
         counterpartyContactId: contactId,
         isOwedToMe: isOwedToMe,
-        currency: currency,
-        originalAmount: amount,
+        currencyCode: currencyCode,
+        originalAmountMinor: amountMinor,
         note: note,
         createdAt: now,
         updatedAt: now,
@@ -264,7 +260,7 @@ class MockDebtRepository implements LocalDebtRepository {
         'contactId': contactId,
         'isOwedToMe': isOwedToMe,
         'currencyCode': currencyCode,
-        'amount': amount,
+        'amountMinor': amountMinor,
       },
     );
     await _notificationPublisher.publish(
@@ -288,7 +284,7 @@ class MockDebtRepository implements LocalDebtRepository {
   Future<DebtSummary> createRepayment({
     required String ownerUserId,
     required String debtId,
-    required String amount,
+    required int amountMinor,
     String? note,
   }) async {
     final DateTime now = DateTime.now().toUtc();
@@ -304,7 +300,7 @@ class MockDebtRepository implements LocalDebtRepository {
     final DebtRepayment repayment = DebtRepayment(
       id: IdGenerator.next(),
       debtId: debtId,
-      amount: amount,
+      amountMinor: amountMinor,
       note: note,
       createdAt: now,
     );
@@ -325,7 +321,7 @@ class MockDebtRepository implements LocalDebtRepository {
       type: SyncOperationType.debtRepaymentCreate,
       payload: <String, dynamic>{
         'debtId': debtId,
-        'amount': amount,
+        'amountMinor': amountMinor,
         'repaymentId': repayment.id,
       },
     );
@@ -350,7 +346,7 @@ class MockDebtRepository implements LocalDebtRepository {
   Future<DebtSummary> updateDebt({
     required String ownerUserId,
     required String debtId,
-    required String amount,
+    required int amountMinor,
     String? note,
   }) async {
     final DateTime now = DateTime.now().toUtc();
@@ -366,7 +362,7 @@ class MockDebtRepository implements LocalDebtRepository {
     final MockDebtRecord currentRecord = records[index];
     final MockDebtRecord updatedRecord = currentRecord.copyWith(
       debt: currentRecord.debt.copyWith(
-        originalAmount: amount,
+        originalAmountMinor: amountMinor,
         note: note,
         updatedAt: now,
       ),
@@ -380,7 +376,7 @@ class MockDebtRepository implements LocalDebtRepository {
       ownerUserId: ownerUserId,
       entityId: debtId,
       type: SyncOperationType.debtUpdate,
-      payload: <String, dynamic>{'amount': amount, 'note': note},
+      payload: <String, dynamic>{'amountMinor': amountMinor, 'note': note},
     );
     await _notificationPublisher.publish(
       ownerUserId: ownerUserId,
@@ -500,7 +496,7 @@ class MockDebtRepository implements LocalDebtRepository {
     required String transferId,
     required String ledgerTransactionId,
     required String transferReference,
-    required String amount,
+    required int amountMinor,
     String? note,
   }) async {
     final DateTime now = DateTime.now().toUtc();
@@ -521,8 +517,8 @@ class MockDebtRepository implements LocalDebtRepository {
       transferId: transferId,
       ledgerTransactionId: ledgerTransactionId,
       transferReference: transferReference,
-      currency: existingRecord.debt.currency,
-      amount: amount,
+      currencyCode: existingRecord.debt.currencyCode,
+      amountMinor: amountMinor,
       note: note,
       createdAt: now,
     );
@@ -546,7 +542,7 @@ class MockDebtRepository implements LocalDebtRepository {
         'transferId': transferId,
         'ledgerTransactionId': ledgerTransactionId,
         'transferReference': transferReference,
-        'amount': amount,
+        'amountMinor': amountMinor,
         'settlementId': settlement.id,
       },
     );
@@ -591,6 +587,55 @@ class MockDebtRepository implements LocalDebtRepository {
     );
 
     return record == null ? null : _toSummary(ownerUserId, record);
+  }
+
+  Map<String, dynamic> _migrateRecordJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> migrated = Map<String, dynamic>.from(json);
+    final Map<String, dynamic> debt = Map<String, dynamic>.from(
+      migrated['debt'] as Map<String, dynamic>,
+    );
+    debt['currencyCode'] ??= (debt.remove('currency') as String?)
+        ?.toUpperCase();
+    if (!debt.containsKey('originalAmountMinor')) {
+      debt['originalAmountMinor'] = AmountFormatter.parseToMinor(
+        (debt.remove('originalAmount') ?? '0').toString(),
+      );
+    }
+    migrated['debt'] = debt;
+
+    migrated['repayments'] =
+        (migrated['repayments'] as List<dynamic>? ?? const [])
+            .map((dynamic item) {
+              final Map<String, dynamic> repayment = Map<String, dynamic>.from(
+                item as Map<String, dynamic>,
+              );
+              if (!repayment.containsKey('amountMinor')) {
+                repayment['amountMinor'] = AmountFormatter.parseToMinor(
+                  (repayment.remove('amount') ?? '0').toString(),
+                );
+              }
+              return repayment;
+            })
+            .toList(growable: false);
+
+    migrated['settlements'] =
+        (migrated['settlements'] as List<dynamic>? ?? const [])
+            .map((dynamic item) {
+              final Map<String, dynamic> settlement = Map<String, dynamic>.from(
+                item as Map<String, dynamic>,
+              );
+              settlement['currencyCode'] ??=
+                  (settlement.remove('currency') as String?)?.toUpperCase();
+              if (!settlement.containsKey('amountMinor')) {
+                settlement['amountMinor'] = AmountFormatter.parseToMinor(
+                  (settlement.remove('amount') ?? '0').toString(),
+                );
+              }
+              return settlement;
+            })
+            .toList(growable: false);
+
+    return migrated;
   }
 }
 

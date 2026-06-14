@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/amount_formatter.dart';
 import '../../../../shared/domain/enums/currency.dart';
 import '../../domain/enums/transaction_filter_option.dart';
 import '../../domain/enums/transaction_sort_option.dart';
@@ -72,8 +73,8 @@ class TransactionController extends StateNotifier<TransactionState> {
           .createDeposit(
             ownerUserId: _resolvedOwnerUserId,
             walletId: walletId,
-            currency: currency,
-            amount: amount,
+            currencyCode: currency.code,
+            amountMinor: AmountFormatter.parseToMinor(amount),
             note: note,
             attachmentLabel: attachmentLabel,
           );
@@ -101,11 +102,13 @@ class TransactionController extends StateNotifier<TransactionState> {
           .createExchange(
             ownerUserId: _resolvedOwnerUserId,
             walletId: walletId,
-            sourceCurrency: sourceCurrency,
-            destinationCurrency: destinationCurrency,
-            amountGiven: amountGiven,
+            sourceCurrencyCode: sourceCurrency.code,
+            destinationCurrencyCode: destinationCurrency.code,
+            sourceAmountMinor: AmountFormatter.parseToMinor(amountGiven),
             exchangeRate: exchangeRate,
-            amountReceived: amountReceived,
+            destinationAmountMinor: AmountFormatter.parseToMinor(
+              amountReceived,
+            ),
             note: note,
             attachmentLabel: attachmentLabel,
           );
@@ -131,8 +134,8 @@ class TransactionController extends StateNotifier<TransactionState> {
             ownerUserId: _resolvedOwnerUserId,
             sourceWalletId: sourceWalletId,
             destinationWalletId: destinationWalletId,
-            currency: currency,
-            amount: amount,
+            currencyCode: currency.code,
+            amountMinor: AmountFormatter.parseToMinor(amount),
             note: note,
           );
       await _reload(selectedTransactionId: transaction.id);
@@ -156,8 +159,8 @@ class TransactionController extends StateNotifier<TransactionState> {
           .createWithdraw(
             ownerUserId: _resolvedOwnerUserId,
             walletId: walletId,
-            currency: currency,
-            amount: amount,
+            currencyCode: currency.code,
+            amountMinor: AmountFormatter.parseToMinor(amount),
             note: note,
             attachmentLabel: attachmentLabel,
           );

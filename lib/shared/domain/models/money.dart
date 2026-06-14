@@ -1,14 +1,43 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
+import '../../../core/utils/amount_formatter.dart';
 import '../enums/currency.dart';
 
-part 'money.freezed.dart';
-part 'money.g.dart';
+class Money {
+  const Money({required this.amountMinor, required this.currencyCode});
 
-@freezed
-abstract class Money with _$Money {
-  const factory Money({required Currency currency, required String amount}) =
-      _Money;
+  factory Money.fromJson(Map<String, dynamic> json) {
+    return Money(
+      amountMinor: (json['amountMinor'] as num).toInt(),
+      currencyCode: json['currencyCode'] as String,
+    );
+  }
 
-  factory Money.fromJson(Map<String, dynamic> json) => _$MoneyFromJson(json);
+  final int amountMinor;
+  final String currencyCode;
+
+  Currency get currency => currencyFromCode(currencyCode);
+
+  String get amount => AmountFormatter.majorFromMinor(amountMinor).toString();
+
+  Money copyWith({int? amountMinor, String? currencyCode}) {
+    return Money(
+      amountMinor: amountMinor ?? this.amountMinor,
+      currencyCode: currencyCode ?? this.currencyCode,
+    );
+  }
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'amountMinor': amountMinor,
+    'currencyCode': currencyCode,
+  };
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is Money &&
+            other.amountMinor == amountMinor &&
+            other.currencyCode == currencyCode;
+  }
+
+  @override
+  int get hashCode => Object.hash(amountMinor, currencyCode);
 }

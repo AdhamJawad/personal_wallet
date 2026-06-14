@@ -1,4 +1,3 @@
-import '../../../../shared/domain/enums/currency.dart';
 import '../../../debts/domain/models/settlement_summary.dart';
 import '../models/transfer_summary.dart';
 
@@ -9,8 +8,8 @@ abstract interface class TransferRepository {
     required String senderWalletId,
     required String recipientUserId,
     required String recipientDisplayName,
-    required Currency currency,
-    required String amount,
+    required String currencyCode,
+    required int amountMinor,
     String? note,
   });
   Future<SettlementSummary> createDebtSettlement({
@@ -20,8 +19,8 @@ abstract interface class TransferRepository {
     required String senderWalletId,
     required String recipientUserId,
     required String recipientDisplayName,
-    required Currency currency,
-    required String amount,
+    required String currencyCode,
+    required int amountMinor,
     String? note,
   });
   Future<List<TransferSummary>> fetchTransfers(String ownerUserId);

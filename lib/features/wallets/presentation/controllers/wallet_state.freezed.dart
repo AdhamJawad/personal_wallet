@@ -49,7 +49,7 @@ $Res call({
 });
 
 
-$WalletDashboardSnapshotCopyWith<$Res>? get dashboardSnapshot;$WalletOverviewCopyWith<$Res>? get selectedWallet;
+$WalletOverviewCopyWith<$Res>? get selectedWallet;
 
 }
 /// @nodoc
@@ -75,18 +75,6 @@ as String?,
   ));
 }
 /// Create a copy of WalletState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$WalletDashboardSnapshotCopyWith<$Res>? get dashboardSnapshot {
-    if (_self.dashboardSnapshot == null) {
-    return null;
-  }
-
-  return $WalletDashboardSnapshotCopyWith<$Res>(_self.dashboardSnapshot!, (value) {
-    return _then(_self.copyWith(dashboardSnapshot: value));
-  });
-}/// Create a copy of WalletState
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -287,7 +275,7 @@ $Res call({
 });
 
 
-@override $WalletDashboardSnapshotCopyWith<$Res>? get dashboardSnapshot;@override $WalletOverviewCopyWith<$Res>? get selectedWallet;
+@override $WalletOverviewCopyWith<$Res>? get selectedWallet;
 
 }
 /// @nodoc
@@ -314,18 +302,6 @@ as String?,
 }
 
 /// Create a copy of WalletState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$WalletDashboardSnapshotCopyWith<$Res>? get dashboardSnapshot {
-    if (_self.dashboardSnapshot == null) {
-    return null;
-  }
-
-  return $WalletDashboardSnapshotCopyWith<$Res>(_self.dashboardSnapshot!, (value) {
-    return _then(_self.copyWith(dashboardSnapshot: value));
-  });
-}/// Create a copy of WalletState
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')

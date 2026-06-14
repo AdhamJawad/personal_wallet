@@ -1,20 +1,62 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
+import '../../../../core/utils/amount_formatter.dart';
 import 'debt_settlement.dart';
 
-part 'settlement_summary.freezed.dart';
-part 'settlement_summary.g.dart';
+class SettlementSummary {
+  const SettlementSummary({
+    required this.settlement,
+    required this.transferReference,
+    required this.counterpartyDisplayName,
+    required this.remainingAmountAfterSettlementMinor,
+    required this.isCompleted,
+  });
 
-@freezed
-abstract class SettlementSummary with _$SettlementSummary {
-  const factory SettlementSummary({
-    required DebtSettlement settlement,
-    required String transferReference,
-    required String counterpartyDisplayName,
-    required String remainingAmountAfterSettlement,
-    required bool isCompleted,
-  }) = _SettlementSummary;
+  factory SettlementSummary.fromJson(Map<String, dynamic> json) {
+    return SettlementSummary(
+      settlement: DebtSettlement.fromJson(
+        json['settlement'] as Map<String, dynamic>,
+      ),
+      transferReference: json['transferReference'] as String,
+      counterpartyDisplayName: json['counterpartyDisplayName'] as String,
+      remainingAmountAfterSettlementMinor:
+          (json['remainingAmountAfterSettlementMinor'] as num).toInt(),
+      isCompleted: json['isCompleted'] as bool,
+    );
+  }
 
-  factory SettlementSummary.fromJson(Map<String, dynamic> json) =>
-      _$SettlementSummaryFromJson(json);
+  final DebtSettlement settlement;
+  final String transferReference;
+  final String counterpartyDisplayName;
+  final int remainingAmountAfterSettlementMinor;
+  final bool isCompleted;
+
+  String get remainingAmountAfterSettlement => AmountFormatter.majorFromMinor(
+    remainingAmountAfterSettlementMinor,
+  ).toString();
+
+  SettlementSummary copyWith({
+    DebtSettlement? settlement,
+    String? transferReference,
+    String? counterpartyDisplayName,
+    int? remainingAmountAfterSettlementMinor,
+    bool? isCompleted,
+  }) {
+    return SettlementSummary(
+      settlement: settlement ?? this.settlement,
+      transferReference: transferReference ?? this.transferReference,
+      counterpartyDisplayName:
+          counterpartyDisplayName ?? this.counterpartyDisplayName,
+      remainingAmountAfterSettlementMinor:
+          remainingAmountAfterSettlementMinor ??
+          this.remainingAmountAfterSettlementMinor,
+      isCompleted: isCompleted ?? this.isCompleted,
+    );
+  }
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'settlement': settlement.toJson(),
+    'transferReference': transferReference,
+    'counterpartyDisplayName': counterpartyDisplayName,
+    'remainingAmountAfterSettlementMinor': remainingAmountAfterSettlementMinor,
+    'isCompleted': isCompleted,
+  };
 }

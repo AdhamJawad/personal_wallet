@@ -49,7 +49,7 @@ $Res call({
 });
 
 
-$DebtSummaryCopyWith<$Res>? get selectedDebt;
+
 
 }
 /// @nodoc
@@ -72,19 +72,7 @@ as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessag
 as String?,
   ));
 }
-/// Create a copy of DebtState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$DebtSummaryCopyWith<$Res>? get selectedDebt {
-    if (_self.selectedDebt == null) {
-    return null;
-  }
 
-  return $DebtSummaryCopyWith<$Res>(_self.selectedDebt!, (value) {
-    return _then(_self.copyWith(selectedDebt: value));
-  });
-}
 }
 
 
@@ -271,7 +259,7 @@ $Res call({
 });
 
 
-@override $DebtSummaryCopyWith<$Res>? get selectedDebt;
+
 
 }
 /// @nodoc
@@ -295,19 +283,7 @@ as String?,
   ));
 }
 
-/// Create a copy of DebtState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$DebtSummaryCopyWith<$Res>? get selectedDebt {
-    if (_self.selectedDebt == null) {
-    return null;
-  }
 
-  return $DebtSummaryCopyWith<$Res>(_self.selectedDebt!, (value) {
-    return _then(_self.copyWith(selectedDebt: value));
-  });
-}
 }
 
 // dart format on

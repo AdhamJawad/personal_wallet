@@ -1,5 +1,4 @@
 import '../../../../core/network/remote_data_source.dart';
-import '../../../../shared/domain/enums/currency.dart';
 import '../../domain/models/ledger_transaction.dart';
 
 abstract interface class TransactionRemoteDataSource
@@ -7,19 +6,19 @@ abstract interface class TransactionRemoteDataSource
   Future<LedgerTransaction> createDeposit({
     required String ownerUserId,
     required String walletId,
-    required Currency currency,
-    required String amount,
+    required String currencyCode,
+    required int amountMinor,
     String? note,
     String? attachmentLabel,
   });
   Future<LedgerTransaction> createExchange({
     required String ownerUserId,
     required String walletId,
-    required Currency sourceCurrency,
-    required Currency destinationCurrency,
-    required String amountGiven,
+    required String sourceCurrencyCode,
+    required String destinationCurrencyCode,
+    required int sourceAmountMinor,
     required String exchangeRate,
-    required String amountReceived,
+    required int destinationAmountMinor,
     String? note,
     String? attachmentLabel,
   });
@@ -27,15 +26,15 @@ abstract interface class TransactionRemoteDataSource
     required String ownerUserId,
     required String sourceWalletId,
     required String destinationWalletId,
-    required Currency currency,
-    required String amount,
+    required String currencyCode,
+    required int amountMinor,
     String? note,
   });
   Future<LedgerTransaction> createWithdraw({
     required String ownerUserId,
     required String walletId,
-    required Currency currency,
-    required String amount,
+    required String currencyCode,
+    required int amountMinor,
     String? note,
     String? attachmentLabel,
   });

@@ -11,15 +11,15 @@ class BalanceCalculatorService {
     List<String> walletIds,
     List<LedgerTransaction> transactions,
   ) {
-    final Map<String, num> usdTotals = <String, num>{
+    final Map<String, int> usdTotals = <String, int>{
       for (final String walletId in walletIds) walletId: 0,
     };
-    final Map<String, num> sypTotals = <String, num>{
+    final Map<String, int> sypTotals = <String, int>{
       for (final String walletId in walletIds) walletId: 0,
     };
 
-    void applyAmount(String walletId, Currency currency, num delta) {
-      if (currency == Currency.usd) {
+    void applyAmount(String walletId, String currencyCode, int delta) {
+      if (currencyFromCode(currencyCode) == Currency.usd) {
         usdTotals[walletId] = (usdTotals[walletId] ?? 0) + delta;
       } else {
         sypTotals[walletId] = (sypTotals[walletId] ?? 0) + delta;
@@ -27,16 +27,15 @@ class BalanceCalculatorService {
     }
 
     for (final LedgerTransaction transaction in transactions) {
-      final num sourceAmount = num.tryParse(transaction.sourceAmount) ?? 0;
-      final num destinationAmount =
-          num.tryParse(transaction.destinationAmount ?? '0') ?? 0;
+      final int sourceAmount = transaction.sourceAmountMinor;
+      final int destinationAmount = transaction.destinationAmountMinor ?? 0;
 
       switch (transaction.type) {
         case TransactionType.deposit:
           if (transaction.destinationWalletId != null) {
             applyAmount(
               transaction.destinationWalletId!,
-              transaction.sourceCurrency,
+              transaction.sourceCurrencyCode,
               sourceAmount,
             );
           }
@@ -44,7 +43,7 @@ class BalanceCalculatorService {
           if (transaction.sourceWalletId != null) {
             applyAmount(
               transaction.sourceWalletId!,
-              transaction.sourceCurrency,
+              transaction.sourceCurrencyCode,
               -sourceAmount,
             );
           }
@@ -52,14 +51,14 @@ class BalanceCalculatorService {
           if (transaction.sourceWalletId != null) {
             applyAmount(
               transaction.sourceWalletId!,
-              transaction.sourceCurrency,
+              transaction.sourceCurrencyCode,
               -sourceAmount,
             );
           }
           if (transaction.destinationWalletId != null) {
             applyAmount(
               transaction.destinationWalletId!,
-              transaction.sourceCurrency,
+              transaction.sourceCurrencyCode,
               sourceAmount,
             );
           }
@@ -67,14 +66,14 @@ class BalanceCalculatorService {
           if (transaction.sourceWalletId != null) {
             applyAmount(
               transaction.sourceWalletId!,
-              transaction.sourceCurrency,
+              transaction.sourceCurrencyCode,
               -sourceAmount,
             );
-            if (transaction.destinationCurrency != null &&
-                transaction.destinationAmount != null) {
+            if (transaction.destinationCurrencyCode != null &&
+                transaction.destinationAmountMinor != null) {
               applyAmount(
                 transaction.sourceWalletId!,
-                transaction.destinationCurrency!,
+                transaction.destinationCurrencyCode!,
                 destinationAmount,
               );
             }
@@ -89,12 +88,12 @@ class BalanceCalculatorService {
         walletId: LedgerBalanceSummary(
           walletId: walletId,
           usdBalance: Money(
-            currency: Currency.usd,
-            amount: (usdTotals[walletId] ?? 0).toString(),
+            amountMinor: usdTotals[walletId] ?? 0,
+            currencyCode: Currency.usd.code,
           ),
           sypBalance: Money(
-            currency: Currency.syp,
-            amount: (sypTotals[walletId] ?? 0).toString(),
+            amountMinor: sypTotals[walletId] ?? 0,
+            currencyCode: Currency.syp.code,
           ),
         ),
     };

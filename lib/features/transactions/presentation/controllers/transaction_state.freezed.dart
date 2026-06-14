@@ -49,7 +49,7 @@ $Res call({
 });
 
 
-$LedgerTransactionCopyWith<$Res>? get selectedTransaction;
+
 
 }
 /// @nodoc
@@ -74,19 +74,7 @@ as TransactionSortOption,errorMessage: freezed == errorMessage ? _self.errorMess
 as String?,
   ));
 }
-/// Create a copy of TransactionState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$LedgerTransactionCopyWith<$Res>? get selectedTransaction {
-    if (_self.selectedTransaction == null) {
-    return null;
-  }
 
-  return $LedgerTransactionCopyWith<$Res>(_self.selectedTransaction!, (value) {
-    return _then(_self.copyWith(selectedTransaction: value));
-  });
-}
 }
 
 
@@ -275,7 +263,7 @@ $Res call({
 });
 
 
-@override $LedgerTransactionCopyWith<$Res>? get selectedTransaction;
+
 
 }
 /// @nodoc
@@ -301,19 +289,7 @@ as String?,
   ));
 }
 
-/// Create a copy of TransactionState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$LedgerTransactionCopyWith<$Res>? get selectedTransaction {
-    if (_self.selectedTransaction == null) {
-    return null;
-  }
 
-  return $LedgerTransactionCopyWith<$Res>(_self.selectedTransaction!, (value) {
-    return _then(_self.copyWith(selectedTransaction: value));
-  });
-}
 }
 
 // dart format on

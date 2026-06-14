@@ -1,27 +1,91 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-import '../../../../core/utils/date_time_converter.dart';
+import '../../../../core/utils/amount_formatter.dart';
 import '../../../../shared/domain/enums/currency.dart';
 import '../../../../shared/domain/enums/debt_status.dart';
 
-part 'debt_record.freezed.dart';
-part 'debt_record.g.dart';
+class DebtRecord {
+  const DebtRecord({
+    required this.id,
+    required this.lenderPartyId,
+    required this.borrowerPartyId,
+    required this.currencyCode,
+    required this.principalAmountMinor,
+    required this.repaidAmountMinor,
+    required this.status,
+    this.note,
+    required this.createdAt,
+    required this.updatedAt,
+  });
 
-@freezed
-abstract class DebtRecord with _$DebtRecord {
-  const factory DebtRecord({
-    required String id,
-    required String lenderPartyId,
-    required String borrowerPartyId,
-    required Currency currency,
-    required String principalAmount,
-    required String repaidAmount,
-    required DebtStatus status,
+  factory DebtRecord.fromJson(Map<String, dynamic> json) {
+    return DebtRecord(
+      id: json['id'] as String,
+      lenderPartyId: json['lenderPartyId'] as String,
+      borrowerPartyId: json['borrowerPartyId'] as String,
+      currencyCode: json['currencyCode'] as String,
+      principalAmountMinor: (json['principalAmountMinor'] as num).toInt(),
+      repaidAmountMinor: (json['repaidAmountMinor'] as num).toInt(),
+      status: DebtStatus.values.byName(json['status'] as String),
+      note: json['note'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  final String id;
+  final String lenderPartyId;
+  final String borrowerPartyId;
+  final String currencyCode;
+  final int principalAmountMinor;
+  final int repaidAmountMinor;
+  final DebtStatus status;
+  final String? note;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Currency get currency => currencyFromCode(currencyCode);
+
+  String get principalAmount =>
+      AmountFormatter.majorFromMinor(principalAmountMinor).toString();
+
+  String get repaidAmount =>
+      AmountFormatter.majorFromMinor(repaidAmountMinor).toString();
+
+  DebtRecord copyWith({
+    String? id,
+    String? lenderPartyId,
+    String? borrowerPartyId,
+    String? currencyCode,
+    int? principalAmountMinor,
+    int? repaidAmountMinor,
+    DebtStatus? status,
     String? note,
-    @DateTimeConverter() required DateTime createdAt,
-    @DateTimeConverter() required DateTime updatedAt,
-  }) = _DebtRecord;
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return DebtRecord(
+      id: id ?? this.id,
+      lenderPartyId: lenderPartyId ?? this.lenderPartyId,
+      borrowerPartyId: borrowerPartyId ?? this.borrowerPartyId,
+      currencyCode: currencyCode ?? this.currencyCode,
+      principalAmountMinor: principalAmountMinor ?? this.principalAmountMinor,
+      repaidAmountMinor: repaidAmountMinor ?? this.repaidAmountMinor,
+      status: status ?? this.status,
+      note: note ?? this.note,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 
-  factory DebtRecord.fromJson(Map<String, dynamic> json) =>
-      _$DebtRecordFromJson(json);
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'id': id,
+    'lenderPartyId': lenderPartyId,
+    'borrowerPartyId': borrowerPartyId,
+    'currencyCode': currencyCode,
+    'principalAmountMinor': principalAmountMinor,
+    'repaidAmountMinor': repaidAmountMinor,
+    'status': status.name,
+    'note': note,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 }

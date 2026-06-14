@@ -49,7 +49,7 @@ $Res call({
 });
 
 
-$TransferSummaryCopyWith<$Res>? get selectedTransfer;$TransferSummaryCopyWith<$Res>? get lastCompletedTransfer;$SettlementSummaryCopyWith<$Res>? get lastCompletedSettlement;
+$TransferSummaryCopyWith<$Res>? get selectedTransfer;$TransferSummaryCopyWith<$Res>? get lastCompletedTransfer;
 
 }
 /// @nodoc
@@ -97,18 +97,6 @@ $TransferSummaryCopyWith<$Res>? get lastCompletedTransfer {
 
   return $TransferSummaryCopyWith<$Res>(_self.lastCompletedTransfer!, (value) {
     return _then(_self.copyWith(lastCompletedTransfer: value));
-  });
-}/// Create a copy of TransferState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$SettlementSummaryCopyWith<$Res>? get lastCompletedSettlement {
-    if (_self.lastCompletedSettlement == null) {
-    return null;
-  }
-
-  return $SettlementSummaryCopyWith<$Res>(_self.lastCompletedSettlement!, (value) {
-    return _then(_self.copyWith(lastCompletedSettlement: value));
   });
 }
 }
@@ -299,7 +287,7 @@ $Res call({
 });
 
 
-@override $TransferSummaryCopyWith<$Res>? get selectedTransfer;@override $TransferSummaryCopyWith<$Res>? get lastCompletedTransfer;@override $SettlementSummaryCopyWith<$Res>? get lastCompletedSettlement;
+@override $TransferSummaryCopyWith<$Res>? get selectedTransfer;@override $TransferSummaryCopyWith<$Res>? get lastCompletedTransfer;
 
 }
 /// @nodoc
@@ -348,18 +336,6 @@ $TransferSummaryCopyWith<$Res>? get lastCompletedTransfer {
 
   return $TransferSummaryCopyWith<$Res>(_self.lastCompletedTransfer!, (value) {
     return _then(_self.copyWith(lastCompletedTransfer: value));
-  });
-}/// Create a copy of TransferState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$SettlementSummaryCopyWith<$Res>? get lastCompletedSettlement {
-    if (_self.lastCompletedSettlement == null) {
-    return null;
-  }
-
-  return $SettlementSummaryCopyWith<$Res>(_self.lastCompletedSettlement!, (value) {
-    return _then(_self.copyWith(lastCompletedSettlement: value));
   });
 }
 }

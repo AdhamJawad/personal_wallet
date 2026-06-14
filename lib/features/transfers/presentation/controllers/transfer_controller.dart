@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/amount_formatter.dart';
 import '../../../../shared/domain/enums/currency.dart';
 import '../../../auth/domain/models/auth_session.dart';
 import '../../../debts/domain/models/settlement_summary.dart';
@@ -79,8 +80,8 @@ class TransferController extends StateNotifier<TransferState> {
         senderWalletId: senderWalletId,
         recipientUserId: recipientUserId,
         recipientDisplayName: recipientDisplayName,
-        currency: currency,
-        amount: amount,
+        currencyCode: currency.code,
+        amountMinor: AmountFormatter.parseToMinor(amount),
         note: note,
       );
       await _reload(
@@ -114,8 +115,8 @@ class TransferController extends StateNotifier<TransferState> {
             senderWalletId: senderWalletId,
             recipientUserId: recipientUserId,
             recipientDisplayName: recipientDisplayName,
-            currency: currency,
-            amount: amount,
+            currencyCode: currency.code,
+            amountMinor: AmountFormatter.parseToMinor(amount),
             note: note,
           );
       final TransferSummary? transfer = await _transferRepository

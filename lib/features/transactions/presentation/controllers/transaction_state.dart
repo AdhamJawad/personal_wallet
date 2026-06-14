@@ -57,13 +57,9 @@ abstract class TransactionState with _$TransactionState {
         case TransactionSortOption.oldest:
           return left.createdAt.compareTo(right.createdAt);
         case TransactionSortOption.highestAmount:
-          return (num.tryParse(right.sourceAmount) ?? 0).compareTo(
-            num.tryParse(left.sourceAmount) ?? 0,
-          );
+          return right.sourceAmountMinor.compareTo(left.sourceAmountMinor);
         case TransactionSortOption.lowestAmount:
-          return (num.tryParse(left.sourceAmount) ?? 0).compareTo(
-            num.tryParse(right.sourceAmount) ?? 0,
-          );
+          return left.sourceAmountMinor.compareTo(right.sourceAmountMinor);
       }
     });
 

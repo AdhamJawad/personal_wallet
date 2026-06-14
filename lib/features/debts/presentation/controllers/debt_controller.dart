@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/amount_formatter.dart';
 import '../../domain/models/debt_summary.dart';
 import '../../domain/repositories/debt_repository.dart';
 import 'debt_state.dart';
@@ -42,7 +43,7 @@ class DebtController extends StateNotifier<DebtState> {
         contactId: contactId,
         isOwedToMe: isOwedToMe,
         currencyCode: currencyCode,
-        amount: amount,
+        amountMinor: AmountFormatter.parseToMinor(amount),
         note: note,
       );
       await initialize(selectedDebtId: summary.debt.id);
@@ -64,7 +65,7 @@ class DebtController extends StateNotifier<DebtState> {
       final DebtSummary summary = await _debtRepository.createRepayment(
         ownerUserId: _resolvedOwnerUserId,
         debtId: debtId,
-        amount: amount,
+        amountMinor: AmountFormatter.parseToMinor(amount),
         note: note,
       );
       await initialize(selectedDebtId: summary.debt.id);
@@ -86,7 +87,7 @@ class DebtController extends StateNotifier<DebtState> {
       final DebtSummary summary = await _debtRepository.updateDebt(
         ownerUserId: _resolvedOwnerUserId,
         debtId: debtId,
-        amount: amount,
+        amountMinor: AmountFormatter.parseToMinor(amount),
         note: note,
       );
       await initialize(selectedDebtId: summary.debt.id);

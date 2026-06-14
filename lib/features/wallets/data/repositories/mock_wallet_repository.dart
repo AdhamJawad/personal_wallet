@@ -332,18 +332,18 @@ class MockWalletRepository implements LocalWalletRepository {
     final num totalUsd = activeOverviews.fold<num>(
       0,
       (num total, WalletOverview item) =>
-          total + (num.tryParse(item.balance.usdBalance.amount) ?? 0),
+          total + item.balance.usdBalance.amountMinor,
     );
     final num totalSyp = activeOverviews.fold<num>(
       0,
       (num total, WalletOverview item) =>
-          total + (num.tryParse(item.balance.sypBalance.amount) ?? 0),
+          total + item.balance.sypBalance.amountMinor,
     );
 
     return WalletDashboardSnapshot(
       ownerUserId: ownerUserId,
-      totalUsd: totalUsd.toString(),
-      totalSyp: totalSyp.toString(),
+      totalUsdMinor: totalUsd.toInt(),
+      totalSypMinor: totalSyp.toInt(),
       walletSummaries: overviews,
       recentActivities: _toActivities(records, transactions),
     );

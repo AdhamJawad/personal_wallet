@@ -46,12 +46,12 @@ abstract class WalletState with _$WalletState {
             left.wallet.name.toLowerCase(),
           );
         case WalletSortOption.highestUsd:
-          return (num.tryParse(right.balance.usdBalance.amount) ?? 0).compareTo(
-            num.tryParse(left.balance.usdBalance.amount) ?? 0,
+          return right.balance.usdBalance.amountMinor.compareTo(
+            left.balance.usdBalance.amountMinor,
           );
         case WalletSortOption.highestSyp:
-          return (num.tryParse(right.balance.sypBalance.amount) ?? 0).compareTo(
-            num.tryParse(left.balance.sypBalance.amount) ?? 0,
+          return right.balance.sypBalance.amountMinor.compareTo(
+            left.balance.sypBalance.amountMinor,
           );
       }
     });

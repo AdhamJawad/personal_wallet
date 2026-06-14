@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/storage/local_store.dart';
 import '../../../../core/utils/id_generator.dart';
+import '../../../../core/utils/amount_formatter.dart';
 import '../../../../shared/domain/enums/currency.dart';
 import '../../../../shared/domain/enums/transaction_type.dart';
 import '../../domain/models/ledger_transaction.dart';
@@ -63,8 +64,9 @@ class MockLedgerStore {
     final List<dynamic> decoded = jsonDecode(rawValue) as List<dynamic>;
     return decoded
         .map(
-          (dynamic item) =>
-              LedgerTransaction.fromJson(item as Map<String, dynamic>),
+          (dynamic item) => LedgerTransaction.fromJson(
+            _migrateTransactionJson(item as Map<String, dynamic>),
+          ),
         )
         .toList(growable: false);
   }
@@ -92,10 +94,10 @@ class MockLedgerStore {
       required TransactionType type,
       String? sourceWalletId,
       String? destinationWalletId,
-      required Currency sourceCurrency,
-      Currency? destinationCurrency,
-      required String sourceAmount,
-      String? destinationAmount,
+      required String sourceCurrencyCode,
+      String? destinationCurrencyCode,
+      required int sourceAmountMinor,
+      int? destinationAmountMinor,
       String? exchangeRate,
       String? note,
     }) {
@@ -110,10 +112,10 @@ class MockLedgerStore {
         initiatedByUserId: ownerUserId,
         sourceWalletId: sourceWalletId,
         destinationWalletId: destinationWalletId,
-        sourceCurrency: sourceCurrency,
-        destinationCurrency: destinationCurrency,
-        sourceAmount: sourceAmount,
-        destinationAmount: destinationAmount,
+        sourceCurrencyCode: sourceCurrencyCode,
+        destinationCurrencyCode: destinationCurrencyCode,
+        sourceAmountMinor: sourceAmountMinor,
+        destinationAmountMinor: destinationAmountMinor,
         exchangeRate: exchangeRate,
         note: note,
         createdAt: now.subtract(Duration(days: 30 - sequence)),
@@ -125,66 +127,91 @@ class MockLedgerStore {
         sequence: 1,
         type: TransactionType.deposit,
         destinationWalletId: 'wallet_main',
-        sourceCurrency: Currency.usd,
-        sourceAmount: '1250',
+        sourceCurrencyCode: Currency.usd.code,
+        sourceAmountMinor: 125000,
         note: 'Initial USD funding',
       ),
       seed(
         sequence: 2,
         type: TransactionType.deposit,
         destinationWalletId: 'wallet_main',
-        sourceCurrency: Currency.syp,
-        sourceAmount: '12500000',
+        sourceCurrencyCode: Currency.syp.code,
+        sourceAmountMinor: 1250000000,
         note: 'Initial SYP funding',
       ),
       seed(
         sequence: 3,
         type: TransactionType.deposit,
         destinationWalletId: 'wallet_business',
-        sourceCurrency: Currency.usd,
-        sourceAmount: '500',
+        sourceCurrencyCode: Currency.usd.code,
+        sourceAmountMinor: 50000,
         note: 'Business reserve',
       ),
       seed(
         sequence: 4,
         type: TransactionType.deposit,
         destinationWalletId: 'wallet_business',
-        sourceCurrency: Currency.syp,
-        sourceAmount: '5000000',
+        sourceCurrencyCode: Currency.syp.code,
+        sourceAmountMinor: 500000000,
         note: 'Business reserve in SYP',
       ),
       seed(
         sequence: 5,
         type: TransactionType.deposit,
         destinationWalletId: 'wallet_travel',
-        sourceCurrency: Currency.usd,
-        sourceAmount: '300',
+        sourceCurrencyCode: Currency.usd.code,
+        sourceAmountMinor: 30000,
         note: 'Travel budget',
       ),
       seed(
         sequence: 6,
         type: TransactionType.deposit,
         destinationWalletId: 'wallet_travel',
-        sourceCurrency: Currency.syp,
-        sourceAmount: '1500000',
+        sourceCurrencyCode: Currency.syp.code,
+        sourceAmountMinor: 150000000,
         note: 'Travel reserve in SYP',
       ),
       seed(
         sequence: 7,
         type: TransactionType.deposit,
         destinationWalletId: 'wallet_savings',
-        sourceCurrency: Currency.usd,
-        sourceAmount: '2200',
+        sourceCurrencyCode: Currency.usd.code,
+        sourceAmountMinor: 220000,
         note: 'Savings funding',
       ),
       seed(
         sequence: 8,
         type: TransactionType.deposit,
         destinationWalletId: 'wallet_savings',
-        sourceCurrency: Currency.syp,
-        sourceAmount: '9000000',
+        sourceCurrencyCode: Currency.syp.code,
+        sourceAmountMinor: 900000000,
         note: 'Savings reserve in SYP',
       ),
     ];
+  }
+
+  Map<String, dynamic> _migrateTransactionJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> migrated = Map<String, dynamic>.from(json);
+
+    migrated['sourceCurrencyCode'] ??=
+        (migrated.remove('sourceCurrency') as String?)?.toUpperCase();
+    migrated['destinationCurrencyCode'] =
+        migrated['destinationCurrencyCode'] ??
+        (migrated.remove('destinationCurrency') as String?)?.toUpperCase();
+
+    if (!migrated.containsKey('sourceAmountMinor')) {
+      migrated['sourceAmountMinor'] = AmountFormatter.parseToMinor(
+        (migrated.remove('sourceAmount') ?? '0').toString(),
+      );
+    }
+
+    if (!migrated.containsKey('destinationAmountMinor')) {
+      final Object? destinationAmount = migrated.remove('destinationAmount');
+      migrated['destinationAmountMinor'] = destinationAmount == null
+          ? null
+          : AmountFormatter.parseToMinor(destinationAmount.toString());
+    }
+
+    return migrated;
   }
 }

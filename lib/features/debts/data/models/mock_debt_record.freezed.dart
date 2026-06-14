@@ -52,7 +52,7 @@ $Res call({
 });
 
 
-$DebtCopyWith<$Res> get debt;
+
 
 }
 /// @nodoc
@@ -73,16 +73,7 @@ as List<DebtRepayment>,settlements: null == settlements ? _self.settlements : se
 as List<DebtSettlement>,
   ));
 }
-/// Create a copy of MockDebtRecord
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$DebtCopyWith<$Res> get debt {
-  
-  return $DebtCopyWith<$Res>(_self.debt, (value) {
-    return _then(_self.copyWith(debt: value));
-  });
-}
+
 }
 
 
@@ -276,7 +267,7 @@ $Res call({
 });
 
 
-@override $DebtCopyWith<$Res> get debt;
+
 
 }
 /// @nodoc
@@ -298,16 +289,7 @@ as List<DebtSettlement>,
   ));
 }
 
-/// Create a copy of MockDebtRecord
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$DebtCopyWith<$Res> get debt {
-  
-  return $DebtCopyWith<$Res>(_self.debt, (value) {
-    return _then(_self.copyWith(debt: value));
-  });
-}
+
 }
 
 // dart format on

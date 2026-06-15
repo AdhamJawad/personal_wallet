@@ -6,7 +6,6 @@ import '../../core/storage/hive/hive_initializer.dart';
 import '../app.dart';
 
 Future<void> bootstrap() async {
-  WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ar');
   await initializeDateFormatting('en');
   await HiveInitializer.initialize();

@@ -5,6 +5,7 @@ class PendingOtpVerification {
     required this.createdAt,
     this.fullName,
     this.emailAddress,
+    this.resendToken,
   });
 
   factory PendingOtpVerification.fromJson(Map<String, dynamic> json) {
@@ -13,6 +14,7 @@ class PendingOtpVerification {
       phoneNumber: json['phoneNumber'] as String,
       fullName: json['fullName'] as String?,
       emailAddress: json['emailAddress'] as String?,
+      resendToken: json['resendToken'] as int?,
       createdAt: DateTime.parse(json['createdAt'] as String).toUtc(),
     );
   }
@@ -21,6 +23,7 @@ class PendingOtpVerification {
   final String phoneNumber;
   final String? fullName;
   final String? emailAddress;
+  final int? resendToken;
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -28,6 +31,7 @@ class PendingOtpVerification {
     'phoneNumber': phoneNumber,
     'fullName': fullName,
     'emailAddress': emailAddress,
+    'resendToken': resendToken,
     'createdAt': createdAt.toIso8601String(),
   };
 }

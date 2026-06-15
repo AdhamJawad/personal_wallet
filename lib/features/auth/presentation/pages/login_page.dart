@@ -66,7 +66,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.xl),
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),

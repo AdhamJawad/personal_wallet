@@ -4,6 +4,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/storage/local_store.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../domain/models/app_user.dart';
+import '../../domain/models/auth_exception.dart';
 import '../../domain/models/auth_session.dart';
 import '../../domain/models/login_request.dart';
 import '../../domain/models/pending_otp_verification.dart';
@@ -155,19 +156,29 @@ class MockAuthRepository implements LocalAuthRepository {
   Future<void> logout(String sessionId) async {}
 
   @override
-  Future<void> requestLoginOtp(LoginRequest request) async {
+  Future<PendingOtpVerification> requestLoginOtp(LoginRequest request) async {
     final MockAuthAccount? account = await _findAccount(request.phoneNumber);
     if (account == null) {
       throw const AuthException('phone_not_registered');
     }
 
     await _otpService.sendOtp(phoneNumber: request.phoneNumber);
+    return PendingOtpVerification(
+      verificationId: request.phoneNumber,
+      phoneNumber: request.phoneNumber,
+      createdAt: DateTime.now().toUtc(),
+    );
   }
 
   @override
-  Future<void> requestPinReset(String phoneNumber) async {
+  Future<PendingOtpVerification> requestPinReset(String phoneNumber) async {
     await _ensureSeeded();
     await _otpService.sendOtp(phoneNumber: phoneNumber);
+    return PendingOtpVerification(
+      verificationId: phoneNumber,
+      phoneNumber: phoneNumber,
+      createdAt: DateTime.now().toUtc(),
+    );
   }
 
   @override
@@ -219,13 +230,18 @@ class MockAuthRepository implements LocalAuthRepository {
   }
 
   @override
+  Future<AuthSession?> restoreSession() async => null;
+
+  @override
   Future<AuthSession> verifyLoginOtp({
-    required String phoneNumber,
+    required PendingOtpVerification pendingVerification,
     required String otpCode,
   }) async {
     await _verifyOtp(otpCode);
 
-    final MockAuthAccount? account = await _findAccount(phoneNumber);
+    final MockAuthAccount? account = await _findAccount(
+      pendingVerification.phoneNumber,
+    );
     if (account == null) {
       throw const AuthException('phone_not_registered');
     }
@@ -235,12 +251,14 @@ class MockAuthRepository implements LocalAuthRepository {
 
   @override
   Future<AuthSession> verifyPinResetOtp({
-    required String phoneNumber,
+    required PendingOtpVerification pendingVerification,
     required String otpCode,
   }) async {
     await _verifyOtp(otpCode);
 
-    final MockAuthAccount? account = await _findAccount(phoneNumber);
+    final MockAuthAccount? account = await _findAccount(
+      pendingVerification.phoneNumber,
+    );
     if (account == null) {
       throw const AuthException('phone_not_registered');
     }
@@ -272,13 +290,4 @@ class MockAuthRepository implements LocalAuthRepository {
 
     return _buildSession(user: user, biometricUnlocked: false);
   }
-}
-
-class AuthException implements Exception {
-  const AuthException(this.message);
-
-  final String message;
-
-  @override
-  String toString() => message;
 }

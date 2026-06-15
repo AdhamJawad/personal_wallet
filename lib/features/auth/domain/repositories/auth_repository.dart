@@ -5,9 +5,10 @@ import '../models/pending_otp_verification.dart';
 import '../models/register_request.dart';
 
 abstract interface class AuthRepository {
-  Future<void> requestLoginOtp(LoginRequest request);
+  Future<PendingOtpVerification> requestLoginOtp(LoginRequest request);
+  Future<AuthSession?> restoreSession();
   Future<AuthSession> verifyLoginOtp({
-    required String phoneNumber,
+    required PendingOtpVerification pendingVerification,
     required String otpCode,
   });
   Future<PendingOtpVerification> register(RegisterRequest request);
@@ -21,9 +22,9 @@ abstract interface class AuthRepository {
     required PendingOtpVerification pendingVerification,
     required String otpCode,
   });
-  Future<void> requestPinReset(String phoneNumber);
+  Future<PendingOtpVerification> requestPinReset(String phoneNumber);
   Future<AuthSession> verifyPinResetOtp({
-    required String phoneNumber,
+    required PendingOtpVerification pendingVerification,
     required String otpCode,
   });
   Future<void> logout(String sessionId);

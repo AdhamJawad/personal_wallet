@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/repositories/mock_auth_repository.dart';
 import '../../domain/enums/app_lock_status.dart';
 import '../../domain/enums/auth_status.dart';
 import '../../domain/enums/lock_timeout_option.dart';
 import '../../domain/enums/otp_flow_type.dart';
+import '../../domain/models/biometric_capability.dart';
+import '../../domain/models/auth_exception.dart';
 import '../../domain/models/auth_session.dart';
 import '../../domain/models/login_request.dart';
 import '../../domain/models/pending_otp_flow.dart';
@@ -32,16 +33,44 @@ class AuthController extends StateNotifier<AuthState> {
   final AuthSessionManager _authSessionManager;
   final BiometricAuthService _biometricAuthService;
 
+  String _accountKey(AuthSession session) => session.user.id;
+
+  AuthSession _mergeCachedSession({
+    required AuthSession freshSession,
+    required AuthSession? cachedSession,
+  }) {
+    if (cachedSession == null ||
+        cachedSession.user.id != freshSession.user.id) {
+      return freshSession;
+    }
+
+    return freshSession.copyWith(
+      user: freshSession.user.copyWith(
+        emailAddress:
+            freshSession.user.emailAddress ?? cachedSession.user.emailAddress,
+        profileImageUri:
+            freshSession.user.profileImageUri ??
+            cachedSession.user.profileImageUri,
+        personalQrToken: cachedSession.user.personalQrToken.isEmpty
+            ? freshSession.user.personalQrToken
+            : cachedSession.user.personalQrToken,
+        createdAt: cachedSession.user.createdAt,
+      ),
+      issuedAt: cachedSession.issuedAt,
+    );
+  }
+
   Future<void> _applyAuthenticatedSession(
     AuthSession session, {
     required bool shouldRequirePinSetup,
     required bool promptBiometricSetup,
   }) async {
-    final String phoneNumber = session.user.phoneNumber;
+    final String accountKey = _accountKey(session);
     final bool isBiometricEnabled = await _authSessionManager
-        .isBiometricEnabled(phoneNumber);
+        .isBiometricEnabled(accountKey);
     final LockTimeoutOption lockTimeout = await _authSessionManager
-        .getLockTimeout(phoneNumber);
+        .getLockTimeout(accountKey);
+    final bool isPinConfigured = await _authSessionManager.hasPin(accountKey);
 
     state = state.copyWith(
       status: AuthStatus.authenticated,
@@ -49,9 +78,9 @@ class AuthController extends StateNotifier<AuthState> {
       pendingOtpFlow: null,
       isBusy: false,
       isBiometricEnabled: isBiometricEnabled,
-      isPinConfigured: !shouldRequirePinSetup,
+      isPinConfigured: isPinConfigured,
       lockTimeout: lockTimeout,
-      appLockStatus: shouldRequirePinSetup
+      appLockStatus: !isPinConfigured || shouldRequirePinSetup
           ? AppLockStatus.setupRequired
           : promptBiometricSetup
           ? AppLockStatus.biometricSetupRequired
@@ -60,32 +89,47 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> initialize() async {
-    final biometricCapability = await _biometricAuthService.getCapability();
-    final AuthSession? restoredSession = await _authSessionManager
+    final BiometricCapability biometricCapability = await _biometricAuthService
+        .getCapability();
+    final AuthSession? cachedSession = await _authSessionManager
         .restoreSession();
-    final String? phoneNumber = restoredSession?.user.phoneNumber;
-    final bool isBiometricEnabled = phoneNumber == null
-        ? false
-        : await _authSessionManager.isBiometricEnabled(phoneNumber);
-    final bool isPinConfigured = phoneNumber == null
-        ? false
-        : await _authSessionManager.hasPin(phoneNumber);
-    final LockTimeoutOption lockTimeout = phoneNumber == null
-        ? LockTimeoutOption.immediate
-        : await _authSessionManager.getLockTimeout(phoneNumber);
+    final AuthSession? authenticatedSession = await _authRepository
+        .restoreSession();
+
+    if (authenticatedSession == null) {
+      await _authSessionManager.clearSession();
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        session: null,
+        biometricCapability: biometricCapability,
+        isBiometricEnabled: false,
+        isPinConfigured: false,
+        lockTimeout: LockTimeoutOption.immediate,
+        appLockStatus: AppLockStatus.unlocked,
+      );
+      return;
+    }
+
+    final AuthSession restoredSession = _mergeCachedSession(
+      freshSession: authenticatedSession,
+      cachedSession: cachedSession,
+    );
+    final String accountKey = _accountKey(restoredSession);
+    final bool isBiometricEnabled = await _authSessionManager
+        .isBiometricEnabled(accountKey);
+    final bool isPinConfigured = await _authSessionManager.hasPin(accountKey);
+    final LockTimeoutOption lockTimeout = await _authSessionManager
+        .getLockTimeout(accountKey);
+    await _authSessionManager.persistSession(restoredSession);
 
     state = state.copyWith(
-      status: restoredSession == null
-          ? AuthStatus.unauthenticated
-          : AuthStatus.authenticated,
+      status: AuthStatus.authenticated,
       session: restoredSession,
       biometricCapability: biometricCapability,
       isBiometricEnabled: isBiometricEnabled,
       isPinConfigured: isPinConfigured,
       lockTimeout: lockTimeout,
-      appLockStatus: restoredSession == null
-          ? AppLockStatus.unlocked
-          : isPinConfigured
+      appLockStatus: isPinConfigured
           ? AppLockStatus.locked
           : AppLockStatus.setupRequired,
     );
@@ -103,7 +147,7 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(isBusy: true);
 
     final bool isCurrentPinValid = await _authSessionManager.validatePin(
-      session.user.phoneNumber,
+      _accountKey(session),
       currentPin,
     );
     if (!isCurrentPinValid) {
@@ -111,7 +155,7 @@ class AuthController extends StateNotifier<AuthState> {
       return AuthOperationResult.failure('current_pin_invalid');
     }
 
-    await _authSessionManager.persistPin(session.user.phoneNumber, newPin);
+    await _authSessionManager.persistPin(_accountKey(session), newPin);
     state = state.copyWith(
       isBusy: false,
       appLockStatus: AppLockStatus.unlocked,
@@ -127,7 +171,7 @@ class AuthController extends StateNotifier<AuthState> {
 
     state = state.copyWith(isBusy: true);
     final bool isCurrentPinValid = await _authSessionManager.validatePin(
-      session.user.phoneNumber,
+      _accountKey(session),
       currentPin,
     );
 
@@ -136,11 +180,8 @@ class AuthController extends StateNotifier<AuthState> {
       return AuthOperationResult.failure('current_pin_invalid');
     }
 
-    await _authSessionManager.clearPin(session.user.phoneNumber);
-    await _authSessionManager.setBiometricEnabled(
-      session.user.phoneNumber,
-      false,
-    );
+    await _authSessionManager.clearPin(_accountKey(session));
+    await _authSessionManager.setBiometricEnabled(_accountKey(session), false);
 
     state = state.copyWith(
       isBusy: false,
@@ -195,19 +236,14 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(isBusy: true);
 
     try {
-      await _authRepository.requestLoginOtp(
-        LoginRequest(phoneNumber: phoneNumber.trim()),
-      );
+      final PendingOtpVerification pendingVerification = await _authRepository
+          .requestLoginOtp(LoginRequest(phoneNumber: phoneNumber.trim()));
 
       state = state.copyWith(
         status: AuthStatus.awaitingOtp,
         pendingOtpFlow: PendingOtpFlow(
           type: OtpFlowType.signIn,
-          challenge: PendingOtpVerification(
-            verificationId: phoneNumber.trim(),
-            phoneNumber: phoneNumber.trim(),
-            createdAt: DateTime.now().toUtc(),
-          ),
+          challenge: pendingVerification,
         ),
         isBusy: false,
       );
@@ -289,16 +325,13 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(isBusy: true);
 
     try {
-      await _authRepository.requestPinReset(phoneNumber.trim());
+      final PendingOtpVerification pendingVerification = await _authRepository
+          .requestPinReset(phoneNumber.trim());
       state = state.copyWith(
         status: AuthStatus.awaitingOtp,
         pendingOtpFlow: PendingOtpFlow(
           type: OtpFlowType.pinReset,
-          challenge: PendingOtpVerification(
-            verificationId: phoneNumber.trim(),
-            phoneNumber: phoneNumber.trim(),
-            createdAt: DateTime.now().toUtc(),
-          ),
+          challenge: pendingVerification,
         ),
         isBusy: false,
       );
@@ -318,7 +351,7 @@ class AuthController extends StateNotifier<AuthState> {
     }
 
     await _authSessionManager.persistLockTimeout(
-      session.user.phoneNumber,
+      _accountKey(session),
       lockTimeout,
     );
     state = state.copyWith(lockTimeout: lockTimeout);
@@ -335,7 +368,7 @@ class AuthController extends StateNotifier<AuthState> {
     }
 
     state = state.copyWith(isBusy: true);
-    await _authSessionManager.persistPin(session.user.phoneNumber, pin);
+    await _authSessionManager.persistPin(_accountKey(session), pin);
 
     final bool shouldShowBiometricSetup =
         promptForBiometricSetup &&
@@ -382,7 +415,7 @@ class AuthController extends StateNotifier<AuthState> {
     }
 
     await _authSessionManager.setBiometricEnabled(
-      state.session!.user.phoneNumber,
+      _accountKey(state.session!),
       enabled,
     );
 
@@ -424,7 +457,7 @@ class AuthController extends StateNotifier<AuthState> {
     }
 
     final bool isPinValid = await _authSessionManager.validatePin(
-      session.user.phoneNumber,
+      _accountKey(session),
       pin,
     );
     if (!isPinValid) {
@@ -484,12 +517,12 @@ class AuthController extends StateNotifier<AuthState> {
       switch (pendingOtpFlow.type) {
         case OtpFlowType.signIn:
           session = await _authRepository.verifyLoginOtp(
-            phoneNumber: pendingOtpFlow.phoneNumber,
+            pendingVerification: pendingOtpFlow.challenge,
             otpCode: otpCode,
           );
           await _authSessionManager.persistSession(session);
           shouldRequirePinSetup = !await _authSessionManager.hasPin(
-            session.user.phoneNumber,
+            _accountKey(session),
           );
           promptBiometricSetup = false;
           successMessageKey = 'login_successful';
@@ -504,11 +537,11 @@ class AuthController extends StateNotifier<AuthState> {
           successMessageKey = 'registration_completed';
         case OtpFlowType.pinReset:
           session = await _authRepository.verifyPinResetOtp(
-            phoneNumber: pendingOtpFlow.phoneNumber,
+            pendingVerification: pendingOtpFlow.challenge,
             otpCode: otpCode,
           );
           await _authSessionManager.clearSecurityPreferences(
-            session.user.phoneNumber,
+            _accountKey(session),
           );
           await _authSessionManager.persistSession(session);
           shouldRequirePinSetup = true;

@@ -27,9 +27,7 @@ abstract class TransferState with _$TransferState {
 
     return transfers
         .where((TransferSummary item) {
-          return item.transfer.reference.value.toLowerCase().contains(
-                normalizedQuery,
-              ) ||
+          return item.reference.value.toLowerCase().contains(normalizedQuery) ||
               item.counterpartyDisplayName.toLowerCase().contains(
                 normalizedQuery,
               ) ||

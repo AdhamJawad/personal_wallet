@@ -46,7 +46,7 @@ class ContactDetailsPage extends ConsumerStatefulWidget {
 
 class _ContactDetailsPageState extends ConsumerState<ContactDetailsPage> {
   AttachmentReference get _attachmentReference => AttachmentReference(
-    type: AttachmentReferenceType.contact,
+    entityType: AttachmentReferenceType.contact,
     entityId: widget.contactId,
   );
 

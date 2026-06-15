@@ -1,5 +1,6 @@
 import '../../../../core/utils/amount_formatter.dart';
 import '../../../../shared/domain/enums/currency.dart';
+import '../../../../shared/domain/enums/debt_status.dart';
 
 class Debt {
   const Debt({
@@ -9,6 +10,7 @@ class Debt {
     required this.isOwedToMe,
     required this.currencyCode,
     required this.originalAmountMinor,
+    this.status = DebtStatus.active,
     this.note,
     required this.createdAt,
     required this.updatedAt,
@@ -23,6 +25,10 @@ class Debt {
       isOwedToMe: json['isOwedToMe'] as bool,
       currencyCode: json['currencyCode'] as String,
       originalAmountMinor: (json['originalAmountMinor'] as num).toInt(),
+      status: _statusFromJson(
+        json['status'] as String?,
+        completedAtRaw: json['completedAt'] as String?,
+      ),
       note: json['note'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -38,12 +44,14 @@ class Debt {
   final bool isOwedToMe;
   final String currencyCode;
   final int originalAmountMinor;
+  final DebtStatus status;
   final String? note;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? completedAt;
 
   Currency get currency => currencyFromCode(currencyCode);
+  bool get isCompleted => status == DebtStatus.completed;
 
   String get originalAmount =>
       AmountFormatter.majorFromMinor(originalAmountMinor).toString();
@@ -55,6 +63,7 @@ class Debt {
     bool? isOwedToMe,
     String? currencyCode,
     int? originalAmountMinor,
+    DebtStatus? status,
     String? note,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -69,6 +78,7 @@ class Debt {
       isOwedToMe: isOwedToMe ?? this.isOwedToMe,
       currencyCode: currencyCode ?? this.currencyCode,
       originalAmountMinor: originalAmountMinor ?? this.originalAmountMinor,
+      status: status ?? this.status,
       note: note ?? this.note,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -83,9 +93,25 @@ class Debt {
     'isOwedToMe': isOwedToMe,
     'currencyCode': currencyCode,
     'originalAmountMinor': originalAmountMinor,
+    'status': status.name,
     'note': note,
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
     'completedAt': completedAt?.toIso8601String(),
   };
+
+  static DebtStatus _statusFromJson(
+    String? rawStatus, {
+    required String? completedAtRaw,
+  }) {
+    return switch (rawStatus) {
+      'active' => DebtStatus.active,
+      'completed' => DebtStatus.completed,
+      'cancelled' => DebtStatus.cancelled,
+      'open' => DebtStatus.active,
+      'settled' => DebtStatus.completed,
+      'disputed' => DebtStatus.cancelled,
+      _ => completedAtRaw == null ? DebtStatus.active : DebtStatus.completed,
+    };
+  }
 }

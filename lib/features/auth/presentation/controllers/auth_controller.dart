@@ -45,9 +45,7 @@ class AuthController extends StateNotifier<AuthState> {
 
     state = state.copyWith(
       status: AuthStatus.authenticated,
-      session: session.copyWith(
-        user: session.user.copyWith(biometricEnabled: isBiometricEnabled),
-      ),
+      session: session,
       pendingOtpFlow: null,
       isBusy: false,
       isBiometricEnabled: isBiometricEnabled,
@@ -388,13 +386,7 @@ class AuthController extends StateNotifier<AuthState> {
       enabled,
     );
 
-    final AuthSession updatedSession = state.session!.copyWith(
-      user: state.session!.user.copyWith(biometricEnabled: enabled),
-    );
-
-    await _authSessionManager.persistSession(updatedSession);
     state = state.copyWith(
-      session: updatedSession,
       isBiometricEnabled: enabled,
       appLockStatus: state.appLockStatus == AppLockStatus.biometricSetupRequired
           ? AppLockStatus.unlocked

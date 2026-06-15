@@ -325,7 +325,7 @@ class _TransactionOperationFlowState
         .read(attachmentControllerProvider.notifier)
         .createAttachments(
           reference: AttachmentReference(
-            type: AttachmentReferenceType.transaction,
+            entityType: AttachmentReferenceType.transaction,
             entityId: transaction.id,
             label: context.tr.transactionReferenceLabel(
               _title,

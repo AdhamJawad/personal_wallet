@@ -44,7 +44,7 @@ class _AttachmentViewerPageState extends ConsumerState<AttachmentViewerPage> {
   void initState() {
     super.initState();
     _reference = AttachmentReference(
-      type: AttachmentReferenceType.values.firstWhere(
+      entityType: AttachmentReferenceType.values.firstWhere(
         (AttachmentReferenceType item) => item.name == widget.entityType,
       ),
       entityId: widget.entityId,

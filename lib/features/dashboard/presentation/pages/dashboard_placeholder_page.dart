@@ -63,7 +63,7 @@ class _DashboardPlaceholderPageState
         wallet.wallet.id: wallet.wallet.name,
     };
     final Set<String> hiddenLedgerIds = transferState.transfers
-        .map((TransferSummary item) => item.transfer.ledgerTransactionId)
+        .map((TransferSummary item) => item.ledgerTransactionId)
         .toSet();
     final List<DashboardActivityData> recentActivities =
         <DashboardActivityData>[

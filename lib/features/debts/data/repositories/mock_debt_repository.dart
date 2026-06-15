@@ -4,20 +4,22 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/storage/local_store.dart';
 import '../../../../core/sync/enums/sync_operation_type.dart';
 import '../../../../core/sync/repositories/sync_queue_repository.dart';
-import '../../../../core/utils/id_generator.dart';
 import '../../../../core/utils/amount_formatter.dart';
+import '../../../../core/utils/id_generator.dart';
+import '../../../../shared/domain/enums/debt_status.dart';
 import '../../../audit/domain/enums/audit_event_type.dart';
 import '../../../audit/domain/services/audit_logger.dart';
 import '../../../contacts/domain/models/contact.dart';
 import '../../../contacts/domain/repositories/contact_repository.dart';
 import '../../../notifications/domain/services/notification_publisher.dart';
+import '../../../transfers/domain/models/user_transfer.dart';
 import '../../domain/models/debt.dart';
 import '../../domain/models/debt_repayment.dart';
 import '../../domain/models/debt_settlement.dart';
 import '../../domain/models/debt_summary.dart';
-import '../../domain/models/settlement_summary.dart';
 import 'local_debt_repository.dart';
 import '../models/mock_debt_record.dart';
+import '../services/debt_projection_builder.dart';
 
 class MockDebtRepository implements LocalDebtRepository {
   MockDebtRepository({
@@ -26,17 +28,22 @@ class MockDebtRepository implements LocalDebtRepository {
     required SyncQueueRepository syncQueueRepository,
     required NotificationPublisher notificationPublisher,
     required AuditLogger auditLogger,
+    DebtProjectionBuilder projectionBuilder = const DebtProjectionBuilder(),
   }) : _localStore = localStore,
        _contactRepository = contactRepository,
        _syncQueueRepository = syncQueueRepository,
        _notificationPublisher = notificationPublisher,
-       _auditLogger = auditLogger;
+       _auditLogger = auditLogger,
+       _projectionBuilder = projectionBuilder;
 
   final LocalStore _localStore;
   final ContactRepository _contactRepository;
   final SyncQueueRepository _syncQueueRepository;
   final NotificationPublisher _notificationPublisher;
   final AuditLogger _auditLogger;
+  final DebtProjectionBuilder _projectionBuilder;
+
+  static const String _canonicalTransfersKey = 'transfers.records';
 
   Future<List<MockDebtRecord>> _loadRecords(String ownerUserId) async {
     final String? rawValue = await _localStore.read(
@@ -103,6 +110,7 @@ class MockDebtRepository implements LocalDebtRepository {
             id: IdGenerator.next(),
             debtId: 'debt_owed_to_me_ali',
             amountMinor: 3000,
+            currencyCode: 'USD',
             note: 'First partial repayment',
             createdAt: now.subtract(const Duration(days: 6)),
           ),
@@ -125,6 +133,7 @@ class MockDebtRepository implements LocalDebtRepository {
             id: IdGenerator.next(),
             debtId: 'debt_i_owe_store',
             amountMinor: 25000000,
+            currencyCode: 'SYP',
             note: 'First settlement',
             createdAt: now.subtract(const Duration(days: 4)),
           ),
@@ -147,10 +156,34 @@ class MockDebtRepository implements LocalDebtRepository {
     ];
   }
 
+  Future<Map<String, UserTransfer>> _loadTransferLookup() async {
+    final String? rawValue = await _localStore.read(
+      boxName: AppConstants.transactionsBox,
+      key: _canonicalTransfersKey,
+    );
+    if (rawValue == null || rawValue.isEmpty) {
+      return const <String, UserTransfer>{};
+    }
+
+    final List<dynamic> decoded = jsonDecode(rawValue) as List<dynamic>;
+    final List<UserTransfer> transfers = decoded
+        .map(
+          (dynamic item) => UserTransfer.fromJson(
+            _migrateTransferJson(item as Map<String, dynamic>),
+          ),
+        )
+        .toList(growable: false);
+
+    return <String, UserTransfer>{
+      for (final UserTransfer transfer in transfers) transfer.id: transfer,
+    };
+  }
+
   Future<DebtSummary> _toSummary(
     String ownerUserId,
-    MockDebtRecord record,
-  ) async {
+    MockDebtRecord record, {
+    Map<String, UserTransfer>? transferLookup,
+  }) async {
     final Contact? contact = await _contactRepository.getContactById(
       ownerUserId: ownerUserId,
       contactId: record.debt.counterpartyContactId,
@@ -160,65 +193,23 @@ class MockDebtRepository implements LocalDebtRepository {
       throw const DebtRepositoryException('Debt contact was not found.');
     }
 
-    final int originalAmount = record.debt.originalAmountMinor;
-    final int repaidAmount = record.repayments.fold<int>(
-      0,
-      (int total, DebtRepayment repayment) => total + repayment.amountMinor,
-    );
-    final int settledAmount = record.settlements.fold<int>(
-      0,
-      (int total, DebtSettlement settlement) => total + settlement.amountMinor,
-    );
-    final int totalRecovered = repaidAmount + settledAmount;
-    final int resolvedRemainingAmount = originalAmount - totalRecovered;
-    final bool manuallyCompleted = record.debt.completedAt != null;
-    final bool isCompleted = manuallyCompleted || resolvedRemainingAmount <= 0;
-    final List<SettlementSummary> settlements = <SettlementSummary>[];
-    int remainingAfterSettlement = originalAmount - repaidAmount;
-    DateTime latestActivityAt = record.debt.updatedAt;
+    final Map<String, UserTransfer> resolvedTransferLookup =
+        transferLookup ?? await _loadTransferLookup();
 
-    for (final DebtSettlement settlement in record.settlements) {
-      remainingAfterSettlement -= settlement.amountMinor;
-      if (settlement.createdAt.isAfter(latestActivityAt)) {
-        latestActivityAt = settlement.createdAt;
-      }
-      settlements.add(
-        SettlementSummary(
-          settlement: settlement,
-          transferReference: settlement.transferReference,
-          counterpartyDisplayName: contact.name,
-          remainingAmountAfterSettlementMinor: remainingAfterSettlement < 0
-              ? 0
-              : remainingAfterSettlement,
-          isCompleted: remainingAfterSettlement <= 0,
-        ),
-      );
-    }
-
-    for (final DebtRepayment repayment in record.repayments) {
-      if (repayment.createdAt.isAfter(latestActivityAt)) {
-        latestActivityAt = repayment.createdAt;
-      }
-    }
-
-    return DebtSummary(
-      debt: record.debt.copyWith(
-        updatedAt: latestActivityAt,
-        completedAt: isCompleted
-            ? record.debt.completedAt ??
-                  record.settlements.lastOrNull?.createdAt ??
-                  record.repayments.lastOrNull?.createdAt
-            : null,
-      ),
+    return _projectionBuilder.buildSummary(
+      debt: record.debt,
       contact: contact,
       repayments: record.repayments,
-      settlements: settlements,
-      repaidAmountMinor: totalRecovered,
-      remainingAmountMinor: isCompleted
-          ? 0
-          : (resolvedRemainingAmount < 0 ? 0 : resolvedRemainingAmount),
-      isCompleted: isCompleted,
-      currencyCode: record.debt.currencyCode,
+      settlements: record.settlements,
+      transferReferenceResolver: (DebtSettlement settlement) {
+        final UserTransfer? transfer =
+            resolvedTransferLookup[settlement.linkedTransferId];
+        final String? value =
+            transfer?.referenceFor(ownerUserId)?.value ??
+            transfer?.senderReference?.value ??
+            transfer?.recipientReference?.value;
+        return value ?? settlement.linkedTransferId;
+      },
     );
   }
 
@@ -241,6 +232,7 @@ class MockDebtRepository implements LocalDebtRepository {
         isOwedToMe: isOwedToMe,
         currencyCode: currencyCode,
         originalAmountMinor: amountMinor,
+        status: DebtStatus.active,
         note: note,
         createdAt: now,
         updatedAt: now,
@@ -297,17 +289,26 @@ class MockDebtRepository implements LocalDebtRepository {
       throw const DebtRepositoryException('Debt was not found.');
     }
 
+    final MockDebtRecord currentRecord = records[index];
     final DebtRepayment repayment = DebtRepayment(
       id: IdGenerator.next(),
       debtId: debtId,
       amountMinor: amountMinor,
+      currencyCode: currentRecord.debt.currencyCode,
       note: note,
       createdAt: now,
     );
 
-    final MockDebtRecord updatedRecord = records[index].copyWith(
-      debt: records[index].debt.copyWith(updatedAt: now),
-      repayments: List<DebtRepayment>.from(records[index].repayments)
+    final Debt reconciledDebt = _projectionBuilder.reconcileDebt(
+      debt: currentRecord.debt.copyWith(updatedAt: now),
+      repayments: List<DebtRepayment>.from(currentRecord.repayments)
+        ..add(repayment),
+      settlements: currentRecord.settlements,
+    );
+
+    final MockDebtRecord updatedRecord = currentRecord.copyWith(
+      debt: reconciledDebt,
+      repayments: List<DebtRepayment>.from(currentRecord.repayments)
         ..add(repayment),
     );
 
@@ -322,6 +323,7 @@ class MockDebtRepository implements LocalDebtRepository {
       payload: <String, dynamic>{
         'debtId': debtId,
         'amountMinor': amountMinor,
+        'currencyCode': repayment.currencyCode,
         'repaymentId': repayment.id,
       },
     );
@@ -360,12 +362,17 @@ class MockDebtRepository implements LocalDebtRepository {
     }
 
     final MockDebtRecord currentRecord = records[index];
-    final MockDebtRecord updatedRecord = currentRecord.copyWith(
+    final Debt reconciledDebt = _projectionBuilder.reconcileDebt(
       debt: currentRecord.debt.copyWith(
         originalAmountMinor: amountMinor,
         note: note,
         updatedAt: now,
       ),
+      repayments: currentRecord.repayments,
+      settlements: currentRecord.settlements,
+    );
+    final MockDebtRecord updatedRecord = currentRecord.copyWith(
+      debt: reconciledDebt,
     );
 
     final List<MockDebtRecord> updatedRecords = List<MockDebtRecord>.from(
@@ -412,7 +419,11 @@ class MockDebtRepository implements LocalDebtRepository {
 
     final MockDebtRecord currentRecord = records[index];
     final MockDebtRecord updatedRecord = currentRecord.copyWith(
-      debt: currentRecord.debt.copyWith(updatedAt: now, completedAt: now),
+      debt: currentRecord.debt.copyWith(
+        status: DebtStatus.completed,
+        updatedAt: now,
+        completedAt: now,
+      ),
     );
 
     final List<MockDebtRecord> updatedRecords = List<MockDebtRecord>.from(
@@ -423,7 +434,10 @@ class MockDebtRepository implements LocalDebtRepository {
       ownerUserId: ownerUserId,
       entityId: debtId,
       type: SyncOperationType.debtClose,
-      payload: <String, dynamic>{'completedAt': now.toIso8601String()},
+      payload: <String, dynamic>{
+        'status': DebtStatus.completed.name,
+        'completedAt': now.toIso8601String(),
+      },
     );
     await _notificationPublisher.publish(
       ownerUserId: ownerUserId,
@@ -458,8 +472,17 @@ class MockDebtRepository implements LocalDebtRepository {
     }
 
     final MockDebtRecord currentRecord = records[index];
+    final Debt reconciledDebt = _projectionBuilder.reconcileDebt(
+      debt: currentRecord.debt.copyWith(
+        status: DebtStatus.active,
+        updatedAt: now,
+        clearCompletedAt: true,
+      ),
+      repayments: currentRecord.repayments,
+      settlements: currentRecord.settlements,
+    );
     final MockDebtRecord updatedRecord = currentRecord.copyWith(
-      debt: currentRecord.debt.copyWith(updatedAt: now, completedAt: null),
+      debt: reconciledDebt,
     );
 
     final List<MockDebtRecord> updatedRecords = List<MockDebtRecord>.from(
@@ -470,7 +493,7 @@ class MockDebtRepository implements LocalDebtRepository {
       ownerUserId: ownerUserId,
       entityId: debtId,
       type: SyncOperationType.debtReopen,
-      payload: const <String, dynamic>{'completedAt': null},
+      payload: const <String, dynamic>{'status': 'active', 'completedAt': null},
     );
     await _notificationPublisher.publish(
       ownerUserId: ownerUserId,
@@ -490,12 +513,10 @@ class MockDebtRepository implements LocalDebtRepository {
   }
 
   @override
-  Future<SettlementSummary> createSettlement({
+  Future<DebtSettlement> createSettlement({
     required String ownerUserId,
     required String debtId,
     required String transferId,
-    required String ledgerTransactionId,
-    required String transferReference,
     required int amountMinor,
     String? note,
   }) async {
@@ -513,18 +534,21 @@ class MockDebtRepository implements LocalDebtRepository {
     final DebtSettlement settlement = DebtSettlement(
       id: IdGenerator.next(),
       debtId: debtId,
-      ownerUserId: ownerUserId,
-      transferId: transferId,
-      ledgerTransactionId: ledgerTransactionId,
-      transferReference: transferReference,
+      linkedTransferId: transferId,
       currencyCode: existingRecord.debt.currencyCode,
       amountMinor: amountMinor,
       note: note,
       createdAt: now,
     );
 
-    final MockDebtRecord updatedRecord = existingRecord.copyWith(
+    final Debt reconciledDebt = _projectionBuilder.reconcileDebt(
       debt: existingRecord.debt.copyWith(updatedAt: now),
+      repayments: existingRecord.repayments,
+      settlements: List<DebtSettlement>.from(existingRecord.settlements)
+        ..add(settlement),
+    );
+    final MockDebtRecord updatedRecord = existingRecord.copyWith(
+      debt: reconciledDebt,
       settlements: List<DebtSettlement>.from(existingRecord.settlements)
         ..add(settlement),
     );
@@ -539,10 +563,9 @@ class MockDebtRepository implements LocalDebtRepository {
       type: SyncOperationType.debtSettlementCreate,
       payload: <String, dynamic>{
         'debtId': debtId,
-        'transferId': transferId,
-        'ledgerTransactionId': ledgerTransactionId,
-        'transferReference': transferReference,
+        'linkedTransferId': transferId,
         'amountMinor': amountMinor,
+        'currencyCode': settlement.currencyCode,
         'settlementId': settlement.id,
       },
     );
@@ -560,18 +583,19 @@ class MockDebtRepository implements LocalDebtRepository {
       entityId: settlement.id,
       relatedEntityType: 'debtSettlement',
     );
-
-    final DebtSummary summary = await _toSummary(ownerUserId, updatedRecord);
-    return summary.settlements.firstWhere(
-      (SettlementSummary item) => item.settlement.id == settlement.id,
-    );
+    return settlement;
   }
 
   @override
   Future<List<DebtSummary>> fetchDebts(String ownerUserId) async {
     final List<MockDebtRecord> records = await _loadRecords(ownerUserId);
+    final Map<String, UserTransfer> transferLookup =
+        await _loadTransferLookup();
     return Future.wait(
-      records.map((MockDebtRecord record) => _toSummary(ownerUserId, record)),
+      records.map(
+        (MockDebtRecord record) =>
+            _toSummary(ownerUserId, record, transferLookup: transferLookup),
+      ),
     );
   }
 
@@ -601,6 +625,16 @@ class MockDebtRepository implements LocalDebtRepository {
         (debt.remove('originalAmount') ?? '0').toString(),
       );
     }
+    debt['status'] = switch (debt['status'] as String?) {
+      'open' => DebtStatus.active.name,
+      'settled' => DebtStatus.completed.name,
+      'disputed' => DebtStatus.cancelled.name,
+      final String value => value,
+      null =>
+        debt['completedAt'] == null
+            ? DebtStatus.active.name
+            : DebtStatus.completed.name,
+    };
     migrated['debt'] = debt;
 
     migrated['repayments'] =
@@ -614,6 +648,7 @@ class MockDebtRepository implements LocalDebtRepository {
                   (repayment.remove('amount') ?? '0').toString(),
                 );
               }
+              repayment['currencyCode'] ??= debt['currencyCode'];
               return repayment;
             })
             .toList(growable: false);
@@ -625,16 +660,35 @@ class MockDebtRepository implements LocalDebtRepository {
                 item as Map<String, dynamic>,
               );
               settlement['currencyCode'] ??=
-                  (settlement.remove('currency') as String?)?.toUpperCase();
+                  (settlement.remove('currency') as String?)?.toUpperCase() ??
+                  debt['currencyCode'];
               if (!settlement.containsKey('amountMinor')) {
                 settlement['amountMinor'] = AmountFormatter.parseToMinor(
                   (settlement.remove('amount') ?? '0').toString(),
                 );
               }
+              settlement['linkedTransferId'] ??= settlement.remove(
+                'transferId',
+              );
+              settlement.remove('ownerUserId');
+              settlement.remove('ledgerTransactionId');
+              settlement.remove('transferReference');
               return settlement;
             })
             .toList(growable: false);
 
+    return migrated;
+  }
+
+  Map<String, dynamic> _migrateTransferJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> migrated = Map<String, dynamic>.from(json);
+    migrated['currencyCode'] ??= (migrated.remove('currency') as String?)
+        ?.toUpperCase();
+    if (!migrated.containsKey('amountMinor')) {
+      migrated['amountMinor'] = AmountFormatter.parseToMinor(
+        (migrated.remove('amount') ?? '0').toString(),
+      );
+    }
     return migrated;
   }
 }

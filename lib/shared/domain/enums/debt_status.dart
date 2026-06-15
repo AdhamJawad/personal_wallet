@@ -1,1 +1,1 @@
-enum DebtStatus { open, settled, disputed }
+enum DebtStatus { active, completed, cancelled }

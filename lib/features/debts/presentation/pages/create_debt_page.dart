@@ -200,7 +200,7 @@ class _CreateDebtPageState extends ConsumerState<CreateDebtPage> {
         .read(attachmentControllerProvider.notifier)
         .createAttachments(
           reference: AttachmentReference(
-            type: AttachmentReferenceType.debt,
+            entityType: AttachmentReferenceType.debt,
             entityId: summary.debt.id,
             label: referenceLabel,
           ),

@@ -17,6 +17,7 @@ class DebtRecord {
   });
 
   factory DebtRecord.fromJson(Map<String, dynamic> json) {
+    final String? rawStatus = json['status'] as String?;
     return DebtRecord(
       id: json['id'] as String,
       lenderPartyId: json['lenderPartyId'] as String,
@@ -24,7 +25,15 @@ class DebtRecord {
       currencyCode: json['currencyCode'] as String,
       principalAmountMinor: (json['principalAmountMinor'] as num).toInt(),
       repaidAmountMinor: (json['repaidAmountMinor'] as num).toInt(),
-      status: DebtStatus.values.byName(json['status'] as String),
+      status: switch (rawStatus) {
+        'active' => DebtStatus.active,
+        'completed' => DebtStatus.completed,
+        'cancelled' => DebtStatus.cancelled,
+        'open' => DebtStatus.active,
+        'settled' => DebtStatus.completed,
+        'disputed' => DebtStatus.cancelled,
+        _ => DebtStatus.active,
+      },
       note: json['note'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),

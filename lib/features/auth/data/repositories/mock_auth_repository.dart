@@ -40,12 +40,11 @@ class MockAuthRepository implements LocalAuthRepository {
     final List<MockAuthAccount> accounts = <MockAuthAccount>[
       MockAuthAccount(
         user: AppUser(
-          id: 'user_demo_1',
+          userId: 'user_demo_1',
           phoneNumber: _demoPhoneNumber,
           displayName: _demoDisplayName,
           emailAddress: _demoEmailAddress,
           isVerified: true,
-          biometricEnabled: false,
           personalQrToken: 'PW-DEMO-001',
           createdAt: now,
           updatedAt: now,
@@ -53,12 +52,11 @@ class MockAuthRepository implements LocalAuthRepository {
       ),
       MockAuthAccount(
         user: AppUser(
-          id: 'user_demo_2',
+          userId: 'user_demo_2',
           phoneNumber: '+963900000002',
           displayName: 'Ahmad Kareem',
           emailAddress: 'ahmad@example.com',
           isVerified: true,
-          biometricEnabled: false,
           personalQrToken: 'PW-AHMAD-002',
           createdAt: now,
           updatedAt: now,
@@ -66,12 +64,11 @@ class MockAuthRepository implements LocalAuthRepository {
       ),
       MockAuthAccount(
         user: AppUser(
-          id: 'user_demo_3',
+          userId: 'user_demo_3',
           phoneNumber: '+963900000003',
           displayName: 'Sara Nasser',
           emailAddress: 'sara@example.com',
           isVerified: true,
-          biometricEnabled: false,
           personalQrToken: 'PW-SARA-003',
           createdAt: now,
           updatedAt: now,
@@ -95,7 +92,7 @@ class MockAuthRepository implements LocalAuthRepository {
     final DateTime now = DateTime.now().toUtc();
 
     return AuthSession(
-      id: IdGenerator.next(),
+      sessionId: IdGenerator.next(),
       user: user.copyWith(updatedAt: now),
       biometricUnlocked: biometricUnlocked,
       issuedAt: now,
@@ -260,13 +257,12 @@ class MockAuthRepository implements LocalAuthRepository {
 
     final DateTime now = DateTime.now().toUtc();
     final AppUser user = AppUser(
-      id: IdGenerator.next(),
+      userId: IdGenerator.next(),
       phoneNumber: pendingVerification.phoneNumber,
       displayName: pendingVerification.fullName ?? 'New User',
       emailAddress: pendingVerification.emailAddress,
       profileImageUri: null,
       isVerified: true,
-      biometricEnabled: false,
       personalQrToken: IdGenerator.next(),
       createdAt: now,
       updatedAt: now,

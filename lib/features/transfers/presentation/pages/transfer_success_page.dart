@@ -62,7 +62,7 @@ class TransferSuccessPage extends ConsumerWidget {
                   Text('Transfer recorded', style: context.titleLarge),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    transfer.transfer.reference.value,
+                    transfer.reference.value,
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   const SizedBox(height: AppSpacing.lg),

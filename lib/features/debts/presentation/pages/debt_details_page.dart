@@ -50,7 +50,7 @@ class _DebtDetailsPageState extends ConsumerState<DebtDetailsPage> {
   final GlobalKey _timelineKey = GlobalKey();
 
   AttachmentReference get _attachmentReference => AttachmentReference(
-    type: AttachmentReferenceType.debt,
+    entityType: AttachmentReferenceType.debt,
     entityId: widget.debtId,
   );
 
@@ -1472,7 +1472,7 @@ class _EditDebtSheetState extends ConsumerState<_EditDebtSheet> {
         .read(attachmentControllerProvider.notifier)
         .createAttachments(
           reference: AttachmentReference(
-            type: AttachmentReferenceType.debt,
+            entityType: AttachmentReferenceType.debt,
             entityId: widget.summary.debt.id,
             label: context.tr.transactionReferenceLabel(
               context.tr.debt,

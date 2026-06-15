@@ -1,5 +1,5 @@
+import '../models/debt_settlement.dart';
 import '../models/debt_summary.dart';
-import '../models/settlement_summary.dart';
 
 abstract interface class DebtRepository {
   Future<DebtSummary> createDebt({
@@ -30,12 +30,10 @@ abstract interface class DebtRepository {
     required String ownerUserId,
     required String debtId,
   });
-  Future<SettlementSummary> createSettlement({
+  Future<DebtSettlement> createSettlement({
     required String ownerUserId,
     required String debtId,
     required String transferId,
-    required String ledgerTransactionId,
-    required String transferReference,
     required int amountMinor,
     String? note,
   });

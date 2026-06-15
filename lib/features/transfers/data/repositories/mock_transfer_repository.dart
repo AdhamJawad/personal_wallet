@@ -14,6 +14,8 @@ import '../../../debts/domain/repositories/debt_repository.dart';
 import '../../../notifications/domain/services/notification_publisher.dart';
 import '../../../transactions/data/services/mock_ledger_store.dart';
 import '../../../transactions/domain/models/ledger_transaction.dart';
+import '../../../transactions/domain/models/transaction_reference.dart';
+import '../../domain/enums/transfer_status.dart';
 import '../../domain/models/transfer_summary.dart';
 import '../../domain/models/user_transfer.dart';
 import 'local_transfer_repository.dart';
@@ -40,35 +42,77 @@ class MockTransferRepository implements LocalTransferRepository {
   final NotificationPublisher _notificationPublisher;
   final AuditLogger _auditLogger;
 
-  static String _transfersKey(String ownerUserId) => 'transfers.$ownerUserId';
+  static const String _canonicalTransfersKey = 'transfers.records';
+
+  static String _legacyTransfersKey(String ownerUserId) =>
+      'transfers.$ownerUserId';
 
   Future<List<UserTransfer>> _loadTransfers(String ownerUserId) async {
-    final String? rawValue = await _localStore.read(
+    final List<UserTransfer> canonicalTransfers = await _loadCanonicalTransfers(
+      ownerUserId,
+    );
+    return canonicalTransfers
+        .where((UserTransfer item) => item.involvesUser(ownerUserId))
+        .toList(growable: false);
+  }
+
+  Future<List<UserTransfer>> _loadCanonicalTransfers(String ownerUserId) async {
+    final String? canonicalRawValue = await _localStore.read(
       boxName: AppConstants.transactionsBox,
-      key: _transfersKey(ownerUserId),
+      key: _canonicalTransfersKey,
+    );
+    final List<UserTransfer> canonicalTransfers =
+        canonicalRawValue == null || canonicalRawValue.isEmpty
+        ? <UserTransfer>[]
+        : _decodeTransfers(canonicalRawValue);
+
+    final String legacyKey = _legacyTransfersKey(ownerUserId);
+    final String? legacyRawValue = await _localStore.read(
+      boxName: AppConstants.transactionsBox,
+      key: legacyKey,
     );
 
-    if (rawValue == null || rawValue.isEmpty) {
-      return const <UserTransfer>[];
+    if (legacyRawValue == null || legacyRawValue.isEmpty) {
+      return canonicalTransfers;
     }
 
+    final List<UserTransfer> legacyTransfers = _decodeTransfers(
+      legacyRawValue,
+      ownerUserId: ownerUserId,
+    );
+    final List<UserTransfer> mergedTransfers = _mergeTransfers(
+      canonicalTransfers,
+      legacyTransfers,
+    );
+
+    if (!_sameTransferSet(canonicalTransfers, mergedTransfers)) {
+      await _saveCanonicalTransfers(mergedTransfers);
+    }
+    await _localStore.delete(
+      boxName: AppConstants.transactionsBox,
+      key: legacyKey,
+    );
+    return mergedTransfers;
+  }
+
+  List<UserTransfer> _decodeTransfers(String rawValue, {String? ownerUserId}) {
     final List<dynamic> decoded = jsonDecode(rawValue) as List<dynamic>;
     return decoded
         .map(
           (dynamic item) => UserTransfer.fromJson(
-            _migrateTransferJson(item as Map<String, dynamic>),
+            _migrateTransferJson(
+              item as Map<String, dynamic>,
+              ownerUserId: ownerUserId,
+            ),
           ),
         )
         .toList(growable: false);
   }
 
-  Future<void> _saveTransfers(
-    String ownerUserId,
-    List<UserTransfer> transfers,
-  ) async {
+  Future<void> _saveCanonicalTransfers(List<UserTransfer> transfers) async {
     await _localStore.write(
       boxName: AppConstants.transactionsBox,
-      key: _transfersKey(ownerUserId),
+      key: _canonicalTransfersKey,
       value: jsonEncode(
         transfers.map((UserTransfer item) => item.toJson()).toList(),
       ),
@@ -77,13 +121,27 @@ class MockTransferRepository implements LocalTransferRepository {
 
   TransferSummary _toSummary(String ownerUserId, UserTransfer transfer) {
     final bool isIncoming = transfer.senderUserId != ownerUserId;
+    final TransactionReference reference =
+        transfer.referenceFor(ownerUserId) ??
+        transfer.senderReference ??
+        transfer.recipientReference ??
+        const TransactionReference(value: 'TR-UNKNOWN', year: 0, sequence: 0);
+    final String ledgerTransactionId =
+        transfer.ledgerTransactionIdFor(ownerUserId) ??
+        transfer.senderLedgerTransactionId ??
+        transfer.recipientLedgerTransactionId ??
+        '';
+
     return TransferSummary(
       transfer: transfer,
+      ownerUserId: ownerUserId,
       isIncoming: isIncoming,
       isDebtSettlement: transfer.linkedDebtSettlementId != null,
       counterpartyDisplayName: isIncoming
           ? transfer.senderDisplayName
           : transfer.recipientDisplayName,
+      reference: reference,
+      ledgerTransactionId: ledgerTransactionId,
     );
   }
 
@@ -158,8 +216,6 @@ class MockTransferRepository implements LocalTransferRepository {
 
     final UserTransfer senderTransfer = UserTransfer(
       id: transferId,
-      ownerUserId: ownerUserId,
-      reference: senderReference,
       senderUserId: ownerUserId,
       senderDisplayName: senderDisplayName,
       recipientUserId: recipientUserId,
@@ -168,32 +224,20 @@ class MockTransferRepository implements LocalTransferRepository {
       recipientWalletId: 'wallet_main',
       currencyCode: currencyCode,
       amountMinor: amountMinor,
+      status: TransferStatus.completed,
       note: note,
-      ledgerTransactionId: senderLedger.id,
-      mirroredLedgerTransactionId: recipientLedger.id,
+      senderReference: senderReference,
+      recipientReference: recipientReference,
+      senderLedgerTransactionId: senderLedger.id,
+      recipientLedgerTransactionId: recipientLedger.id,
       createdAt: now,
     );
-    final UserTransfer recipientTransfer = senderTransfer.copyWith(
-      ownerUserId: recipientUserId,
-      reference: recipientReference,
-      ledgerTransactionId: recipientLedger.id,
-      mirroredLedgerTransactionId: senderLedger.id,
-    );
 
-    final List<UserTransfer> senderTransfers = await _loadTransfers(
+    final List<UserTransfer> existingTransfers = await _loadCanonicalTransfers(
       ownerUserId,
     );
-    await _saveTransfers(
-      ownerUserId,
-      List<UserTransfer>.from(senderTransfers)..add(senderTransfer),
-    );
-
-    final List<UserTransfer> recipientTransfers = await _loadTransfers(
-      recipientUserId,
-    );
-    await _saveTransfers(
-      recipientUserId,
-      List<UserTransfer>.from(recipientTransfers)..add(recipientTransfer),
+    await _saveCanonicalTransfers(
+      List<UserTransfer>.from(existingTransfers)..add(senderTransfer),
     );
     await _syncQueueRepository.addOperation(
       ownerUserId: ownerUserId,
@@ -222,7 +266,7 @@ class MockTransferRepository implements LocalTransferRepository {
       title: 'Transfer received',
       message:
           'You received ${AmountFormatter.formatMinor(amountMinor)} $currencyCode from $senderDisplayName.',
-      relatedEntityId: recipientTransfer.id,
+      relatedEntityId: senderTransfer.id,
       relatedEntityType: 'transfer',
     );
     await _auditLogger.log(
@@ -258,43 +302,26 @@ class MockTransferRepository implements LocalTransferRepository {
       note: note,
     );
 
-    final SettlementSummary settlement = await _debtRepository.createSettlement(
+    final debtSettlement = await _debtRepository.createSettlement(
       ownerUserId: ownerUserId,
       debtId: debtId,
       transferId: transfer.transfer.id,
-      ledgerTransactionId: transfer.transfer.ledgerTransactionId,
-      transferReference: transfer.transfer.reference.value,
       amountMinor: amountMinor,
       note: note,
     );
 
-    final List<UserTransfer> ownerTransfers = await _loadTransfers(ownerUserId);
-    final List<UserTransfer> updatedOwnerTransfers = ownerTransfers
-        .map((UserTransfer item) {
-          if (item.id != transfer.transfer.id) {
-            return item;
-          }
-          return item.copyWith(
-            linkedDebtSettlementId: settlement.settlement.id,
-          );
-        })
-        .toList(growable: false);
-    await _saveTransfers(ownerUserId, updatedOwnerTransfers);
-
-    final List<UserTransfer> recipientTransfers = await _loadTransfers(
-      recipientUserId,
+    final List<UserTransfer> canonicalTransfers = await _loadCanonicalTransfers(
+      ownerUserId,
     );
-    final List<UserTransfer> updatedRecipientTransfers = recipientTransfers
+    final List<UserTransfer> updatedTransfers = canonicalTransfers
         .map((UserTransfer item) {
           if (item.id != transfer.transfer.id) {
             return item;
           }
-          return item.copyWith(
-            linkedDebtSettlementId: settlement.settlement.id,
-          );
+          return item.copyWith(linkedDebtSettlementId: debtSettlement.id);
         })
         .toList(growable: false);
-    await _saveTransfers(recipientUserId, updatedRecipientTransfers);
+    await _saveCanonicalTransfers(updatedTransfers);
 
     final List<LedgerTransaction> ownerLedger = await _ledgerStore
         .loadTransactions(ownerUserId);
@@ -303,7 +330,7 @@ class MockTransferRepository implements LocalTransferRepository {
           if (item.transferRecordId != transfer.transfer.id) {
             return item;
           }
-          return item.copyWith(debtSettlementId: settlement.settlement.id);
+          return item.copyWith(debtSettlementId: debtSettlement.id);
         })
         .toList(growable: false);
     await _ledgerStore.saveTransactions(ownerUserId, rewrittenOwnerLedger);
@@ -315,7 +342,7 @@ class MockTransferRepository implements LocalTransferRepository {
           if (item.transferRecordId != transfer.transfer.id) {
             return item;
           }
-          return item.copyWith(debtSettlementId: settlement.settlement.id);
+          return item.copyWith(debtSettlementId: debtSettlement.id);
         })
         .toList(growable: false);
     await _ledgerStore.saveTransactions(
@@ -323,7 +350,17 @@ class MockTransferRepository implements LocalTransferRepository {
       rewrittenRecipientLedger,
     );
 
-    return settlement;
+    final debtSummary = await _debtRepository.getDebtById(
+      ownerUserId: ownerUserId,
+      debtId: debtId,
+    );
+    if (debtSummary == null) {
+      throw StateError('Debt summary was not found after settlement creation.');
+    }
+
+    return debtSummary.settlements.firstWhere(
+      (SettlementSummary item) => item.settlement.id == debtSettlement.id,
+    );
   }
 
   @override
@@ -352,7 +389,10 @@ class MockTransferRepository implements LocalTransferRepository {
     return transfer == null ? null : _toSummary(ownerUserId, transfer);
   }
 
-  Map<String, dynamic> _migrateTransferJson(Map<String, dynamic> json) {
+  Map<String, dynamic> _migrateTransferJson(
+    Map<String, dynamic> json, {
+    String? ownerUserId,
+  }) {
     final Map<String, dynamic> migrated = Map<String, dynamic>.from(json);
     migrated['currencyCode'] ??= (migrated.remove('currency') as String?)
         ?.toUpperCase();
@@ -361,6 +401,85 @@ class MockTransferRepository implements LocalTransferRepository {
         (migrated.remove('amount') ?? '0').toString(),
       );
     }
+    migrated['status'] ??= TransferStatus.completed.name;
+
+    if (migrated.containsKey('senderReference') ||
+        migrated.containsKey('recipientReference')) {
+      return migrated;
+    }
+
+    final String? legacyOwnerUserId =
+        ownerUserId ?? migrated.remove('ownerUserId') as String?;
+    final Map<String, dynamic>? legacyReference =
+        migrated.remove('reference') as Map<String, dynamic>?;
+    final String? legacyLedgerTransactionId =
+        migrated.remove('ledgerTransactionId') as String?;
+    final String? mirroredLedgerTransactionId =
+        migrated.remove('mirroredLedgerTransactionId') as String?;
+    final bool isSenderProjection =
+        legacyOwnerUserId == migrated['senderUserId'];
+
+    if (isSenderProjection) {
+      migrated['senderReference'] = legacyReference;
+      migrated['senderLedgerTransactionId'] = legacyLedgerTransactionId;
+      migrated['recipientLedgerTransactionId'] = mirroredLedgerTransactionId;
+    } else {
+      migrated['recipientReference'] = legacyReference;
+      migrated['recipientLedgerTransactionId'] = legacyLedgerTransactionId;
+      migrated['senderLedgerTransactionId'] = mirroredLedgerTransactionId;
+    }
     return migrated;
+  }
+
+  List<UserTransfer> _mergeTransfers(
+    List<UserTransfer> current,
+    List<UserTransfer> incoming,
+  ) {
+    final Map<String, UserTransfer> merged = <String, UserTransfer>{
+      for (final UserTransfer item in current) item.id: item,
+    };
+
+    for (final UserTransfer item in incoming) {
+      final UserTransfer? existing = merged[item.id];
+      if (existing == null) {
+        merged[item.id] = item;
+        continue;
+      }
+      merged[item.id] = existing.copyWith(
+        senderReference: existing.senderReference ?? item.senderReference,
+        recipientReference:
+            existing.recipientReference ?? item.recipientReference,
+        senderLedgerTransactionId:
+            existing.senderLedgerTransactionId ??
+            item.senderLedgerTransactionId,
+        recipientLedgerTransactionId:
+            existing.recipientLedgerTransactionId ??
+            item.recipientLedgerTransactionId,
+        linkedDebtSettlementId:
+            existing.linkedDebtSettlementId ?? item.linkedDebtSettlementId,
+      );
+    }
+
+    final List<UserTransfer> ordered = merged.values.toList(growable: false)
+      ..sort((UserTransfer left, UserTransfer right) {
+        return right.createdAt.compareTo(left.createdAt);
+      });
+    return ordered;
+  }
+
+  bool _sameTransferSet(List<UserTransfer> left, List<UserTransfer> right) {
+    if (identical(left, right)) {
+      return true;
+    }
+    if (left.length != right.length) {
+      return false;
+    }
+    for (int index = 0; index < left.length; index += 1) {
+      if (jsonEncode(left[index].toJson()) !=
+          jsonEncode(right[index].toJson())) {
+        return false;
+      }
+    }
+    return true;
   }
 }

@@ -1,6 +1,6 @@
 import '../../../../core/network/remote_data_source.dart';
+import '../../domain/models/debt_settlement.dart';
 import '../../domain/models/debt_summary.dart';
-import '../../domain/models/settlement_summary.dart';
 
 abstract interface class DebtRemoteDataSource implements RemoteDataSource {
   Future<DebtSummary> createDebt({
@@ -23,12 +23,10 @@ abstract interface class DebtRemoteDataSource implements RemoteDataSource {
     required int amountMinor,
     String? note,
   });
-  Future<SettlementSummary> createSettlement({
+  Future<DebtSettlement> createSettlement({
     required String ownerUserId,
     required String debtId,
     required String transferId,
-    required String ledgerTransactionId,
-    required String transferReference,
     required int amountMinor,
     String? note,
   });

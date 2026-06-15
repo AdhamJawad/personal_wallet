@@ -49,7 +49,7 @@ $Res call({
 });
 
 
-$TransferSummaryCopyWith<$Res>? get selectedTransfer;$TransferSummaryCopyWith<$Res>? get lastCompletedTransfer;
+
 
 }
 /// @nodoc
@@ -74,31 +74,7 @@ as String,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMess
 as String?,
   ));
 }
-/// Create a copy of TransferState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TransferSummaryCopyWith<$Res>? get selectedTransfer {
-    if (_self.selectedTransfer == null) {
-    return null;
-  }
 
-  return $TransferSummaryCopyWith<$Res>(_self.selectedTransfer!, (value) {
-    return _then(_self.copyWith(selectedTransfer: value));
-  });
-}/// Create a copy of TransferState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TransferSummaryCopyWith<$Res>? get lastCompletedTransfer {
-    if (_self.lastCompletedTransfer == null) {
-    return null;
-  }
-
-  return $TransferSummaryCopyWith<$Res>(_self.lastCompletedTransfer!, (value) {
-    return _then(_self.copyWith(lastCompletedTransfer: value));
-  });
-}
 }
 
 
@@ -287,7 +263,7 @@ $Res call({
 });
 
 
-@override $TransferSummaryCopyWith<$Res>? get selectedTransfer;@override $TransferSummaryCopyWith<$Res>? get lastCompletedTransfer;
+
 
 }
 /// @nodoc
@@ -313,31 +289,7 @@ as String?,
   ));
 }
 
-/// Create a copy of TransferState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TransferSummaryCopyWith<$Res>? get selectedTransfer {
-    if (_self.selectedTransfer == null) {
-    return null;
-  }
 
-  return $TransferSummaryCopyWith<$Res>(_self.selectedTransfer!, (value) {
-    return _then(_self.copyWith(selectedTransfer: value));
-  });
-}/// Create a copy of TransferState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TransferSummaryCopyWith<$Res>? get lastCompletedTransfer {
-    if (_self.lastCompletedTransfer == null) {
-    return null;
-  }
-
-  return $TransferSummaryCopyWith<$Res>(_self.lastCompletedTransfer!, (value) {
-    return _then(_self.copyWith(lastCompletedTransfer: value));
-  });
-}
 }
 
 // dart format on

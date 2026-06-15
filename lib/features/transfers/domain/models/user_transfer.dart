@@ -1,12 +1,11 @@
 import '../../../../core/utils/amount_formatter.dart';
 import '../../../../shared/domain/enums/currency.dart';
+import '../enums/transfer_status.dart';
 import '../../../transactions/domain/models/transaction_reference.dart';
 
 class UserTransfer {
   const UserTransfer({
     required this.id,
-    required this.ownerUserId,
-    required this.reference,
     required this.senderUserId,
     required this.senderDisplayName,
     required this.recipientUserId,
@@ -15,9 +14,12 @@ class UserTransfer {
     required this.recipientWalletId,
     required this.currencyCode,
     required this.amountMinor,
+    required this.status,
     this.note,
-    required this.ledgerTransactionId,
-    this.mirroredLedgerTransactionId,
+    this.senderReference,
+    this.recipientReference,
+    this.senderLedgerTransactionId,
+    this.recipientLedgerTransactionId,
     this.linkedDebtSettlementId,
     required this.createdAt,
   });
@@ -25,10 +27,6 @@ class UserTransfer {
   factory UserTransfer.fromJson(Map<String, dynamic> json) {
     return UserTransfer(
       id: json['id'] as String,
-      ownerUserId: json['ownerUserId'] as String,
-      reference: TransactionReference.fromJson(
-        json['reference'] as Map<String, dynamic>,
-      ),
       senderUserId: json['senderUserId'] as String,
       senderDisplayName: json['senderDisplayName'] as String,
       recipientUserId: json['recipientUserId'] as String,
@@ -37,18 +35,27 @@ class UserTransfer {
       recipientWalletId: json['recipientWalletId'] as String,
       currencyCode: json['currencyCode'] as String,
       amountMinor: (json['amountMinor'] as num).toInt(),
+      status: TransferStatus.values.byName(json['status'] as String),
       note: json['note'] as String?,
-      ledgerTransactionId: json['ledgerTransactionId'] as String,
-      mirroredLedgerTransactionId:
-          json['mirroredLedgerTransactionId'] as String?,
+      senderReference: json['senderReference'] == null
+          ? null
+          : TransactionReference.fromJson(
+              json['senderReference'] as Map<String, dynamic>,
+            ),
+      recipientReference: json['recipientReference'] == null
+          ? null
+          : TransactionReference.fromJson(
+              json['recipientReference'] as Map<String, dynamic>,
+            ),
+      senderLedgerTransactionId: json['senderLedgerTransactionId'] as String?,
+      recipientLedgerTransactionId:
+          json['recipientLedgerTransactionId'] as String?,
       linkedDebtSettlementId: json['linkedDebtSettlementId'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
 
   final String id;
-  final String ownerUserId;
-  final TransactionReference reference;
   final String senderUserId;
   final String senderDisplayName;
   final String recipientUserId;
@@ -57,9 +64,12 @@ class UserTransfer {
   final String recipientWalletId;
   final String currencyCode;
   final int amountMinor;
+  final TransferStatus status;
   final String? note;
-  final String ledgerTransactionId;
-  final String? mirroredLedgerTransactionId;
+  final TransactionReference? senderReference;
+  final TransactionReference? recipientReference;
+  final String? senderLedgerTransactionId;
+  final String? recipientLedgerTransactionId;
   final String? linkedDebtSettlementId;
   final DateTime createdAt;
 
@@ -67,10 +77,24 @@ class UserTransfer {
 
   String get amount => AmountFormatter.majorFromMinor(amountMinor).toString();
 
+  bool involvesUser(String userId) {
+    return senderUserId == userId || recipientUserId == userId;
+  }
+
+  bool isIncomingFor(String ownerUserId) => senderUserId != ownerUserId;
+
+  TransactionReference? referenceFor(String ownerUserId) {
+    return senderUserId == ownerUserId ? senderReference : recipientReference;
+  }
+
+  String? ledgerTransactionIdFor(String ownerUserId) {
+    return senderUserId == ownerUserId
+        ? senderLedgerTransactionId
+        : recipientLedgerTransactionId;
+  }
+
   UserTransfer copyWith({
     String? id,
-    String? ownerUserId,
-    TransactionReference? reference,
     String? senderUserId,
     String? senderDisplayName,
     String? recipientUserId,
@@ -79,16 +103,17 @@ class UserTransfer {
     String? recipientWalletId,
     String? currencyCode,
     int? amountMinor,
+    TransferStatus? status,
     String? note,
-    String? ledgerTransactionId,
-    String? mirroredLedgerTransactionId,
+    TransactionReference? senderReference,
+    TransactionReference? recipientReference,
+    String? senderLedgerTransactionId,
+    String? recipientLedgerTransactionId,
     String? linkedDebtSettlementId,
     DateTime? createdAt,
   }) {
     return UserTransfer(
       id: id ?? this.id,
-      ownerUserId: ownerUserId ?? this.ownerUserId,
-      reference: reference ?? this.reference,
       senderUserId: senderUserId ?? this.senderUserId,
       senderDisplayName: senderDisplayName ?? this.senderDisplayName,
       recipientUserId: recipientUserId ?? this.recipientUserId,
@@ -97,10 +122,14 @@ class UserTransfer {
       recipientWalletId: recipientWalletId ?? this.recipientWalletId,
       currencyCode: currencyCode ?? this.currencyCode,
       amountMinor: amountMinor ?? this.amountMinor,
+      status: status ?? this.status,
       note: note ?? this.note,
-      ledgerTransactionId: ledgerTransactionId ?? this.ledgerTransactionId,
-      mirroredLedgerTransactionId:
-          mirroredLedgerTransactionId ?? this.mirroredLedgerTransactionId,
+      senderReference: senderReference ?? this.senderReference,
+      recipientReference: recipientReference ?? this.recipientReference,
+      senderLedgerTransactionId:
+          senderLedgerTransactionId ?? this.senderLedgerTransactionId,
+      recipientLedgerTransactionId:
+          recipientLedgerTransactionId ?? this.recipientLedgerTransactionId,
       linkedDebtSettlementId:
           linkedDebtSettlementId ?? this.linkedDebtSettlementId,
       createdAt: createdAt ?? this.createdAt,
@@ -109,8 +138,6 @@ class UserTransfer {
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
-    'ownerUserId': ownerUserId,
-    'reference': reference.toJson(),
     'senderUserId': senderUserId,
     'senderDisplayName': senderDisplayName,
     'recipientUserId': recipientUserId,
@@ -119,9 +146,12 @@ class UserTransfer {
     'recipientWalletId': recipientWalletId,
     'currencyCode': currencyCode,
     'amountMinor': amountMinor,
+    'status': status.name,
     'note': note,
-    'ledgerTransactionId': ledgerTransactionId,
-    'mirroredLedgerTransactionId': mirroredLedgerTransactionId,
+    'senderReference': senderReference?.toJson(),
+    'recipientReference': recipientReference?.toJson(),
+    'senderLedgerTransactionId': senderLedgerTransactionId,
+    'recipientLedgerTransactionId': recipientLedgerTransactionId,
     'linkedDebtSettlementId': linkedDebtSettlementId,
     'createdAt': createdAt.toIso8601String(),
   };

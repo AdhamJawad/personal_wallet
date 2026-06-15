@@ -111,7 +111,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         wallet.wallet.id: wallet,
     };
     final Iterable<String> hiddenLedgerIds = transferState.transfers.map(
-      (TransferSummary item) => item.transfer.ledgerTransactionId,
+      (TransferSummary item) => item.ledgerTransactionId,
     );
     final List<_ActivityItem> allItems = _buildActivityFeed(
       context,
@@ -305,7 +305,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         wallet.wallet.id: wallet,
     };
     final Set<String> hiddenLedgerIds = transferState.transfers
-        .map((TransferSummary item) => item.transfer.ledgerTransactionId)
+        .map((TransferSummary item) => item.ledgerTransactionId)
         .toSet();
     final List<_ActivityItem> allItems = _buildActivityFeed(
       context,
@@ -1967,7 +1967,7 @@ _ActivityItem _ledgerToActivity(
     exchangeFromAmountLabel: exchangeFromAmountLabel,
     exchangeToAmountLabel: exchangeToAmountLabel,
     attachmentReference: AttachmentReference(
-      type: AttachmentReferenceType.transaction,
+      entityType: AttachmentReferenceType.transaction,
       entityId: transaction.id,
       label: transaction.reference.value,
     ),
@@ -2083,23 +2083,23 @@ _ActivityItem _transferToActivity(
         ? Icons.payments_rounded
         : Icons.swap_horizontal_circle_rounded,
     status: _ActivityStatus.completed,
-    referenceLabel: transfer.transfer.reference.value,
+    referenceLabel: transfer.reference.value,
     detailRoute: AppRoutes.transactionDetailsLocation(
-      transfer.transfer.ledgerTransactionId,
+      transfer.ledgerTransactionId,
     ),
     notePreview: _trimmedText(transfer.transfer.note),
     contactName: transfer.counterpartyDisplayName,
     walletNames: <String>[sourceWallet, destinationWallet],
     currencyCodes: <String>[transfer.transfer.currency.name.toUpperCase()],
     attachmentReference: AttachmentReference(
-      type: AttachmentReferenceType.transaction,
-      entityId: transfer.transfer.ledgerTransactionId,
-      label: transfer.transfer.reference.value,
+      entityType: AttachmentReferenceType.transaction,
+      entityId: transfer.ledgerTransactionId,
+      label: transfer.reference.value,
     ),
     attachmentViewerLabel:
-        '${AppRoutes.attachmentViewerPath}?entityType=transaction&entityId=${Uri.encodeComponent(transfer.transfer.ledgerTransactionId)}&label=${Uri.encodeComponent(transfer.transfer.reference.value)}',
+        '${AppRoutes.attachmentViewerPath}?entityType=transaction&entityId=${Uri.encodeComponent(transfer.ledgerTransactionId)}&label=${Uri.encodeComponent(transfer.reference.value)}',
     searchTokens: <String>[
-      transfer.transfer.reference.value,
+      transfer.reference.value,
       transfer.counterpartyDisplayName,
       transfer.transfer.note ?? '',
       sourceWallet,
@@ -2115,7 +2115,7 @@ _ActivityItem _transferToActivity(
       _ActivityDetailRowData(label: context.tr.amount, value: amountLabel),
       _ActivityDetailRowData(
         label: context.tr.transactionsReferenceLabel,
-        value: transfer.transfer.reference.value,
+        value: transfer.reference.value,
       ),
       _ActivityDetailRowData(
         label: context.tr.transactionsFromLabel,
@@ -2171,7 +2171,7 @@ _ActivityItem _debtToActivity(BuildContext context, DebtSummary summary) {
     referenceLabel: summary.debt.id,
     detailRoute: AppRoutes.debtDetailsLocation(summary.debt.id),
     attachmentReference: AttachmentReference(
-      type: AttachmentReferenceType.debt,
+      entityType: AttachmentReferenceType.debt,
       entityId: summary.debt.id,
       label: summary.contact.name,
     ),
@@ -2241,7 +2241,7 @@ _ActivityItem _repaymentToActivity(
     referenceLabel: repayment.id,
     detailRoute: AppRoutes.debtDetailsLocation(summary.debt.id),
     attachmentReference: AttachmentReference(
-      type: AttachmentReferenceType.debt,
+      entityType: AttachmentReferenceType.debt,
       entityId: summary.debt.id,
       label: summary.contact.name,
     ),

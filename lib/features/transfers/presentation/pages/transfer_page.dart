@@ -278,11 +278,11 @@ class _TransferPageState extends ConsumerState<TransferPage> {
         .read(attachmentControllerProvider.notifier)
         .createAttachments(
           reference: AttachmentReference(
-            type: AttachmentReferenceType.transaction,
-            entityId: transfer.transfer.ledgerTransactionId,
+            entityType: AttachmentReferenceType.transaction,
+            entityId: transfer.ledgerTransactionId,
             label: context.tr.transactionReferenceLabel(
               context.tr.transfer,
-              transfer.transfer.reference.value,
+              transfer.reference.value,
             ),
           ),
           drafts: _attachments

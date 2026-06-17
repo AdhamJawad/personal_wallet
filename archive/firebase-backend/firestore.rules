@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(ownerUid) {
+      return isAuthenticated() && request.auth.uid == ownerUid;
+    }
+
+    function isTransferParticipant() {
+      return isAuthenticated() && (
+        resource.data.senderUid == request.auth.uid ||
+        resource.data.receiverUid == request.auth.uid
+      );
+    }
+
+    match /users/{uid} {
+      allow read: if isAuthenticated() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+
+    match /wallets/{walletId} {
+      allow read: if isOwner(resource.data.ownerUid);
+      allow create, update, delete: if false;
+    }
+
+    match /contacts/{contactId} {
+      allow read: if isOwner(resource.data.ownerUid);
+      allow create, update, delete: if false;
+    }
+
+    match /debts/{debtId} {
+      allow read: if isOwner(resource.data.ownerUid);
+      allow create, update, delete: if false;
+    }
+
+    match /debtSettlements/{settlementId} {
+      allow read: if isOwner(resource.data.ownerUid);
+      allow create, update, delete: if false;
+    }
+
+    match /transfers/{transferId} {
+      allow read: if isTransferParticipant();
+      allow create, update, delete: if false;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.ownerUid);
+      allow create, update, delete: if false;
+    }
+
+    match /attachments/{attachmentId} {
+      allow read: if isOwner(resource.data.ownerUid);
+      allow create, update, delete: if false;
+    }
+
+    match /phoneIndex/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /authOtpChallenges/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /ledgerEntries/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /auditLogs/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

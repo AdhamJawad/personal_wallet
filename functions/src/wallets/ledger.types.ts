@@ -33,3 +33,69 @@ export interface LedgerEntryRecord {
 export interface GetWalletLedgerRequest {
   walletId: string;
 }
+
+export interface CreateDepositInput {
+  walletId: string;
+  ownerUid: string;
+  currency: string;
+  amount: number;
+  reason?: string;
+}
+
+export interface CreateDepositRequest {
+  walletId: string;
+  currency: string;
+  amount: number;
+  reason?: string;
+}
+
+export interface CreateDepositResponse {
+  success: true;
+  ledgerEntryId: string;
+}
+
+export interface CreateInternalTransferInput {
+  fromWalletId: string;
+  toWalletId: string;
+  ownerUid: string;
+  currency: string;
+  amount: number;
+  reason?: string;
+}
+
+export interface CreateInternalTransferRequest {
+  fromWalletId: string;
+  toWalletId: string;
+  currency: string;
+  amount: number;
+  reason?: string;
+}
+
+export interface CreateInternalTransferResponse {
+  success: true;
+  referenceId: string;
+}
+
+export interface CreateExchangeInput {
+  walletId: string;
+  ownerUid: string;
+  fromCurrency: string;
+  toCurrency: string;
+  fromAmount: number;
+  exchangeRate: number;
+}
+
+export interface CreateExchangeRequest {
+  walletId: string;
+  fromCurrency: string;
+  toCurrency: string;
+  fromAmount: number;
+  exchangeRate: number;
+}
+
+export interface CreateExchangeResponse {
+  success: true;
+  referenceId: string;
+  fromAmount: number;
+  toAmount: number;
+}

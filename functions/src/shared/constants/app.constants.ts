@@ -5,9 +5,15 @@ export const APP_CONSTANTS = {
   },
   firestore: {
     collections: {
+      auditLogs: "auditLogs",
       authOtpChallenges: "authOtpChallenges",
+      contacts: "contacts",
+      debts: "debts",
+      debtSettlements: "debtSettlements",
       ledgerEntries: "ledgerEntries",
+      notifications: "notifications",
       phoneIndex: "phoneIndex",
+      transfers: "transfers",
       users: "users",
       wallets: "wallets",
     },
@@ -39,6 +45,18 @@ export const APP_CONSTANTS = {
       "debt_settlement_in",
       "debt_settlement_out",
     ],
+  },
+  debts: {
+    directions: ["owed_by_contact", "owed_to_contact"],
+    statuses: ["active", "settled", "cancelled"],
+    defaultStatus: "active",
+  },
+  audit: {
+    entityTypes: ["wallet", "debt", "contact", "transfer"],
+  },
+  transfers: {
+    statuses: ["completed", "cancelled"],
+    defaultStatus: "completed",
   },
   headers: {
     sessionId: "x-session-id",

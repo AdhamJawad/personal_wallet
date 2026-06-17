@@ -5,13 +5,30 @@ import {AppError} from "../shared/errors/app.error.js";
 import {ValidationError} from "../shared/errors/validation.error.js";
 import {appLogger} from "../shared/utils/logger.js";
 import {
+  InvalidExchangeRateError,
+  InvalidDepositAmountError,
+  InvalidTransferAmountError,
+  InvalidWalletCurrencyError,
+  InsufficientFundsError,
+  SameCurrencyExchangeError,
+  SameWalletTransferError,
+  UnsupportedExchangeCurrencyError,
+  UnsupportedTransferCurrencyError,
   WalletCreationError,
   WalletNotFoundError,
   WalletUnauthenticatedError,
   WalletUnauthorizedError,
 } from "./wallets.errors.js";
 import {WalletsService} from "./wallets.service.js";
-import type {LedgerEntryRecord} from "./ledger.types.js";
+import type {
+  CreateExchangeRequest,
+  CreateExchangeResponse,
+  CreateDepositRequest,
+  CreateDepositResponse,
+  CreateInternalTransferRequest,
+  CreateInternalTransferResponse,
+  LedgerEntryRecord,
+} from "./ledger.types.js";
 import type {
   CreateWalletRequest,
   GetWalletBalancesRequest,
@@ -57,6 +74,129 @@ export class WalletsController {
             error: error instanceof Error ? error.message : "unknown_error",
           });
           throw this.toHttpsError(error, "Failed to create wallet.");
+        }
+      },
+    );
+  }
+
+  /**
+   * Creates a deposit ledger entry for an owned wallet.
+   * @return {unknown} Callable Firebase function handler.
+   */
+  createDeposit() {
+    return onCall<CreateDepositRequest>(
+      {region: APP_CONSTANTS.region},
+      async (request): Promise<CreateDepositResponse> => {
+        const ownerUid = this.requireAuthenticatedUid(request);
+        const deposit = this.validateDepositRequest(request.data);
+
+        appLogger.info("Create deposit request received.", {
+          event: "wallets.deposit.requested",
+          ownerUid,
+          walletId: deposit.walletId,
+          currency: deposit.currency,
+          amount: deposit.amount,
+        });
+
+        try {
+          return await this.walletsService.createDeposit({
+            ownerUid,
+            ...deposit,
+          });
+        } catch (error) {
+          appLogger.error("Create deposit request failed.", {
+            event: "wallets.deposit.error",
+            ownerUid,
+            walletId: deposit.walletId,
+            currency: deposit.currency,
+            amount: deposit.amount,
+            error: error instanceof Error ? error.message : "unknown_error",
+          });
+          throw this.toHttpsError(error, "Failed to create deposit.");
+        }
+      },
+    );
+  }
+
+  /**
+   * Creates a manual currency exchange inside an owned wallet.
+   * @return {unknown} Callable Firebase function handler.
+   */
+  createExchange() {
+    return onCall<CreateExchangeRequest>(
+      {region: APP_CONSTANTS.region},
+      async (request): Promise<CreateExchangeResponse> => {
+        const ownerUid = this.requireAuthenticatedUid(request);
+        const exchange = this.validateExchangeRequest(request.data);
+
+        appLogger.info("Create exchange request received.", {
+          event: "wallets.exchange.requested",
+          ownerUid,
+          walletId: exchange.walletId,
+          fromCurrency: exchange.fromCurrency,
+          toCurrency: exchange.toCurrency,
+          fromAmount: exchange.fromAmount,
+          exchangeRate: exchange.exchangeRate,
+        });
+
+        try {
+          return await this.walletsService.createExchange({
+            ownerUid,
+            ...exchange,
+          });
+        } catch (error) {
+          appLogger.error("Create exchange request failed.", {
+            event: "wallets.exchange.error",
+            ownerUid,
+            walletId: exchange.walletId,
+            fromCurrency: exchange.fromCurrency,
+            toCurrency: exchange.toCurrency,
+            fromAmount: exchange.fromAmount,
+            exchangeRate: exchange.exchangeRate,
+            error: error instanceof Error ? error.message : "unknown_error",
+          });
+          throw this.toHttpsError(error, "Failed to create exchange.");
+        }
+      },
+    );
+  }
+
+  /**
+   * Creates an internal transfer between two owned wallets.
+   * @return {unknown} Callable Firebase function handler.
+   */
+  createInternalTransfer() {
+    return onCall<CreateInternalTransferRequest>(
+      {region: APP_CONSTANTS.region},
+      async (request): Promise<CreateInternalTransferResponse> => {
+        const ownerUid = this.requireAuthenticatedUid(request);
+        const transfer = this.validateInternalTransferRequest(request.data);
+
+        appLogger.info("Create internal transfer request received.", {
+          event: "wallets.internal_transfer.requested",
+          ownerUid,
+          fromWalletId: transfer.fromWalletId,
+          toWalletId: transfer.toWalletId,
+          currency: transfer.currency,
+          amount: transfer.amount,
+        });
+
+        try {
+          return await this.walletsService.createInternalTransfer({
+            ownerUid,
+            ...transfer,
+          });
+        } catch (error) {
+          appLogger.error("Create internal transfer request failed.", {
+            event: "wallets.internal_transfer.error",
+            ownerUid,
+            fromWalletId: transfer.fromWalletId,
+            toWalletId: transfer.toWalletId,
+            currency: transfer.currency,
+            amount: transfer.amount,
+            error: error instanceof Error ? error.message : "unknown_error",
+          });
+          throw this.toHttpsError(error, "Failed to create internal transfer.");
         }
       },
     );
@@ -218,6 +358,169 @@ export class WalletsController {
   }
 
   /**
+   * Validates the deposit request input.
+   * @param {CreateDepositRequest | undefined} data Callable request payload.
+   * @return {object} Normalized deposit payload.
+   */
+  private validateDepositRequest(
+    data: CreateDepositRequest | undefined,
+  ): {walletId: string; currency: string; amount: number; reason?: string} {
+    const walletId = this.validateWalletId(data?.walletId);
+
+    if (typeof data?.currency !== "string") {
+      throw new ValidationError("A valid currency is required.", {
+        field: "currency",
+      });
+    }
+
+    if (typeof data?.amount !== "number" || Number.isNaN(data.amount)) {
+      throw new ValidationError("A valid amount is required.", {
+        field: "amount",
+      });
+    }
+
+    const currency = data.currency.trim().toUpperCase();
+
+    if (!currency) {
+      throw new ValidationError("Currency is required.", {
+        field: "currency",
+      });
+    }
+
+    const reason = typeof data.reason === "string" ?
+      data.reason.trim() || undefined :
+      undefined;
+
+    return {
+      walletId,
+      currency,
+      amount: data.amount,
+      reason,
+    };
+  }
+
+  /**
+   * Validates the internal transfer request input.
+   * @param {CreateInternalTransferRequest | undefined} data
+   * Callable request payload.
+   * @return {object} Normalized internal transfer payload.
+   */
+  private validateInternalTransferRequest(
+    data: CreateInternalTransferRequest | undefined,
+  ): {
+    fromWalletId: string;
+    toWalletId: string;
+    currency: string;
+    amount: number;
+    reason?: string;
+  } {
+    const fromWalletId = this.validateWalletId(data?.fromWalletId);
+    const toWalletId = this.validateWalletId(data?.toWalletId);
+
+    if (typeof data?.currency !== "string") {
+      throw new ValidationError("A valid currency is required.", {
+        field: "currency",
+      });
+    }
+
+    if (typeof data?.amount !== "number" || Number.isNaN(data.amount)) {
+      throw new ValidationError("A valid amount is required.", {
+        field: "amount",
+      });
+    }
+
+    const currency = data.currency.trim().toUpperCase();
+
+    if (!currency) {
+      throw new ValidationError("Currency is required.", {
+        field: "currency",
+      });
+    }
+
+    const reason = typeof data.reason === "string" ?
+      data.reason.trim() || undefined :
+      undefined;
+
+    return {
+      fromWalletId,
+      toWalletId,
+      currency,
+      amount: data.amount,
+      reason,
+    };
+  }
+
+  /**
+   * Validates the exchange request input.
+   * @param {CreateExchangeRequest | undefined} data Callable request payload.
+   * @return {object} Normalized exchange payload.
+   */
+  private validateExchangeRequest(
+    data: CreateExchangeRequest | undefined,
+  ): {
+    walletId: string;
+    fromCurrency: string;
+    toCurrency: string;
+    fromAmount: number;
+    exchangeRate: number;
+  } {
+    const walletId = this.validateWalletId(data?.walletId);
+
+    if (typeof data?.fromCurrency !== "string") {
+      throw new ValidationError("A valid fromCurrency is required.", {
+        field: "fromCurrency",
+      });
+    }
+
+    if (typeof data?.toCurrency !== "string") {
+      throw new ValidationError("A valid toCurrency is required.", {
+        field: "toCurrency",
+      });
+    }
+
+    if (
+      typeof data?.fromAmount !== "number" ||
+      Number.isNaN(data.fromAmount)
+    ) {
+      throw new ValidationError("A valid fromAmount is required.", {
+        field: "fromAmount",
+      });
+    }
+
+    if (
+      typeof data?.exchangeRate !== "number" ||
+      Number.isNaN(data.exchangeRate)
+    ) {
+      throw new ValidationError("A valid exchangeRate is required.", {
+        field: "exchangeRate",
+      });
+    }
+
+    const fromCurrency = data.fromCurrency.trim().toUpperCase();
+    const toCurrency = data.toCurrency.trim().toUpperCase();
+
+    if (!fromCurrency) {
+      throw new ValidationError("fromCurrency is required.", {
+        field: "fromCurrency",
+      });
+    }
+
+    if (!toCurrency) {
+      throw new ValidationError("toCurrency is required.", {
+        field: "toCurrency",
+      });
+    }
+
+    return {
+      walletId,
+      fromCurrency,
+      toCurrency,
+      fromAmount: data.fromAmount,
+      exchangeRate: data.exchangeRate,
+    };
+  }
+
+  /**
    * Maps internal application errors to callable HTTPS errors.
    * @param {unknown} error Error raised by the wallets layer.
    * @param {string} fallbackMessage Fallback error message.
@@ -238,6 +541,46 @@ export class WalletsController {
 
     if (error instanceof WalletCreationError) {
       return new HttpsError("internal", error.message, error.details);
+    }
+
+    if (error instanceof InvalidDepositAmountError) {
+      return new HttpsError("invalid-argument", error.message, error.details);
+    }
+
+    if (error instanceof InvalidWalletCurrencyError) {
+      return new HttpsError("invalid-argument", error.message, error.details);
+    }
+
+    if (error instanceof InvalidTransferAmountError) {
+      return new HttpsError("invalid-argument", error.message, error.details);
+    }
+
+    if (error instanceof InvalidExchangeRateError) {
+      return new HttpsError("invalid-argument", error.message, error.details);
+    }
+
+    if (error instanceof SameWalletTransferError) {
+      return new HttpsError("invalid-argument", error.message, error.details);
+    }
+
+    if (error instanceof SameCurrencyExchangeError) {
+      return new HttpsError("invalid-argument", error.message, error.details);
+    }
+
+    if (error instanceof UnsupportedTransferCurrencyError) {
+      return new HttpsError("invalid-argument", error.message, error.details);
+    }
+
+    if (error instanceof UnsupportedExchangeCurrencyError) {
+      return new HttpsError("invalid-argument", error.message, error.details);
+    }
+
+    if (error instanceof InsufficientFundsError) {
+      return new HttpsError(
+        "failed-precondition",
+        error.message,
+        error.details,
+      );
     }
 
     if (error instanceof WalletNotFoundError) {

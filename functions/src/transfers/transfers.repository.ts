@@ -111,6 +111,34 @@ export class TransfersRepository {
   }
 
   /**
+   * Returns a transfer by its identifier.
+   * @param {string} transferId Transfer document ID.
+   * @return {Promise<TransferRecord | null>} Transfer record if it exists.
+   */
+  async getTransferById(transferId: string): Promise<TransferRecord | null> {
+    const collectionName = APP_CONSTANTS.firestore.collections.transfers;
+    const snapshot = await db.collection(collectionName).doc(transferId).get();
+
+    if (!snapshot.exists) {
+      return null;
+    }
+
+    const data = snapshot.data();
+
+    return {
+      transferId: data?.transferId as string,
+      senderUid: data?.senderUid as string,
+      receiverUid: data?.receiverUid as string,
+      sourceWalletId: data?.sourceWalletId as string,
+      destinationWalletId: data?.destinationWalletId as string,
+      currency: data?.currency as string,
+      amount: data?.amount as number,
+      status: data?.status as TransferRecord["status"],
+      createdAt: this.toDate(data?.createdAt),
+    };
+  }
+
+  /**
    * Converts Firestore timestamps and date-like values to Date.
    * @param {unknown} value Firestore timestamp-like value.
    * @return {Date | undefined} Converted date instance.

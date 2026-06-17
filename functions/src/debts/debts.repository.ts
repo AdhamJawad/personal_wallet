@@ -247,6 +247,35 @@ export class DebtsRepository {
   }
 
   /**
+   * Returns a settlement by its identifier.
+   * @param {string} settlementId Settlement document ID.
+   * @return {Promise<DebtSettlementRecord | null>} Settlement if it exists.
+   */
+  async getSettlementById(
+    settlementId: string,
+  ): Promise<DebtSettlementRecord | null> {
+    const collectionName = APP_CONSTANTS.firestore.collections.debtSettlements;
+    const snapshot = await db.collection(collectionName)
+      .doc(settlementId)
+      .get();
+
+    if (!snapshot.exists) {
+      return null;
+    }
+
+    const data = snapshot.data();
+
+    return {
+      settlementId: data?.settlementId as string,
+      debtId: data?.debtId as string,
+      ownerUid: data?.ownerUid as string,
+      amount: data?.amount as number,
+      currency: data?.currency as string,
+      createdAt: this.toDate(data?.createdAt),
+    };
+  }
+
+  /**
    * Updates a debt remaining amount and status.
    * @param {string} debtId Debt document ID.
    * @param {number} remainingAmount Updated remaining amount.

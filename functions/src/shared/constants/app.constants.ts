@@ -5,6 +5,7 @@ export const APP_CONSTANTS = {
   },
   firestore: {
     collections: {
+      attachments: "attachments",
       auditLogs: "auditLogs",
       authOtpChallenges: "authOtpChallenges",
       contacts: "contacts",
@@ -53,6 +54,10 @@ export const APP_CONSTANTS = {
   },
   audit: {
     entityTypes: ["wallet", "debt", "contact", "transfer"],
+  },
+  attachments: {
+    entityTypes: ["debt", "transfer", "wallet", "settlement"],
+    uploadUrlExpiresInMinutes: 15,
   },
   transfers: {
     statuses: ["completed", "cancelled"],

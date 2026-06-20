@@ -19,10 +19,10 @@ This specification defines the backend contract for offline-originated writes. T
 - `internal_transfer_create`
 - `exchange_create`
 - `debt_create`
-- `debt_repayment_create`
 - `debt_settlement_create`
 - `external_contact_create`
 - `registered_contact_create`
+- `contact_archive`
 - `user_transfer_create`
 - `attachment_create`
 
@@ -247,7 +247,7 @@ Suggested non-retryable error codes:
 
 ## Versioning Strategy
 - Mutable entities such as wallets and contacts should carry integer `version`.
-- Immutable entities such as financial transactions and debt repayments do not require update versions for state mutation, but sync responses should still provide canonical metadata.
+- Immutable entities such as financial transactions and debt settlements do not require update versions for state mutation, but sync responses should still provide canonical metadata.
 - Sync write endpoints should reject stale `base_version` with `409`.
 - Wallet restore and archive operations must reconcile both wallet `version` and any change to `default_receiving_wallet_id` when the backend couples those writes.
 

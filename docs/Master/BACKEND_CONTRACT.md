@@ -3,16 +3,37 @@
 ## Purpose
 This document defines the backend contract required to support the existing Personal Wallet mobile application without changing its architecture. The backend is intended to become the canonical system of record, while the mobile app remains an offline cache, sync client, and local operation queue.
 
+## Approved Deployment Architecture
+- Client: Flutter
+- Backend: Laravel 12 API
+- Database: MySQL
+- Attachment file storage: Cloudinary
+- OTP delivery: WhatsApp API
+- Push notifications: Firebase Cloud Messaging (FCM) only
+
+Explicit rules:
+- Laravel backend is the single source of truth.
+- No business logic may live inside Flutter.
+
 ## System Overview
 
 ### Users
 - Users register with full name and phone number.
-- Authentication supports password login, OTP verification, refresh tokens, logout, biometric device registration, and device management.
+- Successful user registration must create one active wallet named `Main Wallet`.
+- `Main Wallet` must be created atomically with the user record and assigned as `default_receiving_wallet_id`.
+- A user account must never exist without at least one wallet.
+- Authentication supports phone-number-based WhatsApp OTP verification, Laravel Sanctum session/token issuance, logout, biometric device registration, and device management.
+- Password-based authentication is not part of the system.
+- Email-based authentication is not part of the system.
+- Password reset flows are not part of the system.
+- Every new device login requires WhatsApp OTP verification before Sanctum token issuance.
+- PIN, fingerprint, and Face ID are application-unlock mechanisms only and must never replace OTP-based identity verification.
 - A user has one account, many wallets, many contacts, many transfers, many debt records, many notifications, many attachments, and many audit events.
 - A user account may define `default_receiving_wallet_id` for inbound user-to-user transfers when the sender does not specify a recipient wallet.
 
 ### Wallets
 - A user may create unlimited wallets.
+- The backend must auto-create one active wallet named `Main Wallet` during successful registration.
 - Wallets are metadata containers only.
 - Wallet balances must not be stored as authoritative fields.
 - Wallet lifecycle supports create, rename, archive, restore, and list/details.
@@ -47,16 +68,24 @@ This document defines the backend contract required to support the existing Pers
 - If `recipient_wallet_id` is provided, the backend must validate that it belongs to `recipient_user_id` and credit that wallet.
 - If `recipient_wallet_id` is omitted, the backend must resolve the destination wallet from the recipient account's `default_receiving_wallet_id`.
 - If no recipient wallet can be resolved, the backend must reject the transfer with a validation or business-rule error.
-- Debt settlement is a separate flow that creates:
-  - a financial transfer
+- User-to-user transfers must use the same currency on both sides.
+- Cross-currency user transfers are not allowed.
+- Currency conversion must use the exchange workflow only.
+- Debt settlement is not modeled as a standard user transfer.
+- Debt settlement is a debt-domain flow that creates:
+  - a linked financial transaction
+  - one or more ledger entries
   - a debt settlement record
-- Both records must be linked by identifiers.
+- All related writes must be linked and committed atomically.
 
 ### Debts
 - Debt tracking is fully separate from wallet accounting.
-- Creating a debt does not move wallet money.
-- Repayments and settlement events reduce debt state only.
+- Creating a debt with direction `owed_by_contact` must create a linked wallet withdrawal.
+- Creating a debt with direction `owed_to_contact` must not create a wallet transaction automatically.
+- Settlement events reduce debt state and create corresponding ledger entries by direction.
 - Standard transfers, gifts, and unrelated money movement must not reduce debt automatically.
+- Debt updates and ledger updates must never become inconsistent.
+- Ledger remains the financial source of truth.
 
 ### Contacts
 - The system supports:
@@ -67,10 +96,9 @@ This document defines the backend contract required to support the existing Pers
 
 ### QR
 - Each registered user has a QR identity.
-- QR payload may contain:
-  - user id
-  - display name
-  - public reference identifier
+- QR payload must contain only:
+  - `public_reference_code`
+- QR resolution must happen through backend APIs.
 - QR payload must not include sensitive data such as phone, tokens, or internal secrets.
 
 ### Attachments
@@ -80,7 +108,11 @@ This document defines the backend contract required to support the existing Pers
   - debts
   - debt settlements
   - contacts
-- The backend must support future upload lifecycle even if the app is currently local-only.
+- Attachment files are stored in Cloudinary.
+- Attachment metadata is stored in MySQL.
+- Attachments may be deleted only through backend-authorized owner operations.
+- Direct Cloudinary access must never bypass backend authorization.
+- Physical Cloudinary deletion and metadata deletion must be performed together atomically where possible.
 
 ### Notifications
 - Notifications are an independent subsystem.
@@ -88,8 +120,7 @@ This document defines the backend contract required to support the existing Pers
   - transfer received
   - transfer sent
   - debt created
-  - debt repaid
-  - debt settled
+  - debt_settlement_created
   - wallet created
   - sync failure
   - sync success
@@ -112,12 +143,12 @@ This document defines the backend contract required to support the existing Pers
 
 ### Accounting Rules
 - Wallet balances are derived from the ledger only.
-- Debt balances are derived from debt records, repayments, and settlement records only.
+- Debt balances are derived from debt records and debt settlement records only.
 - Wallet and debt balances must never be merged into one model.
 
 ### Immutability Rules
 - Ledger transactions are immutable.
-- Debt repayments and debt settlements are immutable.
+- Debt settlements are immutable.
 - Audit events are immutable.
 
 ### Ownership Rules
@@ -180,14 +211,26 @@ This document defines the backend contract required to support the existing Pers
 6. Emit notification if applicable.
 7. Return transaction and updated derived balances.
 
+### Debt Create
+1. Validate debt ownership context, contact ownership, direction, amount, and currency.
+2. If direction is `owed_by_contact`, validate `source_wallet_id` and sufficient funds.
+3. Create debt record.
+4. If direction is `owed_by_contact`, create linked financial withdrawal and ledger debit.
+5. Commit all related writes atomically.
+6. Emit audit event.
+7. Emit notification when applicable.
+8. Return canonical debt summary and linked financial metadata when present.
+
 ### Debt Settlement Create
 1. Validate debt ownership and remaining balance.
-2. Resolve transfer destination wallet by `recipient_wallet_id` or recipient `default_receiving_wallet_id`.
-3. Create financial transfer.
-4. Create linked debt settlement event.
-5. Emit audit event.
-6. Emit notification.
-7. Return transfer summary and debt summary.
+2. Resolve wallet requirement by debt direction.
+3. If direction is `owed_by_contact`, validate `destination_wallet_id` and create linked financial deposit.
+4. If direction is `owed_to_contact`, validate `source_wallet_id` and create linked financial withdrawal.
+5. Create linked debt settlement event.
+6. Commit debt and ledger writes atomically.
+7. Emit audit event.
+8. Emit notification.
+9. Return debt summary plus linked financial metadata.
 
 ### Contact Link Approval
 1. Validate pending link request.
@@ -199,10 +242,19 @@ This document defines the backend contract required to support the existing Pers
 ## Read Model Expectations
 - Dashboard totals should be derived from current ledger state.
 - Wallet list should expose derived balances, not stored balances.
-- Debt details should expose original amount, repaid amount, settled amount, and remaining amount.
+- Debt details should expose original amount, settled amount, and remaining amount.
 - Transaction history should be queryable by wallet, type, currency, date, and reference.
 - Notification center should support unread counters and filtering.
 - Audit history should support developer and admin investigation.
+
+## Unified Transaction History
+- The backend must support a consolidated chronological transaction history view.
+- The unified history must combine:
+  - deposits
+  - transfers
+  - exchanges
+  - debt settlements
+- This history is a derived read model over canonical financial transactions and ledger records.
 
 ## Cross-Cutting Backend Requirements
 - API versioning via `/api/v1`.

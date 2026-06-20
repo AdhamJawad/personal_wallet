@@ -9,6 +9,15 @@
   - `X-Device-Id` header
   - `client_generated_id` in request body when applicable
 
+## Approved Platform Notes
+- Backend: Laravel 12 API
+- Database: MySQL
+- Authentication: WhatsApp OTP plus Laravel Sanctum
+- Attachments: Cloudinary file storage plus MySQL metadata
+- Push notifications: FCM only
+- Laravel backend is the single source of truth.
+- No business logic may live inside Flutter.
+
 ## Standard Response Shapes
 
 ### Success Envelope
@@ -90,11 +99,10 @@
 ```json
 {
   "id": "uuid",
-  "direction": "owed_to_me",
+  "direction": "owed_by_contact",
   "currency": "USD",
   "original_amount": "100.00",
-  "repaid_amount": "20.00",
-  "settled_amount": "10.00",
+  "settled_amount": "30.00",
   "remaining_amount": "70.00",
   "status": "open",
   "contact": {
@@ -124,14 +132,13 @@
 ## Authentication APIs
 
 ### `POST /auth/register`
-Creates a user and starts OTP verification.
+Creates a user, creates one active wallet named `Main Wallet`, assigns it as `default_receiving_wallet_id`, and starts WhatsApp OTP verification. User creation, `Main Wallet` creation, default wallet assignment, and OTP challenge creation must commit atomically.
 
 Request:
 ```json
 {
   "full_name": "Adham Ahmad",
   "phone_number": "+963999999999",
-  "password": "123456",
   "client_generated_id": "uuid"
 }
 ```
@@ -141,6 +148,8 @@ Response `201`:
 {
   "data": {
     "user_id": "uuid",
+    "main_wallet_id": "uuid",
+    "default_receiving_wallet_id": "uuid",
     "otp_challenge_id": "uuid",
     "otp_expires_at": "2026-06-06T12:05:00Z"
   }
@@ -148,7 +157,7 @@ Response `201`:
 ```
 
 ### `POST /auth/verify-otp`
-Verifies registration or password-reset OTP.
+Verifies a WhatsApp OTP challenge for registration, login, or new-device verification and authorizes Laravel-side authentication continuation.
 
 Request:
 ```json
@@ -162,42 +171,43 @@ Response `200`:
 ```json
 {
   "data": {
-    "verified": true
+    "verified": true,
+    "access_token": "sanctum-token",
+    "token_type": "Bearer"
   }
 }
 ```
 
 ### `POST /auth/login`
-Password-based login.
+Starts OTP-based login. The backend validates the phone number and device metadata, creates an OTP challenge, and sends the OTP through WhatsApp.
 
 Request:
 ```json
 {
   "phone_number": "+963999999999",
-  "password": "123456",
   "device_identifier": "device_123",
   "device_name": "iPhone 15"
 }
 ```
 
-Response `200`:
+Response `202`:
 ```json
 {
   "data": {
-    "access_token": "jwt",
-    "refresh_token": "opaque_or_jwt",
-    "expires_in": 900,
-    "user": {
-      "id": "uuid",
-      "full_name": "Adham Ahmad",
-      "phone_number": "+963999999999"
-    }
+    "otp_challenge_id": "uuid",
+    "otp_expires_at": "2026-06-06T12:05:00Z",
+    "requires_verification": true
   }
 }
 ```
 
+Behavior:
+- Passwords are not accepted by this endpoint.
+- Email-based login is not supported.
+- New device login always requires WhatsApp OTP verification before access token issuance.
+
 ### `POST /auth/logout`
-Revokes the current refresh token or all sessions.
+Revokes the current Sanctum-authenticated session or selected session scope.
 
 Request:
 ```json
@@ -208,46 +218,8 @@ Request:
 
 Response `204`
 
-### `POST /auth/refresh-token`
-Rotates refresh token and returns a new access token.
-
-Request:
-```json
-{
-  "refresh_token": "opaque_or_jwt",
-  "device_identifier": "device_123"
-}
-```
-
-Response `200`: same shape as login.
-
-### `POST /auth/forgot-password`
-Starts reset flow.
-
-Request:
-```json
-{
-  "phone_number": "+963999999999"
-}
-```
-
-Response `202`
-
-### `POST /auth/reset-password`
-Consumes reset token or verified OTP.
-
-Request:
-```json
-{
-  "reset_token": "token",
-  "new_password": "newSecret123"
-}
-```
-
-Response `200`
-
 ### `POST /auth/biometric-devices`
-Registers a device for future biometric-based login delegation.
+Registers a device for application-unlock convenience on a trusted device. This does not replace server-side OTP identity verification for new device login.
 
 Request:
 ```json
@@ -282,7 +254,7 @@ Response `200`:
 ```
 
 ### `DELETE /auth/devices/{device_id}`
-Revokes the selected device, disables biometric trust for that device, and invalidates its active refresh tokens.
+Revokes the selected device, disables biometric trust for that device, and invalidates its active Sanctum sessions/tokens.
 
 Response `204`
 
@@ -295,6 +267,10 @@ Query params:
 - `sort=created_desc|created_asc|name_asc|name_desc`
 
 Response `200`: list of wallet schema.
+
+Rules:
+- Every user must always have at least one wallet.
+- The backend creates `Main Wallet` automatically during successful registration.
 
 ### `POST /wallets`
 Request:
@@ -354,12 +330,16 @@ Response `200`: active wallet schema.
 ### `GET /transactions`
 Query params:
 - `wallet_id`
-- `type=deposit|withdraw|internal_transfer|exchange|user_transfer`
+- `type=deposit|withdraw|internal_transfer|exchange|user_transfer|debt_settlement`
 - `currency`
 - `search`
 - `sort=created_desc|created_asc|amount_desc|amount_asc`
 - `from`
 - `to`
+
+Currency rules:
+- Allowed values for `currency`, `source_currency`, and `destination_currency`: `USD`, `SYP`
+- No other currencies are supported.
 
 ### `POST /transactions/deposits`
 ```json
@@ -427,13 +407,23 @@ Response `201` for all create transaction endpoints:
 ### `GET /transactions/{transaction_id}`
 Returns full financial transaction details, ledger effect summary, attachments, and linked entities.
 
+### Unified Transaction History
+The transactions surface must support a consolidated chronological history combining:
+- deposits
+- transfers
+- exchanges
+- debt settlements
+
 ## Debt APIs
 
 ### `GET /debts`
 Query params:
-- `direction=owed_to_me|i_owe`
+- `direction=owed_by_contact|owed_to_contact`
 - `status=open|completed`
 - `contact_id`
+
+Currency rule:
+- Allowed `currency` values: `USD`, `SYP`
 
 ### `POST /debts`
 ```json
@@ -441,34 +431,29 @@ Query params:
   "contact_id": "uuid",
   "currency": "USD",
   "amount": "100.00",
-  "direction": "owed_to_me",
+  "direction": "owed_by_contact",
+  "source_wallet_id": "uuid",
   "note": "Personal loan",
   "attachment_ids": ["uuid"],
   "client_generated_id": "uuid"
 }
 ```
 
+Behavior:
+- If `direction=owed_by_contact`, `source_wallet_id` is required and the backend must create the debt plus linked wallet withdrawal atomically.
+- If `direction=owed_to_contact`, no automatic wallet transaction is created.
+- Debt state writes, transaction writes, and ledger writes must commit inside a single database transaction.
+
 ### `GET /debts/{debt_id}`
 Returns debt summary and timeline.
 
-### `POST /debts/{debt_id}/repayments`
-```json
-{
-  "amount": "30.00",
-  "note": "Cash repayment",
-  "attachment_ids": [],
-  "client_generated_id": "uuid"
-}
-```
-
 ### `POST /debts/{debt_id}/settlements`
-Creates both transfer and debt settlement.
+Creates debt settlement plus corresponding ledger-backed financial write.
 
 ```json
 {
-  "sender_wallet_id": "uuid",
-  "recipient_user_id": "uuid",
-  "recipient_wallet_id": "uuid",
+  "source_wallet_id": "uuid",
+  "destination_wallet_id": "uuid",
   "amount": "50.00",
   "currency": "USD",
   "note": "Debt settlement",
@@ -477,18 +462,18 @@ Creates both transfer and debt settlement.
 ```
 
 Behavior:
-- If `recipient_wallet_id` is provided, the backend must validate ownership and use it.
-- If omitted, the backend must use the recipient account `default_receiving_wallet_id`.
+- For debts with direction `owed_by_contact`, `destination_wallet_id` is required and `source_wallet_id` must be omitted.
+- For debts with direction `owed_to_contact`, `source_wallet_id` is required and `destination_wallet_id` must be omitted.
+- Debt state writes, settlement writes, transaction writes, and ledger writes must commit inside a single database transaction.
 
 Response `201`:
 ```json
 {
   "data": {
-    "transfer": {},
     "settlement": {
       "id": "uuid",
       "debt_id": "uuid",
-      "user_transfer_id": "uuid",
+      "financial_transaction_id": "uuid",
       "amount": "50.00"
     },
     "debt_summary": {}
@@ -499,7 +484,6 @@ Response `201`:
 ### `GET /debts/{debt_id}/history`
 Returns timeline entries including:
 - debt_created
-- debt_repayment
 - debt_settlement
 
 ## Contact APIs
@@ -507,6 +491,7 @@ Returns timeline entries including:
 ### `GET /contacts`
 Query params:
 - `type=external|registered`
+- `status=active|archived`
 - `search`
 
 ### `POST /contacts`
@@ -526,6 +511,16 @@ Query params:
   "display_name": "Ali Ahmad",
   "phone_number": "+9639xxxxxxx",
   "note": "Updated note",
+  "version": 2
+}
+```
+
+### `POST /contacts/{contact_id}/archive`
+Archives the contact. Permanent deletion is not supported.
+
+Request:
+```json
+{
   "version": 2
 }
 ```
@@ -568,6 +563,10 @@ Behavior:
 - If `recipient_wallet_id` is provided, the backend credits that wallet.
 - If `recipient_wallet_id` is omitted, the backend credits the recipient account `default_receiving_wallet_id`.
 - If neither can be resolved, the backend must reject the request.
+- Allowed `currency` values: `USD`, `SYP`
+- Sender and recipient sides must use the same currency.
+- Cross-currency user transfer is not allowed.
+- Currency conversion must use the exchange workflow only.
 
 Response `201`:
 ```json
@@ -590,8 +589,11 @@ Query params:
 - `from`
 - `to`
 
+Currency rule:
+- Allowed `currency` values: `USD`, `SYP`
+
 ### `GET /user-transfers/{transfer_id}`
-Returns sender, recipient, wallet, ledger reference, and any linked settlement.
+Returns sender, recipient, wallet, and ledger reference.
 
 ## QR APIs
 
@@ -602,14 +604,16 @@ Response:
 ```json
 {
   "data": {
-    "user_id": "uuid",
-    "display_name": "Adham Ahmad",
     "public_reference_code": "USR-9B81D1",
     "qr_payload": "base64-or-json-string",
     "payload_version": 1
   }
 }
 ```
+
+QR payload rule:
+- `qr_payload` should contain only `public_reference_code`.
+- User resolution must happen through backend QR resolution APIs.
 
 ### `POST /qr/resolve`
 Request:
@@ -638,7 +642,7 @@ Returns limited user preview suitable for transfer or contact-add start.
 ## Attachment APIs
 
 ### `POST /attachments`
-Creates attachment metadata and optionally initiates upload.
+Creates attachment metadata and optionally initiates upload. Direct Cloudinary access must remain backend-authorized.
 
 Multipart fields:
 - `entity_type`
@@ -656,7 +660,8 @@ Response `201`:
     "original_file_name": "receipt.jpg",
     "content_type": "image/jpeg",
     "file_size_bytes": 124050,
-    "upload_status": "uploaded"
+    "upload_status": "uploaded",
+    "storage_provider": "cloudinary"
   }
 }
 ```
@@ -670,7 +675,12 @@ Query params:
 Returns metadata and a temporary download URL if authorized.
 
 ### `DELETE /attachments/{attachment_id}`
-Soft delete only.
+Deletes the attachment through a backend-authorized owner operation.
+
+Deletion rules:
+- ownership validation is mandatory
+- Cloudinary file deletion and metadata deletion must occur together atomically where possible
+- direct Cloudinary access must never bypass backend authorization
 
 ## Notification APIs
 

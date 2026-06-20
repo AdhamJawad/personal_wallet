@@ -30,15 +30,17 @@ archive/
 ```
 
 ## Why This Structure Is Safe
-- Keeps all Firebase backend source intact.
+- Keeps all Firebase backend source intact as historical reference.
 - Removes Firebase deployment artifacts from the active root project path.
 - Preserves exact implementation details for later review.
-- Separates archived backend implementation from current Flutter application code.
+- Separates archived backend implementation from the active Flutter plus Laravel architecture.
 
 ## Recommended Archive Usage Rules
 - Treat `archive/firebase-backend/` as read-only historical reference.
 - Do not delete source from the archive during Laravel migration.
 - Do not continue feature development inside archived Firebase code.
+- Do not treat archived Firebase code as production architecture.
+- The approved production stack is Flutter -> Laravel 12 API -> MySQL, with Cloudinary, WhatsApp API, and FCM as supporting integrations.
 - Use archived code to verify:
   - validation rules
   - ownership checks

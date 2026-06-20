@@ -34,7 +34,7 @@ Personal Wallet
 ### 2.2 Vision
 Personal Wallet is an offline-first personal finance system designed for a small trusted group of users. Its purpose is to help users manage multiple wallets, track financial activity through an immutable ledger, record debts independently from wallet balances, transfer money between trusted registered users, and preserve a verifiable history of actions and records.
 
-The project is intentionally designed to start mobile-first with strong local capability and later evolve into a backend-driven distributed system where the server becomes the canonical source of truth.
+The project is intentionally designed to start mobile-first with strong local capability and later evolve into a backend-driven distributed system where the Laravel backend becomes the canonical source of truth.
 
 ### 2.3 Goals
 The project goals are:
@@ -120,10 +120,31 @@ The application should be understood as three layers of responsibility:
    - conflict detection
    - server-side canonical state
 
+### 2.9 Approved Production Stack
+- Flutter
+- Laravel 12 API
+- MySQL
+- Cloudinary for attachment files
+- WhatsApp API for OTP delivery
+- FCM for push notifications only
+
+### 2.10 Authority Boundary
+- Laravel backend is the single source of truth.
+- No business logic may live inside Flutter.
+- Flutter may cache, queue, and render data locally, but it must not become the authoritative owner of business rules.
+
 ## 3. Core Business Concepts
 
 ### 3.1 Users
-A user is a registered account holder in the system. Users authenticate with phone number and password, then may also use OTP-driven verification and device-based biometric convenience after initial trust is established.
+A user is a registered account holder in the system. User identity is based on phone number plus WhatsApp OTP verification, followed by Laravel Sanctum token issuance for authenticated API access.
+
+Authentication and application unlock are separate concerns:
+- authentication uses phone number plus WhatsApp OTP
+- application unlock may use PIN
+- application unlock may use fingerprint
+- application unlock may use Face ID
+
+PIN, fingerprint, and Face ID are local application-lock mechanisms only. They must never replace OTP-based identity verification, especially on new device login.
 
 A user owns:
 - wallets
@@ -141,6 +162,12 @@ A user may also:
 - define a default receiving wallet for inbound transfers
 
 The user account is the primary ownership boundary in the system.
+
+Successful registration must also:
+- create one active wallet named `Main Wallet`
+- assign that wallet as `default_receiving_wallet_id`
+- commit user creation and initial wallet creation atomically
+- ensure no user account exists without at least one wallet
 
 ### 3.2 Wallets
 A wallet is a logical container for financial activity. Users can create unlimited wallets to separate different purposes:
@@ -182,7 +209,6 @@ Debts track obligations between a user and a counterparty. Debts are not wallet 
 - who owes whom
 - in which currency
 - the original amount
-- repayments
 - settlements
 - remaining obligation
 
@@ -204,13 +230,11 @@ External contacts do not have an account in the system. They may represent:
 The architecture is prepared for future linking between external contacts and future registered accounts through dual approval.
 
 ### 3.7 Transfers
-Transfers represent money movement between registered users. There are two distinct transfer meanings:
-- standard transfer
-- debt settlement transfer
+Transfers represent money movement between registered users.
 
 A standard transfer moves wallet value but does not affect debt balances.
 
-A debt settlement transfer moves wallet value and also creates a linked debt settlement record that reduces the debt.
+Debt settlement is a separate debt-domain workflow. It may create linked wallet-affecting ledger records, but it is not modeled as a standard transfer subtype in the final backend architecture.
 
 This distinction is one of the most important rules in the application.
 
@@ -220,9 +244,7 @@ Each registered user has a personal QR identity used for:
 - contact addition
 - transfer initiation
 
-The QR payload is intentionally limited to public-safe identity data:
-- user id
-- display name
+The QR payload is intentionally limited to one public-safe identifier:
 - public reference code
 
 It must never expose secrets or sensitive account information.
@@ -259,7 +281,7 @@ Audit events are immutable records of significant business actions. They exist f
 Audit events capture what happened, when it happened, who triggered it, and which entity was affected.
 
 ### 3.12 Offline Sync
-Offline sync is the infrastructure that allows the app to function locally while preparing future writes for a backend. The app must remain usable offline, but once backend integration exists, the server becomes the canonical source of truth.
+Offline sync is the infrastructure that allows the app to function locally while preparing future writes for a backend. The app must remain usable offline, but once backend integration exists, the Laravel backend becomes the canonical source of truth.
 
 Offline sync relies on:
 - local-first persistence
@@ -400,14 +422,21 @@ Wallet rules are strict because wallets are central user-facing entities but sho
 A user can create unlimited wallets. There is no product-level restriction on count unless future business or operational policy introduces one.
 
 ### 5.2 Supported Currencies
-The current domain supports:
+The system supports only:
 - USD
 - SYP
 
-Each wallet may hold balances in both currencies at the same time because balance is derived by currency from ledger entries.
+No other currencies are supported.
+
+Each wallet may hold balances in both supported currencies at the same time because balance is derived by currency from ledger entries.
 
 ### 5.3 Wallets Are Metadata, Not Balances
 A wallet stores metadata only. It does not hold authoritative balance fields. Any displayed balance is derived from ledger activity.
+
+This means:
+- no `balance_usd` field
+- no `balance_syp` field
+- no stored wallet balance columns
 
 ### 5.4 Wallet Lifecycle
 Wallet lifecycle currently supports:
@@ -526,10 +555,14 @@ A user transfer moves value from one user wallet to another user wallet.
 Expected effect:
 - debit sender wallet
 - credit recipient wallet
+- sender and recipient use the same currency
+
+Cross-currency user-to-user transfer is not allowed.
+Currency conversion must use the exchange workflow only.
 
 If it is a standard transfer, the effect ends there.
 
-If it is a debt settlement transfer, there must also be a linked debt settlement record.
+Debt settlement is not a standard user transfer requirement. It is a debt-domain workflow with its own linked financial write and ledger effect.
 
 ### 6.9 Transaction References
 Financial transactions must have generated reference numbers in a canonical format such as:
@@ -558,33 +591,41 @@ This must remain true across:
 - backend logic
 
 ### 7.2 Debt Creation
-Creating a debt records an obligation only.
+Debt creation behavior depends on direction.
+
+If direction is `owed_by_contact`:
+- the user is lending money
+- a source wallet must be selected
+- debt creation and wallet withdrawal must commit atomically
 
 Example:
-- Adham lends Ali 100 USD
-- Result: Ali owes Adham 100 USD
+- Wallet USD = 500
+- user lends 100 USD
 
-Immediate wallet effect:
-- none, unless the user separately records a financial transaction
+Expected result:
+- wallet USD = 400
+- debt remaining = 100
 
-### 7.3 Debt Repayment
-A debt repayment reduces the remaining debt amount, but by itself it does not require a linked transfer in the current domain model.
+If direction is `owed_to_contact`:
+- the user owes someone money
+- debt is recorded without creating an automatic wallet transaction
 
-Example:
-- Ali repays 30 USD
-- Result: debt remaining becomes 70 USD
+### 7.3 Debt Settlement
+Debt settlement is the explicit action that reduces a debt and creates the corresponding financial impact when required.
 
-Wallet effect:
-- none automatically
+For `owed_by_contact`:
+- the user is receiving money back
+- a destination wallet must be selected
+- remaining debt must decrease
+- a ledger-backed deposit must be created
+- all related writes must commit atomically
 
-### 7.4 Debt Settlement
-Debt settlement is a special case. It is not merely a debt note. It is a linked financial and debt action.
-
-When a debt settlement occurs, the system must create:
-- a financial transfer
-- a debt settlement record
-
-These must be linked by identifier so the business event can be understood from either side.
+For `owed_to_contact`:
+- the user is paying money
+- a source wallet must be selected
+- remaining debt must decrease
+- a ledger-backed withdrawal must be created
+- all related writes must commit atomically
 
 ### 7.5 Partial Settlement
 Debt settlements may be partial.
@@ -595,33 +636,39 @@ Example:
 - remaining debt becomes 20 USD
 
 ### 7.6 Full Settlement
-When total repayments plus settlements equal the original amount, the debt becomes completed.
+When total settlements equal the original amount, the debt becomes completed.
 
 ### 7.7 Debt Completion
 Debt completion is a derived state. It should be based on the relationship between:
 - original amount
-- repayments
 - settlements
 - remaining amount
 
 ### 7.8 Debt Timeline
 Debt details should expose a timeline including:
 - debt created
-- repayments
 - settlement events
 
 This timeline helps the user understand how the remaining amount was reached.
 
 ### 7.9 Debt Ownership
 Each debt belongs to one owner and one contact counterparty. The direction of the debt determines whether it is:
-- owed to me
-- I owe
+- `owed_by_contact`
+- `owed_to_contact`
 
 ### 7.10 No Hidden Coupling
+Debt and Wallet remain separate domains, but approved debt flows may create linked ledger-backed financial records.
+
+### 7.11 Atomicity Rule
+Debt updates and ledger updates must never become inconsistent. All related writes must commit atomically.
+
+### 7.12 Financial Source Of Truth
+Ledger remains the financial source of truth. Debt records never become an alternate source of wallet-balance truth.
+
 The system must never silently infer:
-- “transfer to same person means debt repayment”
-- “debt repayment means transfer”
-- “settlement means debt is closed”
+- "transfer to same person means debt settlement"
+- "debt settlement means transfer"
+- "settlement means debt is closed"
 
 Every debt-affecting action must be explicit.
 
@@ -637,7 +684,7 @@ Standard transfer:
 Debt settlement:
 - moves wallet value
 - reduces debt
-- creates both transfer and settlement records
+- creates a linked financial transaction, ledger entries, and settlement record
 
 ### 8.2 Standard Transfer Example
 Ali owes Adham 70 USD.
@@ -717,6 +764,15 @@ Linking should preserve history. Old debts, attachments, and references should r
 ### 9.7 Ownership
 Contacts belong to the owning user. There is no global shared address book in the current model.
 
+### 9.8 Contact Lifecycle
+Contacts must not support permanent deletion.
+
+Contacts may only be:
+- active
+- archived
+
+Historical debts, settlements, transfers, and audit records must never lose referential integrity because a contact was removed.
+
 ## 10. QR Rules
 
 ### 10.1 Personal QR Identity
@@ -724,8 +780,6 @@ Each registered user has a personal QR identity. It exists to make discovery and
 
 ### 10.2 QR Payload Content
 Allowed content:
-- user id
-- display name
 - public reference code
 
 Not allowed:
@@ -733,7 +787,7 @@ Not allowed:
 - tokens
 - secrets
 - internal device data
-- password-related information
+- authentication credential information
 
 ### 10.3 QR Use Cases
 Supported uses:
@@ -746,7 +800,7 @@ Supported uses:
 ### 10.4 QR Scan Flow
 The expected flow is:
 1. user scans QR
-2. app resolves the QR payload
+2. app sends the QR payload to backend resolution APIs
 3. app presents limited user preview
 4. user chooses an action
    - add contact
@@ -758,6 +812,8 @@ QR identities are public-facing enough to be shared, so they must only contain s
 - payload versioning
 - rotation support
 - server-side resolution
+
+QR resolution must happen through backend APIs.
 
 ## 11. Attachment Rules
 
@@ -799,7 +855,8 @@ Current app behavior is local-first. Future backend implementation should suppor
 - upload initiation
 - metadata persistence
 - authorized download
-- soft deletion or archival policy
+- backend-authorized deletion by the owner
+- coordinated Cloudinary file deletion and metadata deletion where possible
 
 ### 11.7 Sync Queue Readiness
 Attachment creation must be representable as a sync operation because file-related records are part of future remote consistency.
@@ -811,8 +868,7 @@ Current supported event families include:
 - transfer received
 - transfer sent
 - debt created
-- debt repaid
-- debt settled
+- debt_settlement_created
 - wallet created
 - sync failure
 - sync success
@@ -848,8 +904,7 @@ Audit events should be generated automatically by repositories or backend servic
 Examples include:
 - transaction created
 - debt created
-- debt repaid
-- debt settled
+- debt settlement created
 - transfer executed
 - wallet created
 - wallet renamed
@@ -933,10 +988,10 @@ Operations expected to be sync-capable include:
 - internal transfer create
 - exchange create
 - debt create
-- debt repayment create
 - debt settlement create
 - external contact create
 - registered contact create
+- contact archive
 - user transfer create
 - attachment create
 
@@ -997,9 +1052,8 @@ This section summarizes the backend data model at a high level. The full field-l
 Identity and access:
 - users
 - user_devices
-- refresh_tokens
+- personal_access_tokens
 - otp_challenges
-- password_reset_requests
 
 Wallet and financial accounting:
 - wallets
@@ -1012,7 +1066,6 @@ Contacts and debts:
 - contacts
 - contact_link_requests
 - debts
-- debt_repayments
 - debt_settlements
 
 User identity and collaboration:
@@ -1039,8 +1092,8 @@ Important relationships include:
 - wallet participates in many financial transactions
 - financial transaction produces one or more ledger entries
 - debt belongs to a contact and an owning user
-- debt has many repayments and settlements
-- debt settlement references a user transfer
+- debt has many settlements
+- debt settlement references a linked financial transaction
 - user has one QR identity
 - sync operations may create conflict records
 
@@ -1064,12 +1117,9 @@ This section summarizes the API surface. Detailed endpoint definitions are in [A
 ### 16.1 Auth APIs
 Auth covers:
 - register
+- request login OTP
 - verify OTP
-- login
 - logout
-- refresh token
-- forgot password
-- reset password
 - biometric device registration
 - list devices
 - revoke device
@@ -1092,12 +1142,18 @@ Transaction APIs cover:
 - list transaction history
 - transaction details
 
+### 16.3.1 Unified Transaction History
+The system must support a consolidated history view ordered chronologically and combining:
+- deposits
+- transfers
+- exchanges
+- debt settlements
+
 ### 16.4 Debt APIs
 Debt APIs cover:
 - create debt
 - debt details
 - debt history
-- create repayment
 - create settlement
 
 ### 16.5 Contact APIs
@@ -1105,6 +1161,7 @@ Contact APIs cover:
 - create contact
 - list contacts
 - update contact
+- archive contact
 - discover link candidate
 - approve link
 - reject link
@@ -1151,14 +1208,14 @@ Sync APIs cover:
 
 This section summarizes the security model. Full detail is in [SECURITY_SPECIFICATION.md](/c:/Users/TOSHIBA/Desktop/wallet/docs/SECURITY_SPECIFICATION.md).
 
-### 17.1 JWT Access Tokens
-Short-lived JWT access tokens authorize normal API access.
+### 17.1 Access Tokens
+Laravel Sanctum access tokens authorize normal API access.
 
-### 17.2 Refresh Tokens
-Refresh tokens support session continuity and must be stored hashed server-side. They should be rotated and revocable.
+### 17.2 Sanctum Sessions And Tokens
+Laravel Sanctum tokens support authenticated API access and session revocation. Token records must remain backend-managed and revocable per session or device policy.
 
 ### 17.3 OTP
-OTP is used for registration verification and password reset flows. OTPs must be:
+OTP is delivered through WhatsApp API and used for identity verification, registration verification, and new-device login verification. OTPs must be:
 - hashed at rest
 - time-limited
 - attempt-limited
@@ -1172,14 +1229,13 @@ Sessions are tied to registered device records. Device metadata matters for:
 - sync context
 
 ### 17.5 Biometrics
-Biometrics are a device convenience, not a standalone backend trust model. The backend should store device registration or attestation data, not raw biometric data.
+Biometrics are a device convenience and local application-unlock mechanism, not a standalone backend trust model. The backend should store device registration or attestation data, not raw biometric data.
 
 ### 17.6 Rate Limiting
 Rate limiting is required for:
 - login
 - register
 - OTP issue and verify
-- password reset requests
 - sync upload
 - attachment upload
 
@@ -1201,10 +1257,10 @@ This section defines rules that must never be violated by application code, back
 1. The ledger is the only source of wallet balances.
 2. Wallet balances must never be stored as the authoritative truth.
 3. Debts are completely separate from wallet balances.
-4. Creating a debt does not automatically move money.
-5. Recording a standard transfer does not automatically reduce debt.
-6. Only debt settlement reduces debt through a transfer-linked settlement record.
-7. Debt settlement must create both a financial transfer and a debt settlement record.
+4. Creating a debt with `owed_by_contact` must create a linked wallet withdrawal atomically.
+5. Creating a debt with `owed_to_contact` must not create an automatic wallet transaction.
+6. Recording a standard transfer does not automatically reduce debt.
+7. Only debt settlement reduces debt through a linked ledger-backed financial write.
 8. Transactions are immutable.
 9. Ledger entries are immutable.
 10. Audit events are immutable.
@@ -1212,12 +1268,14 @@ This section defines rules that must never be violated by application code, back
 12. Archived wallets must remain available for historical interpretation.
 13. User-to-user transfers must resolve an explicit or default receiving wallet.
 14. A user's default receiving wallet must belong to that same user.
-15. Contact linking requires approval from both parties.
-16. QR payloads must not contain secrets or sensitive private data.
-17. Sync operations must be idempotent.
-18. Sync conflicts must not be silently hidden.
-19. Once backend integration exists, the server becomes the canonical source of truth.
-20. Local cache, summaries, and projections may optimize reads, but they never replace canonical domain records.
+15. User-to-user transfers must remain same-currency only.
+16. Contact linking requires approval from both parties.
+17. Contacts are archived, not permanently deleted.
+18. QR payloads must contain only `public_reference_code`.
+19. Sync operations must be idempotent.
+20. Sync conflicts must not be silently hidden.
+21. Laravel backend is the canonical source of truth.
+22. Local cache, summaries, and projections may optimize reads, but they never replace canonical domain records.
 
 ## 19. Operational Guidance For Developers
 
@@ -1276,7 +1334,7 @@ Expected result:
 
 ### 20.2 Debt Without Money Movement
 User records:
-- Ali owes me 100 USD
+- I owe Ali 100 USD
 
 Expected result:
 - debt summary shows 100 USD owed
@@ -1290,12 +1348,12 @@ Expected result:
 - sender and recipient wallet balances change
 - debt remains 70 USD
 
-### 20.4 Debt Settlement Transfer
-User A is owed 70 USD by User B.
-User B settles 50 USD against the debt.
+### 20.4 Debt Settlement
+User is owed 70 USD by a contact.
+User records a 50 USD settlement into a destination wallet.
 
 Expected result:
-- transfer is created
+- linked financial transaction is created
 - wallet balances change
 - linked debt settlement is created
 - debt remaining becomes 20 USD
@@ -1327,11 +1385,12 @@ Expected result:
 
 The current project is intentionally scoped, but several future enhancements are already implied by the architecture.
 
-### 21.1 Additional Currencies
-The system currently supports USD and SYP. Future support may include:
-- more fiat currencies
-- currency metadata tables
-- configurable decimal handling
+### 21.1 Currency Scope
+The system supports only:
+- USD
+- SYP
+
+No other currencies are part of the approved implementation scope.
 
 ### 21.2 Push Notifications
 Notifications are currently modeled as app-visible records. Future work may add:
@@ -1403,3 +1462,4 @@ Personal Wallet is a disciplined finance application for a small trusted group, 
 - offline capability must not undermine future server authority
 
 Anyone extending this project should begin from these principles rather than from visible UI behavior alone. The screens may evolve, the backend stack may change, and implementation details may be optimized, but the business model defined in this document must remain stable unless there is an explicit architectural decision to change the product itself.
+
